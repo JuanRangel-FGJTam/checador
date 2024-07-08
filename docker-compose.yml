@@ -1,0 +1,35 @@
+services:
+  nginx:
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    ports:
+      - 80:80
+    volumes:
+      - .:/var/www/html
+      - ./default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - networkapp
+
+  app:
+    build:
+      args:
+        user: dgfspc
+        uid: 1000
+      context: .
+      dockerfile: ./Dockerfile
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+      - ./php.ini:/usr/local/etc/php/conf.d/php.ini
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - networkapp
+    ports:
+      - 5173:5173
+
+networks:
+  networkapp:
