@@ -29,9 +29,43 @@ const showingNavigationDropdown = ref(false);
 
                             <!-- Navigation Links -->
                             <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                                
                                 <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
                                     Dashboard
                                 </NavLink>
+
+                                <NavLink :href="route('admin')" :active="route().current('admin')">
+                                    Admin
+                                </NavLink>
+
+                                <NavLink :href="route('rh')" :active="route().current('rh')">
+                                    Empleados
+                                </NavLink>
+
+                                <NavLink :href="route('reports')" :active="route().current('reports')">
+                                    Reportes
+                                </NavLink>
+
+                                <NavLink :href="route('newEmployees')" :active="route().current('new-employees')">
+                                    Nuevos registros
+                                </NavLink>
+
+                                <NavLink :href="route('show')" :active="route().current('show')">
+                                    Consulta
+                                </NavLink>
+
+                                <NavLink :href="route('incidents')" :active="route().current('incidents')">
+                                    Incidencias
+                                </NavLink>
+                                
+                                <NavLink :href="route('hollidays')" :active="route().current('hollidays')">
+                                    Días inhábiles
+                                </NavLink>
+
+                                <NavLink :href="route('inactive')" :active="route().current('inactive')">
+                                    Bajas
+                                </NavLink>
+
                             </div>
                         </div>
 
@@ -64,10 +98,8 @@ const showingNavigationDropdown = ref(false);
                                     </template>
 
                                     <template #content>
-                                        <DropdownLink :href="route('profile.edit')"> Profile </DropdownLink>
-                                        <DropdownLink :href="route('logout')" method="post" as="button">
-                                            Log Out
-                                        </DropdownLink>
+                                        <DropdownLink :href="route('profile.edit')"> Mi informacion </DropdownLink>
+                                        <DropdownLink :href="route('logout')" method="post" as="button"> Cerrar sesion</DropdownLink>
                                     </template>
                                 </Dropdown>
                             </div>

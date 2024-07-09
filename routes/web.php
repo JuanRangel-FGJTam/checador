@@ -18,6 +18,43 @@ Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::get('admin', function(){
+    return Inertia::render('Dashboard');
+})->middleware(['auth'])->name('admin');
+
+Route::get('rh', function(){
+    return Inertia::render('Dashboard');
+})->middleware(['auth'])->name('rh');
+
+Route::get('reports', function(){
+    return Inertia::render('Dashboard');
+})->middleware(['auth'])->name('reports');
+
+Route::get('new-employees', function(){
+    return Inertia::render('Dashboard');
+})->middleware(['auth'])->name('newEmployees');
+
+Route::get('show', function(){
+    return Inertia::render('Dashboard');
+})->middleware(['auth'])->name('show');
+
+Route::get('incidents', function(){
+    return Inertia::render('Dashboard');
+})->middleware(['auth'])->name('incidents');
+
+Route::get('incidents', function(){
+    return Inertia::render('Dashboard');
+})->middleware(['auth'])->name('incidents');
+
+Route::get('inactive', function(){
+    return Inertia::render('Dashboard');
+})->middleware(['auth'])->name('inactive');
+
+
+Route::get('/hollidays', function () {
+    return Inertia::render('Dashboard');
+})->middleware(['auth', 'verified'])->name('hollidays');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
