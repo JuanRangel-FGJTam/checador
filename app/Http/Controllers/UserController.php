@@ -176,10 +176,11 @@ class UserController extends Controller
             
             // * update the menu elements
             $user->menus()->sync($request->options);
-                
+
             $user->update();
 
             // * redirect to user index
+            Log::info("User id '$userid' updated");
             return redirect()->route('admin.users.index');
 
         } catch (\Throwable $th) {
@@ -225,6 +226,7 @@ class UserController extends Controller
             $user->update();
 
             // * redirect to user index
+            Log::info("Password of the user '$userid' updated");
             return redirect()->route('admin.users.index');
 
         } catch (\Throwable $th) {
@@ -238,7 +240,6 @@ class UserController extends Controller
             ])->withInput();
         }
     }
-
 
     /**
      * Remove the specified resource from storage.
