@@ -5,11 +5,12 @@ namespace Database\Seeders;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Database\Seeders\{
-    DepartmentSeeder,
-    DirectionSeeder,
+use Database\Seeders\{
+    MenuSeeder,
     GeneralDirectionSeeder,
-    SubdirectorateSeeder
+    DirectionSeeder,
+    SubdirectorateSeeder,
+    DepartmentSeeder,
 };
 
 
@@ -23,10 +24,11 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         $this->call([
-            DepartmentSeeder::class,
-            DirectionSeeder::class,
+            MenuSeeder::class,
             GeneralDirectionSeeder::class,
-            SubdirectorateSeeder::class
+            DirectionSeeder::class,
+            SubdirectorateSeeder::class,
+            DepartmentSeeder::class,
         ]);
 
         // User::factory()->create([
