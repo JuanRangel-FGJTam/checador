@@ -1,9 +1,12 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\{
+    AdminController,
+    ProfileController
+};
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -18,9 +21,14 @@ Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('admin', function(){
-    return Inertia::render('Dashboard');
-})->middleware(['auth'])->name('admin');
+
+Route::middleware(['auth'])->group(function () {
+
+    Route::prefix('admin')->name('admin.')->group(function(){
+        Route::get('', [ AdminController::class, "index"])->name('index');
+    });
+
+});
 
 Route::get('rh', function(){
     return Inertia::render('Dashboard');
