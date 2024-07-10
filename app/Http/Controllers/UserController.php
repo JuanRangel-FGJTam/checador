@@ -19,7 +19,7 @@ use App\Models\{
     Menu
 };
 use App\Services\UserService;
-
+use PhpParser\Node\Stmt\Catch_;
 
 class UserController extends Controller
 {
@@ -163,22 +163,80 @@ class UserController extends Controller
             ])->withInput();
         }
 
-        // * update the general data
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->general_direction_id = $request->generalDirection_id;
-        $user->direction_id = $request->direction_id;
-        $user->subdirectorates_id = $request->subdirectorate_id;
-        $user->departments_id = $request->departments_id;
-        $user->level_id = $request->level_id;
+        try {
+
+            // * update the general data
+            $user->name = $request->name;
+            $user->email = $request->email;
+            $user->general_direction_id = $request->generalDirection_id;
+            $user->direction_id = $request->direction_id;
+            $user->subdirectorates_id = $request->subdirectorate_id;
+            $user->departments_id = $request->departments_id;
+            $user->level_id = $request->level_id;
+            
+            // * update the menu elements
+            $user->menus()->sync($request->options);
+                
+            $user->update();
+
+            // * redirect to user index
+            return redirect()->route('admin.users.index');
+
+        } catch (\Throwable $th) {
+            Log::error( "Error at attempting to update the user '{userid}' at UserController.update: {message}", [
+                "userid" => $userid,
+                "message" => $th->getMessage(),
+                "request" => $request->request->all()
+            ]);
+            return redirect()->back()->withErrors([
+                "message" => "Error no controlado; intente de nuevo o comuníquese con el administrador."
+            ])->withInput();
+        }
         
-        // * update the menu elements
-        $user->menus()->sync($request->options);
+    }
 
-        $user->update();
+    /**
+     * Update the user password
+     */
+    public function updatePassword(Request $request, string $userid)
+    {
+        
+        // * some validations
+        $request->validate([
+            "password" => 'required|string|min:8|max:24',
+            "password_confirmation" => 'required|string|min:8|max:24|same:password',
+        ]);
 
-        // * redirect to user index
-        return redirect()->route('admin.users.index');
+
+        // * retrive the user
+        $user = null;
+        try {
+            $user = $this->userService->getUser($userid);
+        } catch (ModelNotFoundException $th) {
+            return redirect()->back()->withErrors([
+                "message" => "User not found"
+            ])->withInput();
+        }
+
+        try {
+
+            // * update user password
+            $user->password = $request->password;
+            $user->update();
+
+            // * redirect to user index
+            return redirect()->route('admin.users.index');
+
+        } catch (\Throwable $th) {
+            Log::error( "Error at attempting to update the password of the user '{userid}' at UserController.updatePassword: {message}", [
+                "userid" => $userid,
+                "message" => $th->getMessage(),
+                "request" => $request->request->all()
+            ]);
+            return redirect()->back()->withErrors([
+                "message" => "Error no controlado; intente de nuevo o comuníquese con el administrador."
+            ])->withInput();
+        }
     }
 
 

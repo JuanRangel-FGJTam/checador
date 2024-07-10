@@ -34,6 +34,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('create', [UserController::class, 'create'])->name('create');
             Route::get('edit/{userid}', [UserController::class, 'edit'])->name('edit');
             Route::patch('{userid}', [UserController::class, 'update'])->name('update');
+            Route::patch('{userid}/password', [UserController::class, 'updatePassword'])->name('update.password');
         });
 
     });

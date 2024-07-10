@@ -70,13 +70,13 @@ function submitForm(){
 }
 
 function submitFormPassword(){
-    // formPassword.post( route('admin.users.store'), {
-    //     replace: true,
-    //     onError:(res)=>{
-    //         const { message } = res;
-    //         alert( message ?? "Error no controlado al almacenar la evaluacion.");
-    //     }
-    // });
+    formPassword.patch( route('admin.users.update.password', props.user.id), {
+        replace: true,
+        onError:(res)=>{
+            const { message } = res;
+            alert( message ?? "Error no controlado al almacenar la evaluacion.");
+        }
+    });
 }
 
 function handleCheckboxUpdated(e) {
