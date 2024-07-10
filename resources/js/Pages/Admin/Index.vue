@@ -28,7 +28,7 @@ import Landmark from '@/Components/Icons/Landmark.vue';
             </template>
             <template #content>
                 <div class="flex flex-wrap gap-4 p-4 justify-around">
-                    <CatalogOptionCard href="/dashboard" title="Agregar Usuario">
+                    <CatalogOptionCard :href="route('admin.users.create')" title="Agregar Usuario">
                         <UserIconPlus class="w-12 h-12" />
                     </CatalogOptionCard>
 

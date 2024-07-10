@@ -5,7 +5,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\{
     AdminController,
-    ProfileController
+    ProfileController,
+    UserController
 };
 
 Route::get('/', function () {
@@ -26,6 +27,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('admin')->name('admin.')->group(function(){
         Route::get('', [ AdminController::class, "index"])->name('index');
+
+        Route::prefix('users')->name('users.')->group(function(){
+            Route::get('create', [UserController::class, 'create'])->name('create');
+            Route::post('', [UserController::class, 'store'])->name('store');
+        });
+
     });
 
 });
