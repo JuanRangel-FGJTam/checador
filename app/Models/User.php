@@ -5,6 +5,8 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
@@ -49,4 +51,59 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+
+    #region relations
+
+    /**
+     * Get all the menu items for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function menus(): BelongsToMany
+    {
+        return $this->belongsToMany(Menu::class);
+    }
+
+    /**
+     * Get the generalDirection that owns the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function generalDirection(): BelongsTo
+    {
+        return $this->belongsTo(GeneralDirection::class);
+    }
+
+    /**
+     * Get the direction that owns the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function direction(): BelongsTo
+    {
+        return $this->belongsTo(Direction::class);
+    }
+
+    /**
+     * Get the subdirectorate that owns the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function subdirectorate(): BelongsTo
+    {
+        return $this->belongsTo(Subdirectorate::class);
+    }
+
+    /**
+     * Get the department that owns the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
+    }
+    #endregion
+
 }

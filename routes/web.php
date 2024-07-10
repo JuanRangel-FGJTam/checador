@@ -29,8 +29,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('', [ AdminController::class, "index"])->name('index');
 
         Route::prefix('users')->name('users.')->group(function(){
-            Route::get('create', [UserController::class, 'create'])->name('create');
+            Route::get('', [UserController::class, 'index'])->name('index');
             Route::post('', [UserController::class, 'store'])->name('store');
+            Route::get('create', [UserController::class, 'create'])->name('create');
+            Route::get('edit/{userid}', [UserController::class, 'edit'])->name('edit');
+            Route::patch('{userid}', [UserController::class, 'update'])->name('update');
         });
 
     });

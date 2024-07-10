@@ -3,12 +3,10 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use App\Models\User;
 
-class NewUserRequest extends FormRequest
+class UpdateUserRequest extends FormRequest
 {
-
-    /**
+      /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
@@ -23,16 +21,17 @@ class NewUserRequest extends FormRequest
      */
     public function rules(): array
     {
+        $userId = $this->route('userid');
+        
         return [
             "generalDirection_id" => 'required|integer|min:1',
             "direction_id" => 'required|integer|min:1',
             "subdirectorate_id" => 'required|integer|min:1',
             "departments_id" => 'required|integer|min:1',
             "name" => 'required|string|max:120',
-            "email" => 'required|email|unique:users,email',
-            "password" => 'required|string|min:8|max:24',
-            "password_confirmation" => 'required|string|min:8|max:24|same:password',
-            "level_id" => 'nullable|integer|min:0|max:5'
+            "email" => 'required|email|unique:users,email,' . $userId,
+            "level_id" => 'required|integer|min:0|max:5',
+            "options" => 'required|array|min:1'
         ];
     }
 
@@ -50,9 +49,8 @@ class NewUserRequest extends FormRequest
             "departments_id" => 'departamento',
             "name" => 'nombre',
             "email" => 'correo',
-            "password" => 'contraseña',
-            "password_confirmation" => 'confirmar contraseña'
+            "level_id" => 'nivel de acceso',
+            "options" => 'acceso menu'
         ];
     }
-
 }

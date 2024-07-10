@@ -32,7 +32,7 @@ import Landmark from '@/Components/Icons/Landmark.vue';
                         <UserIconPlus class="w-12 h-12" />
                     </CatalogOptionCard>
 
-                    <CatalogOptionCard href="/dashboard" title="Usuarios Activos">
+                    <CatalogOptionCard :href="route('admin.users.index')" title="Usuarios Activos">
                         <Users class="w-12 h-12" />
                     </CatalogOptionCard>
 
