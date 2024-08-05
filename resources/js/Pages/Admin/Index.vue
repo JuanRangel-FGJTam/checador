@@ -49,7 +49,7 @@ import Landmark from '@/Components/Icons/Landmark.vue';
             </template>
             <template #content>
                 <div class="flex flex-wrap gap-4 p-4 justify-around">
-                    <CatalogOptionCard href="/dashboard" title="Direcciones Generales">
+                    <CatalogOptionCard :href="route('admin.catalogs.general-directions.index')" title="Direcciones Generales">
                         <Landmark class="w-12 h-12" />
                     </CatalogOptionCard>
 
