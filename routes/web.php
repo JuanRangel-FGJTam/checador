@@ -62,6 +62,15 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('{directionId}', [CatalogController::class, 'subDirectionEdit'])->name('edit');
                 Route::patch('{directionId}', [CatalogController::class, 'subDirectionUpdate'])->name('update');
             });
+
+            Route::prefix('departments')->name("departments.")->group(function(){
+                Route::get('', [CatalogController::class, 'departmentsIndex'])->name('index');
+                Route::get('/new', [CatalogController::class, 'departmentCreate'])->name('create');
+                Route::post('', [CatalogController::class, 'departmentStore'])->name('store');
+                Route::get('{directionId}', [CatalogController::class, 'departmentEdit'])->name('edit');
+                Route::patch('{directionId}', [CatalogController::class, 'departmentUpdate'])->name('update');
+            });
+
         });
 
     });

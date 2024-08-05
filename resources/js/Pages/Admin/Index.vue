@@ -61,7 +61,7 @@ import Landmark from '@/Components/Icons/Landmark.vue';
                         <Landmark class="w-12 h-12" />
                     </CatalogOptionCard>
 
-                    <CatalogOptionCard href="/dashboard" title="Departamentos">
+                    <CatalogOptionCard :href="route('admin.catalogs.departments.index')" title="Departamentos">
                         <Landmark class="w-12 h-12" />
                     </CatalogOptionCard>
                 </div>

@@ -7,8 +7,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use App\Models\{
-    GeneralDirection,
+    Department,
     Direction,
+    GeneralDirection,
     Subdirectorate
 };
 use Exception;
@@ -418,6 +419,148 @@ class CatalogController extends Controller
      */
     private function getDirectionsAvailables(): Array {
         return Direction::select('id', 'name')->get()->toArray();
+    }
+
+    #endregion
+
+    #region Departamentos
+    public function departmentsIndex()
+    { 
+        // * retrive the data
+        $data = Department::with([
+            'subdirectorate' => fn($query) => $query->select('id', 'name')
+        ])->select([
+            'id',
+            'name',
+            'subdirectorate_id'
+        ])->get()->toArray();
+
+        
+        // * return the view
+        return Inertia::render('Catalogs/Departments/Index', [
+            "data" => $data
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new direction resource.
+     */
+    public function departmentCreate()
+    {
+        // * get sub directions availables
+        $subDirections = $this->getSubDirectionsAvailables();
+
+        // * return the view
+        return Inertia::render('Catalogs/Departments/New', [
+            "subDirections" => $subDirections
+        ]);
+    }
+
+    /**
+     * Store a newly created the direction in storage.
+     */
+    public function departmentStore(Request $request)
+    {
+        // * validate the request
+        $request->validate([
+            "name" => 'required|string|max:200',
+            "subdirectorate_id" => 'required|numeric|exists:subdirectorates,id'
+        ]);
+
+
+        // * attempting to create the new resource
+        try {
+
+            $department = Department::create([
+                'name' => $request->input('name'),
+                'subdirectorate_id' => $request->input('subdirectorate_id')
+            ]);
+
+            // * redirect to index
+            Log::info("New resource 'Department' created with id '$department->id' at CatalogController.departmentStore");
+            return redirect()->route('admin.catalogs.departments.index' );
+
+        } catch(ValidationException $ve){
+            Log::error("Fail to create the new resource 'Department', validations fails at CatalogController.departmentStore: {message}", [
+                "message" => $ve->getMessage(),
+                "request" => $request->request->all()
+            ]);
+            return redirect()->back()->withErrors( $ve->errors() )->withInput();
+
+        } catch(Throwable $th){
+            Log::error("Fail to create the new resource 'Department' at CatalogController.departmentStore: {message}", [
+                "message" => $th->getMessage(),
+                "request" => $request->request->all()
+            ]);
+            return redirect()->back()->withErrors([
+                "message" =>  "Error al registrar el departamento, intente de nuevo o comuníquese con el administrador."
+            ])->withInput();
+        }
+
+    }
+
+    /**
+     * Show the form for editing the direction resource.
+     */
+    public function departmentEdit(string $departmentId)
+    {
+
+        // * load the resource
+        $department = Department::find($departmentId);
+        if($department == null){
+            Log::warning("Department id '$departmentId' not found");
+            return redirect()->route('admin.catalogs.sub-directions.index');
+        }
+
+        // * get sub directions availables
+        $subDirections = $this->getSubDirectionsAvailables();
+
+        // * return the view
+        return Inertia::render('Catalogs/Departments/Edit', [
+            "department" => $department,
+            "subDirections" => $subDirections
+        ]);
+
+    }
+
+    /**
+     * Update the drirection resource in storage.
+     */
+    public function departmentUpdate(Request $request, string $departmentId)
+    {
+        
+        // * load the resource
+        $direction = Department::find($departmentId);
+        if( $direction == null){
+            return redirect()->back()->withErrors([
+                'message' => 'El recurso que se trata de actializar no existe o no esta disponible'
+            ])->withInput();
+        }
+        
+        // * validate the request
+        $request->validate([
+            "name" => 'required|string|max:200',
+            "subdirectorate_id" => 'required|numeric|exists:subdirectorates,id'
+        ]);
+
+
+        // * update the model
+        $direction->name = $request->input('name');
+        $direction->subdirectorate_id = $request->input('subdirectorate_id');
+        $direction->save();
+
+        // * redirect to index
+        Log::info("Resource 'Department' id '$departmentId' updated at CatalogController.departmentUpdate");
+        return redirect()->route('admin.catalogs.departments.index' );
+    }
+    
+    /**
+     * get sub directions availables
+     *
+     * @return Array<Subdirectorate>
+     */
+    private function getSubDirectionsAvailables(): Array {
+        return Subdirectorate::select('id', 'name')->get()->toArray();
     }
 
     #endregion
