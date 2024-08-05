@@ -57,7 +57,7 @@ import Landmark from '@/Components/Icons/Landmark.vue';
                         <Landmark class="w-12 h-12" />
                     </CatalogOptionCard>
 
-                    <CatalogOptionCard href="/dashboard" title="Subdirecciones">
+                    <CatalogOptionCard :href="route('admin.catalogs.sub-directions.index')" title="Subdirecciones">
                         <Landmark class="w-12 h-12" />
                     </CatalogOptionCard>
 
