@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\{
     AdminController,
+    CatalogController,
     ProfileController,
     UserController
 };
@@ -35,6 +36,16 @@ Route::middleware(['auth'])->group(function () {
             Route::get('edit/{userid}', [UserController::class, 'edit'])->name('edit');
             Route::patch('{userid}', [UserController::class, 'update'])->name('update');
             Route::patch('{userid}/password', [UserController::class, 'updatePassword'])->name('update.password');
+        });
+
+        Route::prefix('catalogs')->name('catalogs.')->group(function(){
+            Route::prefix('general-directions')->name("general-directions.")->group(function(){
+                Route::get('', [CatalogController::class, 'generalDirectionsIndex'])->name('index');
+                Route::get('/new', [CatalogController::class, 'generalDirectionsCreate'])->name('create');
+                Route::post('', [CatalogController::class, 'generalDirectionsStore'])->name('store');
+                Route::get('{catalogId}', [CatalogController::class, 'generalDirectionsEdit'])->name('edit');
+                Route::patch('{catalogId}', [CatalogController::class, 'generalDirectionsUpdate'])->name('update');
+            });
         });
 
     });
