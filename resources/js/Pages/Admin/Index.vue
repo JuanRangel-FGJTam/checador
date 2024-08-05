@@ -36,7 +36,7 @@ import Landmark from '@/Components/Icons/Landmark.vue';
                         <Users class="w-12 h-12" />
                     </CatalogOptionCard>
 
-                    <CatalogOptionCard href="/dashboard" title="Bajas">
+                    <CatalogOptionCard :href="route('admin.users.index', {inactives: 1})" title="Bajas">
                         <UsersSlash class="w-12 h-12" />
                     </CatalogOptionCard>
                 </div>

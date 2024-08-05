@@ -33,13 +33,25 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index( Request $request)
     {
+
+        $title = "Usuarios Activos";
+        $users = array();
+
+
         // * get the users data
-        $users = $this->userService->getUsers();
+        if($request->query->has('inactives')){
+            $title = "Usuarios Inactivos";
+            $users = User::onlyTrashed()->with(['generalDirection', 'direction', 'subdirectorate', 'department' ])->get();
+        }else {
+            $users = $this->userService->getUsers();
+        }
+
 
         // * return the view
         return Inertia::render('Admin/UserIndex', [
+            "title" => $title,
             "users" => array_values( is_array($users) ?$users :$users->toArray() )
         ]);
     }
