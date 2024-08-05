@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use App\Models\{
     GeneralDirection
 };
+use Exception;
+use Throwable;
 
 class CatalogController extends Controller
 {
@@ -35,15 +38,49 @@ class CatalogController extends Controller
      */
     public function generalDirectionsCreate()
     {
-        dd( "create new catalog");
+        return Inertia::render('Catalogs/GeneralDirections/New');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function generalDirectionsStore(Request $catalogId)
+    public function generalDirectionsStore(Request $request)
     {
-        dd( "store the catalog");
+        // * validate the request
+        $request->validate([
+            "name" => 'required|string|max:200',
+            "abbreviation" => 'required|string|max:50'
+        ]);
+
+
+        // * create the new resource
+        try {
+            $generalDirection = GeneralDirection::create([
+                'name' => $request->input('name'),
+                'abbreviation' => $request->input('abbreviation')
+            ]);
+
+            // * redirect to index
+            Log::info("New resource 'GeneralDirection' created with id '$generalDirection->id' at CatalogController.generalDirectionsStore");
+            return redirect()->route('admin.catalogs.general-directions.index' );
+
+        } catch(ValidationException $ve){
+            Log::error("Fail to create the new resource 'GeneralDirection' validations fails at CatalogController.generalDirectionsStore: {message}", [
+                "message" => $ve->getMessage(),
+                "request" => $request->request->all()
+            ]);
+            return redirect()->back()->withErrors( $ve->errors() )->withInput();
+
+        } catch(Throwable $th){
+            Log::error("Fail to create the new resource 'GeneralDirection' at CatalogController.generalDirectionsStore: {message}", [
+                "message" => $th->getMessage(),
+                "request" => $request->request->all()
+            ]);
+            return redirect()->back()->withErrors([
+                "message" =>  "Error al registrar la dirección general, intente de nuevo o comuníquese con el administrador."
+            ])->withInput();
+        }
+
     }
 
     /**
