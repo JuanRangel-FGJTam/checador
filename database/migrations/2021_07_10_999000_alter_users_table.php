@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('subdirectorates_id')->nullable()->constrained();
             $table->foreignId('departments_id')->nullable()->constrained();
             $table->integer('level_id')->nullable();
+            $table->softDeletes();
         });
     }
 
@@ -39,6 +40,9 @@ return new class extends Migration
             $table->dropForeign(['departments_id']);
             $table->dropColumn('departments_id');
             $table->dropColumn('level_id');
+
+            $table->dropSoftDeletes();
+            
         });
     }
 };
