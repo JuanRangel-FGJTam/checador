@@ -16,7 +16,7 @@ class EmployeeViewModel
     public int $generalDirectionId;
     public string $direction;
     public int $directionId;
-    public int $statusId;
+    public int $checa;
     public ?string $photo;
     public string $horario;
     public string $days;
@@ -25,11 +25,10 @@ class EmployeeViewModel
         $this->id = $id;
         $this->employeeNumber = $employeeNumber;
         $this->name = $name;
-
         $this->abbreviation = "";
         $this->generalDirection = "";
         $this->direction = "";
-        $this->statusId = 0;
+        $this->checa = 0;
         $this->horario = 'Sin horario asignado';
         $this->days = 'Días no asignados';
     }
@@ -48,7 +47,8 @@ class EmployeeViewModel
             substr($employee->plantilla_id, 1),
             $employee->name
         );
-        $model->statusId = $employee->status_id;
+        $model->checa = $employee->status_id;
+        $model->photo = $employee->photo;
 
         $employee->load(['generalDirection', 'direction', 'workingHours', 'workingDays']);
 
