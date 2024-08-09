@@ -9,6 +9,8 @@ use App\Models\{
 };
 use App\ViewModels\EmployeeViewModel;
 
+use function PHPUnit\Framework\isEmpty;
+
 class EmployeeService {
     
     
@@ -17,19 +19,38 @@ class EmployeeService {
      *
      * @return Array<EmployeeViewModel>
      */
-    public function getEmployees(int $count = 0, int $offset = 0){
+    public function getEmployees(int $take = 0, int $skip = 0, array $filters = []){
 
         $employees = array();
-        
-        // * get the local employees
-        if( $count > 0){
-            $employeesRaw = Employee::all();
-        }else {
-            $employeesRaw = Employee::all();
+        $query = Employee::query();
+
+        // * apply some filters
+        if( !empty($filters) ){
+            if(isset($filters['general_direction_id'])){
+                $query->where('general_direction_id', $filters['general_direction_id'] );
+            }
+
+            if(isset($filters['subdirectorate_id'])){
+                $query->where('subdirectorate_id', $filters['subdirectorate_id'] );
+            }
+
+            if(isset($filters['direction_id'])){
+                $query->where('direction_id', $filters['direction_id'] );
+            }
         }
 
+        
+        // * get the local employees
+        if($take > 0){
+            $query->skip($skip)->take($take);
+        }
+        $employeesRaw = $query->get();
+        
+        /**
+         * @var Employee $employeeData
+         */
         foreach ($employeesRaw as $employeeData) {
-            array_push( $employees, EmployeeViewModel::fromEmployeeModel($employeeData) );
+            array_push($employees, EmployeeViewModel::fromEmployeeModel($employeeData));
         }
 
         return $employees;

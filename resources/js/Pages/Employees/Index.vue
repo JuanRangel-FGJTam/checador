@@ -1,6 +1,10 @@
 <script setup>
+import { ref, onMounted } from 'vue';
+import { Head, useForm, router } from '@inertiajs/vue3';
+import { debounce } from '@/utils/debounce.js';
+import { useToast } from 'vue-toastification';
+
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head } from '@inertiajs/vue3';
 
 import NavLink from '@/Components/NavLink.vue';
 import SearchInput from '@/Components/SearchInput.vue';
@@ -8,14 +12,82 @@ import InputSelect from '@/Components/InputSelect.vue';
 import BadgeBlue from '@/Components/BadgeBlue.vue';
 import BadgeGreen from '@/Components/BadgeGreen.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import AnimateSpin from '@/Components/Icons/AnimateSpin.vue';
 
 const props = defineProps({
     title: String,
-    employees: Array
+    employees: Array,
+    general_direction: Array,
+    directions: Array,
+    subdirectorate: Array,
+    filters: Object
+});
+
+const toast = useToast();
+
+const form = useForm({
+    search: "",
+    gd: undefined,
+    d: undefined,
+    sd: undefined,
+});
+
+const loading = ref(false);
+
+onMounted(()=>{
+    form.gd = props.filters.gd ?? undefined;
+    form.d = props.filters.d ?? undefined;
+    form.sd = props.filters.sd ?? undefined;
 });
 
 function handleInputSearch(search){
+    toast.info("Input search changed!");
+}
 
+function reloadData(){
+    loading.value = true;
+    debounce(()=>{
+        // * prepare the query params
+        var params = [];
+        if(form.gd){
+            params.push(`gd=${form.gd}`);
+        }
+        
+        if(form.d){
+            params.push(`d=${form.d}`);
+        }
+        
+        if(form.sd){
+            params.push(`sd=${form.sd}`);
+        }
+        
+        // * reload the view
+        router.visit("?" + params.join("&"), {
+            method: 'get',
+            only: ['employees', 'directions', 'subdirectorate'],
+            preserveState: true,
+            onError:(err)=>{
+                toast.error("Error al obtener los datos");
+            }
+        });
+        
+    loading.value = false;
+    }, 1000);
+}
+
+function handleGeneralDirectionSelect(){
+    form.d = undefined;
+    form.sd = undefined;
+    reloadData();
+}
+
+function handleDirectionSelect(){
+    form.sd = undefined;
+    reloadData();
+}
+
+function handleSubDirectionSelect(){
+    reloadData();
 }
 
 </script>
@@ -33,23 +105,28 @@ function handleInputSearch(search){
             
             <!-- filter data area -->
             <div class="grid grid-cols-3 gap-2 px-2 pt-2 pb-4 bg-white border-x border-t dark:bg-gray-700 dark:border-gray-500">
-                <InputSelect>
+                <InputSelect v-model="form.gd" v-on:change="handleGeneralDirectionSelect">
                     <option disabled selected value="" >Direccion General</option>
+                    <option v-for="item in general_direction" :key="item.id" :value="item.id" > {{item.name }}</option>
                 </InputSelect>
 
-                <InputSelect>
-                    <option disabled selected value="" >Subdireccion</option>
-                </InputSelect>
-
-                <InputSelect>
-                    <option disabled selected value="" >Departamento</option>
+                <InputSelect v-model="form.d" v-on:change="handleDirectionSelect">
+                    <option disabled selected value="">Direccion</option>
+                    <option v-for="item in directions" :key="item.id" :value="item.id" > {{item.name }}</option>
                 </InputSelect> 
 
+                <InputSelect v-model="form.sd" v-on:change="handleSubDirectionSelect">
+                    <option disabled selected value="">Subdireccion</option>
+                    <option v-for="item in subdirectorate" :key="item.id" :value="item.id" > {{item.name }}</option>
+                </InputSelect>
+
                 <SearchInput class="col-span-3" placeHolder="Nombre, curp, numero de empleado" v-on:search="handleInputSearch"/>
+
             </div>
 
             <table class="table-fixed w-full shadow text-sm text-left border rtl:text-right text-gray-500 dark:text-gray-400 dark:border-gray-500">
                 <thead class="sticky top-0 z-20 text-xs uppercase text-gray-700 border bg-gradient-to-b from-gray-50 to-slate-100 dark:from-gray-800 dark:to-gray-700 dark:text-gray-200 dark:border-gray-500">
+                    <AnimateSpin v-if="loading" class="w-4 h-4 mx-2 absolute top-2.5" />
                     <tr>
                         <th scope="col" class="w-2/8 text-center px-6 py-3">
                             Nombre
@@ -113,18 +190,14 @@ function handleInputSearch(search){
                     </template>
                     <template v-else>
                         <tr>
-                            <td colspan="5" class="px-6 py-4 text-center font-medium whitespace-nowrap dark:text-white">
+                            <td colspan="6" class="px-6 py-4 text-center font-medium whitespace-nowrap dark:text-white">
                                 No hay registros de Empleados.
                             </td>
                         </tr>
                     </template>
                 </tbody>
             </table>
-
-            <div class="w-100 flex justify-center my-2">
-                <PrimaryButton>Cargar mas</PrimaryButton>
-            </div>
-
+            
         </div>
 
     </AuthenticatedLayout>

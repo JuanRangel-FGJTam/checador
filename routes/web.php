@@ -6,6 +6,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\{
     AdminController,
     CatalogController,
+    EmployeeController,
     ProfileController,
     UserController
 };
@@ -73,6 +74,10 @@ Route::middleware(['auth'])->group(function () {
 
         });
 
+    });
+
+    Route::prefix('employees')->name('employees.')->group(function(){
+        Route::get('', [EmployeeController::class, 'index'])->name('index');
     });
 
 });
