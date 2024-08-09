@@ -63,6 +63,7 @@ class EmployeeController extends Controller
             "general_direction" => $general_direction,
             "directions" => array_values( $directions->toArray() ),
             "subdirectorate" => array_values( $subdirectorate->toArray() ),
+            "showMoreButton" => true,
             "filters" => [
                 "gd" => $request->query('gd', null),
                 "d" => $request->query('d', null),

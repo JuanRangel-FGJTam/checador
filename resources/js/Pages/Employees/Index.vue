@@ -20,7 +20,8 @@ const props = defineProps({
     general_direction: Array,
     directions: Array,
     subdirectorate: Array,
-    filters: Object
+    showMoreButton: Boolean,
+    filters: Object,
 });
 
 const toast = useToast();
@@ -197,7 +198,12 @@ function handleSubDirectionSelect(){
                     </template>
                 </tbody>
             </table>
-            
+
+            <div v-if="showMoreButton" class="flex justify-center my-2">
+                <PrimaryButton>
+                    Cargar mas datos
+                </PrimaryButton>
+            </div>
         </div>
 
     </AuthenticatedLayout>
