@@ -2,10 +2,14 @@
 import { ref } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 
+import FullCalendar from '@fullcalendar/vue3';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import esLocale from '@fullcalendar/core/locales/es';
+import interactionPlugin from '@fullcalendar/interaction';
+
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import SuccessButton from '@/Components/SuccessButton.vue';
 import Breadcrumb from '@/Components/Breadcrumb.vue';
-import Card from '@/Components/Card.vue';
 import EmployeeGeneralData from './Partials/EmployeeGeneralData.vue';
 import EmployeeDataPanel from './Partials/EmployeeDataPanel.vue';
 import IncidenciasPanel from './Partials/IncidenciasPanel.vue';
@@ -21,6 +25,15 @@ const breadcrumbs = ref([
     { "name": 'Vista Empleados', "href": '/employees' },
     { "name": `Empleado: ${props.employeeNumber}`, "href": '' }
 ]);
+
+const calendarOptions = {
+    plugins: [
+        dayGridPlugin, interactionPlugin
+    ],
+    locales: [esLocale],
+    locale: 'es',
+    initialView: 'dayGridMonth'
+}
 
 </script>
 
@@ -52,9 +65,7 @@ const breadcrumbs = ref([
             </div>
 
             <div class="col-span-12 bg-white shadow border rounded-lg p-4">
-                <div class="h-64">
-                    Calendario
-                </div>
+                <FullCalendar :options="calendarOptions" />
             </div>
 
             <div class="col-span-12 bg-white shadow border rounded-lg p-4">
