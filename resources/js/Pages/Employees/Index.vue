@@ -14,6 +14,7 @@ import BadgeBlue from '@/Components/BadgeBlue.vue';
 import BadgeGreen from '@/Components/BadgeGreen.vue';
 import AnimateSpin from '@/Components/Icons/AnimateSpin.vue';
 import Pagination from '@/Components/Paginator.vue';
+import ChevronRightIcon from '@/Components/Icons/ChevronRightIcon.vue';
 
 const props = defineProps({
     title: String,
@@ -38,7 +39,7 @@ const toast = useToast();
 
 const form = useForm({
     search: "",
-    gd: undefined,
+    gd: 0,
     d: 0,
     sd: 0,
     page: 1
@@ -47,14 +48,14 @@ const form = useForm({
 const loading = ref(false);
 
 onMounted(()=>{
-    form.gd = props.filters.gd ?? undefined;
+    form.gd = props.filters.gd ?? 0;
     form.d = props.filters.d ?? 0;
     form.sd = props.filters.sd ?? 0;
     form.p = props.filters.page ?? 1;
 });
 
 function handleInputSearch(search){
-    toast.info("Input search changed!");
+    toast.warning(`Searching ${search}, no implemented!`);
 }
 
 function reloadData(){
@@ -99,7 +100,7 @@ function handleGeneralDirectionSelect(){
 }
 
 function handleDirectionSelect(){
-    form.sd = undefined;
+    form.sd = 0;
     reloadData();
 }
 
@@ -131,6 +132,7 @@ function changePage(pageNumber){
                 <div role="form-group" class="flex flex-col">
                     <InputLabel value="Direccion General" for="gd" />
                     <InputSelect id="gd" v-model="form.gd" v-on:change="handleGeneralDirectionSelect">
+                        <option selected value="0">Todos</option>
                         <option v-for="item in general_direction" :key="item.id" :value="item.id" > {{item.name }}</option>
                     </InputSelect>
                 </div>
@@ -138,7 +140,7 @@ function changePage(pageNumber){
                 <div role="form-group" class="flex flex-col">
                     <InputLabel value="Direccion" for="d"/>
                     <InputSelect id="d" v-model="form.d" v-on:change="handleDirectionSelect">
-                        <option selected value="0">* Todos</option>
+                        <option selected value="0">Todos</option>
                         <option v-for="item in directions" :key="item.id" :value="item.id" > {{item.name }}</option>
                     </InputSelect>
                 </div>
@@ -146,7 +148,7 @@ function changePage(pageNumber){
                 <div role="form-group" class="flex flex-col">
                     <InputLabel value="Sub direccion" for="sd" />
                     <InputSelect id="sd" v-model="form.sd" v-on:change="handleSubDirectionSelect">
-                        <option value="0">* Todos</option>
+                        <option value="0">Todos</option>
                         <option v-for="item in subdirectorate" :key="item.id" :value="item.id" > {{item.name }}</option>
                     </InputSelect>
                 </div>
@@ -220,10 +222,12 @@ function changePage(pageNumber){
                             </td>
 
                             <td class="p-2 text-center">
-                                <div class="flex gap-2">
-                                    <NavLink href="/dashboard" >Accion 1</NavLink>
-                                    <NavLink href="/dashboard">Accion 2</NavLink>
-                                </div>
+                                <NavLink :href=" route('employees.show', employee.employeeNumber)">
+                                    <div class="flex gap-2 shadow bg-slate-200 px-4 py-1">
+                                        <span>Asistencia</span>
+                                        <ChevronRightIcon class="w-4 h-4 ml-1" />
+                                    </div>
+                                </NavLink>
                             </td>
                         </tr>
                     </template>

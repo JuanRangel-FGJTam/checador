@@ -117,9 +117,9 @@ class EmployeeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(int $employeeId)
+    public function show(string $employee_number)
     {
-        //
+        dd( "Show employee", $employee_number);
     }
 
     /**
