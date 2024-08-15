@@ -8,11 +8,12 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
 import NavLink from '@/Components/NavLink.vue';
 import SearchInput from '@/Components/SearchInput.vue';
+import InputLabel from '@/Components/InputLabel.vue';
 import InputSelect from '@/Components/InputSelect.vue';
 import BadgeBlue from '@/Components/BadgeBlue.vue';
 import BadgeGreen from '@/Components/BadgeGreen.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
 import AnimateSpin from '@/Components/Icons/AnimateSpin.vue';
+import Pagination from '@/Components/Paginator.vue';
 
 const props = defineProps({
     title: String,
@@ -20,8 +21,17 @@ const props = defineProps({
     general_direction: Array,
     directions: Array,
     subdirectorate: Array,
-    showMoreButton: Boolean,
+    showPaginator: Boolean,
     filters: Object,
+    paginator: {
+        type: Object,
+        default : {
+            from: 0,
+            to: 0,
+            total: 0,
+            pages: []
+        }
+    }
 });
 
 const toast = useToast();
@@ -29,16 +39,18 @@ const toast = useToast();
 const form = useForm({
     search: "",
     gd: undefined,
-    d: undefined,
-    sd: undefined,
+    d: 0,
+    sd: 0,
+    page: 1
 });
 
 const loading = ref(false);
 
 onMounted(()=>{
     form.gd = props.filters.gd ?? undefined;
-    form.d = props.filters.d ?? undefined;
-    form.sd = props.filters.sd ?? undefined;
+    form.d = props.filters.d ?? 0;
+    form.sd = props.filters.sd ?? 0;
+    form.p = props.filters.page ?? 1;
 });
 
 function handleInputSearch(search){
@@ -54,18 +66,22 @@ function reloadData(){
             params.push(`gd=${form.gd}`);
         }
         
-        if(form.d){
+        if(form.d && form.d > 0){
             params.push(`d=${form.d}`);
         }
         
-        if(form.sd){
+        if(form.sd && form.sd > 0){
             params.push(`sd=${form.sd}`);
+        }
+
+        if(form.page && form.page > 1){
+            params.push(`p=${form.page}`);
         }
         
         // * reload the view
         router.visit("?" + params.join("&"), {
             method: 'get',
-            only: ['employees', 'directions', 'subdirectorate'],
+            only: ['employees', 'directions', 'subdirectorate', 'showPaginator', 'paginator'],
             preserveState: true,
             onError:(err)=>{
                 toast.error("Error al obtener los datos");
@@ -73,12 +89,12 @@ function reloadData(){
         });
         
     loading.value = false;
-    }, 1000);
+    }, 500);
 }
 
 function handleGeneralDirectionSelect(){
-    form.d = undefined;
-    form.sd = undefined;
+    form.d = 0;
+    form.sd = 0;
     reloadData();
 }
 
@@ -88,6 +104,11 @@ function handleDirectionSelect(){
 }
 
 function handleSubDirectionSelect(){
+    reloadData();
+}
+
+function changePage(pageNumber){
+    form.page = pageNumber;
     reloadData();
 }
 
@@ -106,25 +127,42 @@ function handleSubDirectionSelect(){
             
             <!-- filter data area -->
             <div class="grid grid-cols-3 gap-2 px-2 pt-2 pb-4 bg-white border-x border-t dark:bg-gray-700 dark:border-gray-500">
-                <InputSelect v-model="form.gd" v-on:change="handleGeneralDirectionSelect">
-                    <option disabled selected value="" >Direccion General</option>
-                    <option v-for="item in general_direction" :key="item.id" :value="item.id" > {{item.name }}</option>
-                </InputSelect>
 
-                <InputSelect v-model="form.d" v-on:change="handleDirectionSelect">
-                    <option disabled selected value="">Direccion</option>
-                    <option v-for="item in directions" :key="item.id" :value="item.id" > {{item.name }}</option>
-                </InputSelect> 
+                <div role="form-group" class="flex flex-col">
+                    <InputLabel value="Direccion General" for="gd" />
+                    <InputSelect id="gd" v-model="form.gd" v-on:change="handleGeneralDirectionSelect">
+                        <option v-for="item in general_direction" :key="item.id" :value="item.id" > {{item.name }}</option>
+                    </InputSelect>
+                </div>
 
-                <InputSelect v-model="form.sd" v-on:change="handleSubDirectionSelect">
-                    <option disabled selected value="">Subdireccion</option>
-                    <option v-for="item in subdirectorate" :key="item.id" :value="item.id" > {{item.name }}</option>
-                </InputSelect>
+                <div role="form-group" class="flex flex-col">
+                    <InputLabel value="Direccion" for="d"/>
+                    <InputSelect id="d" v-model="form.d" v-on:change="handleDirectionSelect">
+                        <option selected value="0">* Todos</option>
+                        <option v-for="item in directions" :key="item.id" :value="item.id" > {{item.name }}</option>
+                    </InputSelect>
+                </div>
+
+                <div role="form-group" class="flex flex-col">
+                    <InputLabel value="Sub direccion" for="sd" />
+                    <InputSelect id="sd" v-model="form.sd" v-on:change="handleSubDirectionSelect">
+                        <option value="0">* Todos</option>
+                        <option v-for="item in subdirectorate" :key="item.id" :value="item.id" > {{item.name }}</option>
+                    </InputSelect>
+                </div>
 
                 <SearchInput class="col-span-3" placeHolder="Nombre, curp, numero de empleado" v-on:search="handleInputSearch"/>
 
             </div>
 
+            <!-- paginator -->
+            <Pagination v-if="showPaginator"
+                :paginator="paginator"
+                :currentPage="form.page"
+                v-on:changePage="changePage"
+            />
+
+            <!-- data table -->
             <table class="table-fixed w-full shadow text-sm text-left border rtl:text-right text-gray-500 dark:text-gray-400 dark:border-gray-500">
                 <thead class="sticky top-0 z-20 text-xs uppercase text-gray-700 border bg-gradient-to-b from-gray-50 to-slate-100 dark:from-gray-800 dark:to-gray-700 dark:text-gray-200 dark:border-gray-500">
                     <AnimateSpin v-if="loading" class="w-4 h-4 mx-2 absolute top-2.5" />
@@ -168,7 +206,7 @@ function handleSubDirectionSelect(){
 
                             <td class="p-2 text-center">
                                 <div class="text-sm text-gray-900">{{ employee.abbreviation }} </div>
-						        <div class="text-xs text-gray-400">{{ employee.generalDirection }}</div>
+                            <div class="text-xs text-gray-400">{{ employee.direction }}</div>
                             </td>
 
                             <td class="p-2 text-center">
@@ -178,7 +216,7 @@ function handleSubDirectionSelect(){
 
                             <td class="p-2 text-center">
                                 <div class="text-sm text-gray-900">{{ employee.days }} </div>
-						        <div class="text-sm text-gray-400">{{ employee.horario }}</div>
+                            <div class="text-sm text-gray-400">{{ employee.horario }}</div>
                             </td>
 
                             <td class="p-2 text-center">
@@ -199,11 +237,13 @@ function handleSubDirectionSelect(){
                 </tbody>
             </table>
 
-            <div v-if="showMoreButton" class="flex justify-center my-2">
-                <PrimaryButton>
-                    Cargar mas datos
-                </PrimaryButton>
-            </div>
+            <!-- paginator -->
+            <Pagination v-if="showPaginator"
+                :paginator="paginator"
+                :currentPage="form.page"
+                v-on:changePage="changePage"
+            />
+
         </div>
 
     </AuthenticatedLayout>

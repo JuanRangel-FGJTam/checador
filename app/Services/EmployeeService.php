@@ -17,9 +17,13 @@ class EmployeeService {
     /**
      * get the employees
      *
+     * @param  int $take elemento to return, if its 0 return all
+     * @param  int $skip record to skip when take
+     * @param  array<string,mixed> $filters filter to apply ['general_direction_id', 'subdirectorate_id', 'direction_id']
+     * @param  int $total out of total
      * @return Array<EmployeeViewModel>
      */
-    public function getEmployees(int $take = 0, int $skip = 0, array $filters = []){
+    public function getEmployees(int $take = 0, int $skip = 0, array $filters = [], &$total){
 
         $employees = array();
         $query = Employee::query();
@@ -38,6 +42,9 @@ class EmployeeService {
                 $query->where('direction_id', $filters['direction_id'] );
             }
         }
+
+        // * set the total people
+        $total = $query->count();
 
         
         // * get the local employees

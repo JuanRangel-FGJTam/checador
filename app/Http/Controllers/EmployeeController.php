@@ -28,6 +28,9 @@ class EmployeeController extends Controller
      */
     public function index(Request $request)
     {
+        $currentPage = $request->query('p', 1);
+        $elementsToTake = 50;
+
         // * get catalogs
         $general_direction = GeneralDirection::select('id', 'name')->get();
         $directions = Direction::select('id', 'name', 'general_direction_id')->get();
@@ -56,19 +59,42 @@ class EmployeeController extends Controller
         }
 
         // * get employees
-        $data = $this->employeeService->getEmployees(take:0, skip:0, filters:$filters);
+        $totalEmployees = 0;
+        $data = $this->employeeService->getEmployees(
+            take: $elementsToTake,
+            skip: ($elementsToTake * ($currentPage - 1)),
+            filters:$filters,
+            total:$totalEmployees
+        );
 
+
+        // * verify if display paginator
+        $showPaginator = $elementsToTake < $totalEmployees;
+
+
+        // * make paginator
+        $paginator = [
+            "from" => $elementsToTake * ($currentPage - 1),
+            "to" =>  $elementsToTake * $currentPage,
+            "total" => $totalEmployees,
+            "pages" =>  range(1, ceil( $totalEmployees / $elementsToTake))
+        ];
+
+
+        // * return the viewe
         return Inertia::render('Employees/Index', [
             "employees" => $data,
             "general_direction" => $general_direction,
             "directions" => array_values( $directions->toArray() ),
             "subdirectorate" => array_values( $subdirectorate->toArray() ),
-            "showMoreButton" => true,
+            "showPaginator" => $showPaginator,
             "filters" => [
                 "gd" => $request->query('gd', null),
                 "d" => $request->query('d', null),
                 "sd" => $request->query('sd', null),
-            ]
+                "page" => $currentPage
+            ],
+            "paginator" => $paginator
         ]);
     }
 
