@@ -9,8 +9,6 @@ use App\Models\{
 };
 use App\ViewModels\EmployeeViewModel;
 
-use function PHPUnit\Framework\isEmpty;
-
 class EmployeeService {
     
     
@@ -62,5 +60,22 @@ class EmployeeService {
 
         return $employees;
     }
+
+
+    /**
+     * get the employee by the employee number
+     *
+     * @param  string $employeeNumber
+     * @return EmployeeViewModel
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     */
+    public function getEmployee(string $employeeNumber) {
+        $employee = Employee::where('plantilla_id', '9' . $employeeNumber)->first();
+        if( $employee == null){
+            throw new ModelNotFoundException("Employee not fount");
+        }
+        return EmployeeViewModel::fromEmployeeModel($employee);
+    }
+
     
 }

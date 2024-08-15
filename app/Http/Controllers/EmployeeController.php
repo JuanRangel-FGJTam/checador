@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Inertia\Inertia;
 use App\Services\EmployeeService;
 use App\Models\{
@@ -12,6 +13,7 @@ use App\Models\{
     Subdirectorate
 
 };
+use Exception;
 
 class EmployeeController extends Controller
 {
@@ -119,7 +121,34 @@ class EmployeeController extends Controller
      */
     public function show(string $employee_number)
     {
-        dd( "Show employee", $employee_number);
+
+        // * attempt to get the employee
+        try {
+            $employee = $this->employeeService->getEmployee($employee_number);
+        } catch (ModelNotFoundException $nf) {
+            Log::warning("Employee with employee number '$employee_number' not found");
+
+            // * redirect back
+            return redirect()->back()->withErrors([
+                "employee_number" => "Empleado no encontrado",
+                "message" => "Empleado no encontrado"
+            ])->withInput();
+
+        } catch (\Throwable $th) {
+            Log::error("Unhandle exception at attempting to get the employee at EmployeeController.show: {message}", [
+                "employee_number" => $employee_number,
+                "message" => $th->getMessage(),
+            ]);
+
+            //TODO: Redirect to error page
+            throw new Exception("Not implemented");
+        }
+
+        // * return the view
+        return Inertia::render('Employees/Show', [
+            "employeeNumber" => $employee_number,
+            "employee" => isset($employee) ?$employee :null
+        ]);
     }
 
     /**
