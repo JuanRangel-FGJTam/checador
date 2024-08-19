@@ -96,15 +96,18 @@ function reloadData(){
 function handleGeneralDirectionSelect(){
     form.d = 0;
     form.sd = 0;
+    form.page = 1;
     reloadData();
 }
 
 function handleDirectionSelect(){
     form.sd = 0;
+    form.page = 1;
     reloadData();
 }
 
 function handleSubDirectionSelect(){
+    form.page = 1;
     reloadData();
 }
 
