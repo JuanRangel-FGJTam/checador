@@ -3,12 +3,12 @@
 import Card from '@/Components/Card.vue';
 import CardText from '@/Components/CardText.vue';
 import CardTitle from '@/Components/CardTitle.vue';
-import BadgeBlue from '@/Components/BadgeBlue.vue';
-import BadgeGreen from '@/Components/BadgeGreen.vue';
-import BadgeYellow from '@/Components/BadgeYellow.vue';
+
 
 const props = defineProps({
-    employee: Object
+    employee: Object,
+    status: Object,
+    checa: Object
 });
 
 </script>
@@ -24,9 +24,12 @@ const props = defineProps({
             <h1 class="font-bold text-lg uppercase">{{ employee.name }}</h1>
             
             <div class="flex gap-2">
-                <BadgeYellow>{estatus}</BadgeYellow>
-                <BadgeGreen v-if="employee.checa == 1">Checa</BadgeGreen>
-                <BadgeBlue v-else>No Checa</BadgeBlue>
+                <div class="border rounded-lg px-2" :class="status.class">
+                    {{status.name}}
+                </div>
+                <div class="border rounded-lg px-2" :class="checa.class">
+                    {{checa.name}}
+                </div>
             </div>
             
             <div class="flex gap-2 justify-end">

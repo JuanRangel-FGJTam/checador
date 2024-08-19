@@ -20,6 +20,11 @@ class EmployeeViewModel
     public ?string $photo;
     public string $horario;
     public string $days;
+    public bool $active = true;
+    public ?string $subDirection = null;
+    public ?int $subDirectionId = null;
+    public ?string $department = null;
+    public ?int $departmentId = null;
     
     public function __construct(int $id, string $employeeNumber, string $name) {
         $this->id = $id;
@@ -49,8 +54,15 @@ class EmployeeViewModel
         );
         $model->checa = $employee->status_id;
         $model->photo = $employee->photo;
+        if(isset($employee->active)){
+            if(is_bool($employee->active)){
+                $model->active = $employee->active;
+            }else{
+                $model->active = $employee->active === 1;
+            }
+        }
 
-        $employee->load(['generalDirection', 'direction', 'workingHours', 'workingDays']);
+        $employee->load(['generalDirection', 'direction', 'workingHours', 'workingDays', 'subdirectorate', 'department']);
 
         if( isset($employee->generalDirection) ){
             $model->abbreviation = $employee->generalDirection->abbreviation;
@@ -88,6 +100,17 @@ class EmployeeViewModel
             if ($allWeek == 2) {
                 $model->days = 'Lun - Dom';
             }
+        }
+
+        if( isset($employee->subdirectorate) ){
+            $model->subDirection = $employee->subdirectorate->name;
+            $model->subDirectionId = $employee->subdirectorate->id;
+        }
+
+        if( isset($employee->department) ){
+            $model->subDirection = $employee->department->name;
+            $model->subDirectionId = $employee->department->id;
+
         }
 
         // TODO: retrive the data from the RH database

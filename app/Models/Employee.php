@@ -17,7 +17,8 @@ class Employee extends Model
         'name',
         'photo',
         'fingerprint',
-        "plantilla_id"
+        "plantilla_id",
+        "active"
     ];
 
     public function department() {

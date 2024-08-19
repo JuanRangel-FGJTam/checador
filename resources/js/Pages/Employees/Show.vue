@@ -1,11 +1,16 @@
 <script setup>
 import { ref } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
+import { useToast } from 'vue-toastification';
+import { formatDate } from '@/utils/date.js';
+import axios from 'axios';
 
 import FullCalendar from '@fullcalendar/vue3';
-import dayGridPlugin from '@fullcalendar/daygrid';
 import esLocale from '@fullcalendar/core/locales/es';
 import interactionPlugin from '@fullcalendar/interaction';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import multiMonthPlugin from '@fullcalendar/multimonth'
 
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import SuccessButton from '@/Components/SuccessButton.vue';
@@ -14,11 +19,16 @@ import EmployeeGeneralData from './Partials/EmployeeGeneralData.vue';
 import EmployeeDataPanel from './Partials/EmployeeDataPanel.vue';
 import IncidenciasPanel from './Partials/IncidenciasPanel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import AnimateSpin from '@/Components/Icons/AnimateSpin.vue';
 
 const props = defineProps({
     employeeNumber: String,
-    employee: Object
+    employee: Object,
+    status: Object,
+    checa: Object,
 });
+
+const toast = useToast();
 
 const breadcrumbs = ref([
     { "name": 'Inicio', "href": '/dashboard' },
@@ -26,13 +36,91 @@ const breadcrumbs = ref([
     { "name": `Empleado: ${props.employeeNumber}`, "href": '' }
 ]);
 
+const calendarDaySelected = ref({
+    element: undefined,
+    day: undefined
+});
+
+const calendarLoading = ref(false);
+
 const calendarOptions = {
     plugins: [
-        dayGridPlugin, interactionPlugin
+        dayGridPlugin, timeGridPlugin, multiMonthPlugin, interactionPlugin
     ],
     locales: [esLocale],
+    height: 650,
     locale: 'es',
-    initialView: 'dayGridMonth'
+    initialView: 'dayGridMonth',
+    headerToolbar: {
+        start: 'multiMonthYear,dayGridMonth,timeGridWeek',
+        center: 'title',
+        end: 'today prev,next'
+    },
+    loading: (isLoading) => calendarLoading.value = isLoading,
+    dateClick: (info)=> calendarDayClick(info),
+    events: function(info, successCallback, failureCallback) {
+        const startDate = info.start.valueOf();
+        const endDate = info.end.valueOf();
+        axios.get(route('employees.raw-events', {
+            "employee_number": props.employeeNumber,
+            "start": startDate,
+            "end": endDate,
+        }))
+        .then((res)=> successCallback(res.data))
+        .catch((ex)=> failureCallback(ex));
+    }
+}
+
+function editCalendarClick(){
+    toast.info("Edit calendar click!!");
+}
+
+function editEmployeeClick(){
+    toast.info("Edit employee click!!");
+}
+
+function incidencesClick(){
+    toast.info("incidences click!!");
+}
+
+/**
+ * @param {Object} form
+ * @param {number} form.year - year selected.
+ */
+function downLoadkardexClick(form){
+    toast.info(`download kardex ${form.year} click!!`);
+}
+
+function makeIncidenceClick(){
+    toast.info('make incidence click!');
+}
+
+function showJustificationsClick(){
+    toast.info('show justifications click!');
+}
+
+function justifyDayClick(){
+    toast.info('justify day click!');
+}
+
+/**
+ *
+ * @param {Object} info
+ * @param {Date} info.date
+ * @param {string} info.dateStr
+ * @param {any} info.dayEl
+ */
+function calendarDayClick(info){
+    // clear selection
+    if( calendarDaySelected.value.element != undefined){
+        calendarDaySelected.value.element.style.backgroundColor = 'inherit';
+    }
+    calendarDaySelected.value.element = info.dayEl;
+    calendarDaySelected.value.element.style.backgroundColor = '#a9cce3';
+    calendarDaySelected.value.day = info.date;
+
+    // TODO: load some data
+    toast.info(`Day ${info.dateStr} clicked!!`);
 }
 
 </script>
@@ -48,27 +136,40 @@ const calendarOptions = {
 
         <div class="grid grid-cols-12 my-4 p-4 gap-2 mx-auto w-screen max-w-screen-xl">
 
-            <div class="col-span-7 bg-white shadow border rounded-lg p-4">
-                <EmployeeGeneralData :employee="employee" />
+            <div class="col-span-7 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500">
+                <EmployeeGeneralData :employee="employee" :status="status" :checa="checa" />
             </div>
 
-            <div class="col-span-5 bg-white shadow border rounded-lg p-4">
-                <EmployeeDataPanel :employee="employee"/>
+            <div class="col-span-5 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500">
+                <EmployeeDataPanel
+                    :employee="employee"
+                    v-on:editCalendar="editCalendarClick"
+                    v-on:editEmployee="editEmployeeClick"
+                    v-on:incidencesClick="incidencesClick"
+                    v-on:downloadKardex="downLoadkardexClick"
+                />
             </div>
 
-            <div class="col-span-12 bg-white shadow border rounded-lg px-4 py-2">
+            <div class="col-span-12 bg-white shadow border rounded-lg px-4 py-2 dark:bg-gray-800 dark:border-gray-500">
                 <div class="flex gap-4 justify-center">
-                    <PrimaryButton>Generar Incidencias</PrimaryButton>
-                    <PrimaryButton>Ver justificaciones</PrimaryButton>
-                    <PrimaryButton>Justificar {dia seleccionado}</PrimaryButton>
+                    <PrimaryButton v-on:click="makeIncidenceClick">
+                        Generar Incidencias
+                    </PrimaryButton>
+                    <PrimaryButton v-on:click="showJustificationsClick">
+                        Ver justificaciones
+                    </PrimaryButton>
+                    <PrimaryButton v-if="calendarDaySelected.day" v-on:click="justifyDayClick">
+                        Justificar ({{ formatDate(calendarDaySelected.day) }} )
+                    </PrimaryButton>
                 </div>
             </div>
 
-            <div class="col-span-12 bg-white shadow border rounded-lg p-4">
+            <div class="col-span-12 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500 select-none">
                 <FullCalendar :options="calendarOptions" />
             </div>
 
-            <div class="col-span-12 bg-white shadow border rounded-lg p-4">
+            <div class="col-span-12 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500 select-none">
+                <AnimateSpin v-if="calendarLoading" class="w-4 h-4 mx-1 "/>
                 <IncidenciasPanel />
             </div>
         </div>

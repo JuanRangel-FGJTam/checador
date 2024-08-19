@@ -79,6 +79,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('employees')->name('employees.')->group(function(){
         Route::get('', [EmployeeController::class, 'index'])->name('index');
         Route::get('{employee_number}', [EmployeeController::class, 'show'])->name('show');
+        Route::get('{employee_number}/raw-events', [EmployeeController::class, 'eventsJson'])->name('raw-events');
     });
 
 });

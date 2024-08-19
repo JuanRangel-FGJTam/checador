@@ -1,5 +1,6 @@
 import './bootstrap';
 import '../css/app.css';
+import '../css/calendar-override.css';
 import "vue-toastification/dist/index.css";
 
 import { createApp, h } from 'vue';

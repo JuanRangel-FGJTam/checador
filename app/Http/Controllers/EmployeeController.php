@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
+use Exception;
 use App\Services\EmployeeService;
 use App\Models\{
     Employee,
@@ -13,7 +15,9 @@ use App\Models\{
     Subdirectorate
 
 };
-use Exception;
+use App\ViewModels\{
+    CalendarEvent
+};
 
 class EmployeeController extends Controller
 {
@@ -144,10 +148,37 @@ class EmployeeController extends Controller
             throw new Exception("Not implemented");
         }
 
+        // calculate status
+        $status = array(
+            'name' => 'BAJA',
+            'class' => 'border border-red-400 text-red-600'
+        );
+        if ($employee->active) {
+            $status = array(
+                'name' => 'ACTIVO',
+                'class' => 'border border-green-400 text-green-600'
+            );
+        }
+
+        // calculate status checa
+        $checa = array(
+            'name' => 'REGISTRA ASISTENCIA',
+            'class' => 'border border-green-400 text-green-600'
+        );
+        if ($employee->checa != 1) {
+            $checa = array(
+                'name' => 'NO REGISTRA ASISTENCIA',
+                'class' => 'border border-red-400 text-red-600'
+            );
+        }
+
+
         // * return the view
         return Inertia::render('Employees/Show', [
             "employeeNumber" => $employee_number,
-            "employee" => isset($employee) ?$employee :null
+            "employee" => isset($employee) ?$employee :null,
+            "status" => (object) $status,
+            "checa" => (object) $checa
         ]);
     }
 
@@ -165,6 +196,30 @@ class EmployeeController extends Controller
     public function update(Request $request, int $employeeId)
     {
         //
+    }
+
+
+    public function eventsJson(Request $request, string $employee_number): JsonResponse{
+
+        $green = '#27ae60';
+        $amber = ' #f5b041';
+        $red = '#c0392b';
+
+        $elementA = new CalendarEvent("Entrada", "2024-08-19 09:21", "2024-08-19 17:31");
+        $elementA->color = $red;
+
+        $elementB = new CalendarEvent("Entrada", "2024-08-17 09:08", "2024-08-17 17:04");
+        $elementB->color = $amber;
+
+        $events = Array(
+            $elementA,
+            new CalendarEvent("Entrada", "2024-08-18 08:59", "2024-08-18 17:01"),
+            new CalendarEvent("Periodo 2", "2024-08-18 18:04", "2024-08-18 21:12"),
+            $elementB,
+            new CalendarEvent("Entrada", "2024-08-16 09:21", "2024-08-16 09:21"),
+        );
+
+        return response()->json($events, 200);
     }
 
 }
