@@ -26,6 +26,7 @@ const props = defineProps({
     employee: Object,
     status: Object,
     checa: Object,
+    workingHours: Array,
 });
 
 const toast = useToast();
@@ -137,7 +138,12 @@ function calendarDayClick(info){
         <div class="grid grid-cols-12 my-4 p-4 gap-2 mx-auto w-screen max-w-screen-xl">
 
             <div class="col-span-7 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500">
-                <EmployeeGeneralData :employee="employee" :status="status" :checa="checa" />
+                <EmployeeGeneralData
+                    :employee="employee"
+                    :status="status"
+                    :checa="checa"
+                    :workingHours="workingHours"
+                />
             </div>
 
             <div class="col-span-5 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500">

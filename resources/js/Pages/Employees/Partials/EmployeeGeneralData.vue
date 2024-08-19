@@ -8,7 +8,8 @@ import CardTitle from '@/Components/CardTitle.vue';
 const props = defineProps({
     employee: Object,
     status: Object,
-    checa: Object
+    checa: Object,
+    workingHours: Array
 });
 
 </script>
@@ -44,7 +45,7 @@ const props = defineProps({
 
             <div class="flex gap-2 justify-end">
                 <CardTitle class="pt-0.5">Horario: </CardTitle>
-                <CardText> {{ employee.horario }}</CardText>
+                <CardText v-for="item in workingHours">{{ item }}</CardText>
             </div>
 
             <div class="flex gap-2 justify-end">

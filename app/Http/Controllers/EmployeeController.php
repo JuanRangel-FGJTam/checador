@@ -12,8 +12,8 @@ use App\Models\{
     Employee,
     GeneralDirection,
     Direction,
-    Subdirectorate
-
+    Subdirectorate,
+    WorkingHours
 };
 use App\ViewModels\{
     CalendarEvent
@@ -172,13 +172,26 @@ class EmployeeController extends Controller
             );
         }
 
+        // * get working hours
+        $hours = array();
+        $workingHours = WorkingHours::where("employee_id", $employee->id)->first();
+        if( $workingHours != null){
+            if( $workingHours->toeat == null){
+                array_push($hours, $workingHours->checkin . "-" . $workingHours->checkout);
+            }else {
+                array_push($hours, $workingHours->checkin . "-" . $workingHours->toeat);
+                array_push($hours, $workingHours->toarrive . "-" . $workingHours->checkout);
+            }
+        }
+
 
         // * return the view
         return Inertia::render('Employees/Show', [
             "employeeNumber" => $employee_number,
             "employee" => isset($employee) ?$employee :null,
             "status" => (object) $status,
-            "checa" => (object) $checa
+            "checa" => (object) $checa,
+            "workingHours" => $hours
         ]);
     }
 
@@ -216,7 +229,7 @@ class EmployeeController extends Controller
             new CalendarEvent("Entrada", "2024-08-18 08:59", "2024-08-18 17:01"),
             new CalendarEvent("Periodo 2", "2024-08-18 18:04", "2024-08-18 21:12"),
             $elementB,
-            new CalendarEvent("Entrada", "2024-08-16 09:21", "2024-08-16 09:21"),
+            new CalendarEvent("Entrada", "2024-08-16 09:21", "2024-08-16 17:58"),
         );
 
         return response()->json($events, 200);
