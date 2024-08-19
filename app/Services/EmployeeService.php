@@ -3,9 +3,13 @@
 namespace App\Services;
 
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Models\{
-    Employee
+    Employee,
+    WorkingHours,
+    WorkingDays
 };
 use App\ViewModels\EmployeeViewModel;
 
@@ -76,6 +80,96 @@ class EmployeeService {
         }
         return EmployeeViewModel::fromEmployeeModel($employee);
     }
+
+    #region schedule
+
+    /**
+     * update employee schedule
+     *
+     * @param  string $employeeNumber
+     * @param  array $scheduleRequest {
+     * An array of schedule data.
+     *     @type int    $scheduleType Required. The type of schedule.
+     *     @type string $checkin      Required. The check-in time (format: H:i).
+     *     @type string $toeat        Required. The time allocated for eating (format: H:i).
+     *     @type string $toarrive     Required. The arrival time (format: H:i).
+     *     @type string $checkout     Required. The check-out time (format: H:i).
+     *     @type bool   $midweek      Required. Indicates if the schedule applies to midweek.
+     *     @type bool   $weekend      Required. Indicates if the schedule applies to the weekend.
+     * }
+     * @return void
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException employee not found
+     * @throws \Exception fail to updat the schedule
+     */
+    public function updateEmployeeSchedule(string $employeeNumber, $scheduleRequest ){
+        // * get the employee
+        $employee = Employee::where('plantilla_id', '9' . $employeeNumber)->first();
+        if( $employee == null){
+            throw new ModelNotFoundException("Employee not fount");
+        }
+
+        DB::beginTransaction();
+
+        // * attempt to update the working hours
+        try {
+            // * remove the old working hours
+            WorkingHours::where('employee_id', $employee->id)->delete();
+
+            // * store new working hours
+            if( $scheduleRequest['scheduleType'] == 1) /* Horario corrido */{
+                WorkingHours::create([
+                    'employee_id' => $employee->id,
+                    'checkin' => $scheduleRequest['checkin'],
+                    'checkout' => $scheduleRequest['toeat'],
+                ]);
+            }else /* Horario quebrado */ {
+                WorkingHours::create([
+                    'employee_id' => $employee->id,
+                    'checkin' => $scheduleRequest['checkin'],
+                    'toeat' => $scheduleRequest['toeat'],
+                    'toarrive' => $scheduleRequest['toarrive'],
+                    'checkout' => $scheduleRequest['checkout']
+                ]);
+            }
+        } catch (\Throwable $th) {
+            DB::rollback();
+            Log::error("Fail to update the employee working hours: {message}", [
+                "employee_id" => $employee->id,
+                "message" => $th->getMessage(),
+                "request" => $scheduleRequest
+            ]);
+            throw new \Exception($th->getMessage());
+        }
+
+        // * attempt tp update the working days
+        try {
+            $workingDays = WorkingDays::where('employee_id', $employee->id)->first();
+            if( $workingDays == null){
+                WorkingDays::create([
+                    'employee_id' => $employee->id,
+                    'week' => $scheduleRequest['midweek'],
+                    'weekend' => $scheduleRequest['weekend'],
+                ]);
+            }else{
+                $workingDays->week = $scheduleRequest['midweek'];
+                $workingDays->weekend = $scheduleRequest['weekend'];
+                $workingDays->save();
+            }
+
+        } catch (\Throwable $th) {
+            DB::rollback();
+            Log::error("Fail to update the employee working days: {message}", [
+                "employee_id" => $employee->id,
+                "message" => $th->getMessage(),
+                "request" => $scheduleRequest
+            ]);
+            throw new \Exception($th->getMessage());
+        }
+
+        DB::commit();
+    }
+
+    #endregion
 
     
 }

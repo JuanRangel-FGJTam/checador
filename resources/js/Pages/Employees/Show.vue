@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, router } from '@inertiajs/vue3';
 import { useToast } from 'vue-toastification';
 import { formatDate } from '@/utils/date.js';
 import axios from 'axios';
@@ -72,7 +72,7 @@ const calendarOptions = {
 }
 
 function editCalendarClick(){
-    toast.info("Edit calendar click!!");
+    router.visit( route('employees.schedule.edit', props.employeeNumber));
 }
 
 function editEmployeeClick(){

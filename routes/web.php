@@ -7,6 +7,7 @@ use App\Http\Controllers\{
     AdminController,
     CatalogController,
     EmployeeController,
+    EmployeeScheduleController,
     ProfileController,
     UserController
 };
@@ -80,6 +81,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('', [EmployeeController::class, 'index'])->name('index');
         Route::get('{employee_number}', [EmployeeController::class, 'show'])->name('show');
         Route::get('{employee_number}/raw-events', [EmployeeController::class, 'eventsJson'])->name('raw-events');
+
+        Route::prefix('{employee_number}/schedule')->name('schedule.')->group(function(){
+            Route::get('', [EmployeeScheduleController::class, 'edit'])->name('edit');
+            Route::patch('', [EmployeeScheduleController::class, 'update'])->name('update');
+        });
     });
 
 });
