@@ -108,9 +108,8 @@ class EmployeeViewModel
         }
 
         if( isset($employee->department) ){
-            $model->subDirection = $employee->department->name;
-            $model->subDirectionId = $employee->department->id;
-
+            $model->department = $employee->department->name;
+            $model->departmentId = $employee->department->id;
         }
 
         // TODO: retrive the data from the RH database

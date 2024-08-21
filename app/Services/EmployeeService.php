@@ -81,6 +81,44 @@ class EmployeeService {
         return EmployeeViewModel::fromEmployeeModel($employee);
     }
 
+
+    /**
+     * update employee data
+     *
+     * @param  string $employeeNumber
+     * @param  array $data
+     * @return void
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws \Throwable
+     */
+    public function updateEmployee(string $employeeNumber, array $data )
+    {
+        // * get the employee
+        $employee = Employee::where('plantilla_id', '9' . $employeeNumber)->first();
+        if( $employee == null){
+            throw new ModelNotFoundException("Employee not fount");
+        }
+
+        // * attempt to update the employee
+        try {
+            $employee->general_direction_id = $data['general_direction_id'];
+            $employee->direction_id = $data['direction_id'];
+            $employee->subdirectorate_id = $data['subdirectorate_id'];
+            $employee->department_id = $data['department_id'];
+            $employee->status_id = $data['canCheck'];
+            $employee->active = $data['status_id'];
+            $employee->save();
+        } catch (\Throwable $th) {
+            Log::error("Fail to update the employee '{employeeNumber}': {message}", [
+                "employeeNumber" => $employee->employeeNumber,
+                "message" => $th->getMessage(),
+                "request" => $data,
+            ]);
+            throw $th;
+        }
+
+    }
+
     #region schedule
 
     /**
@@ -171,5 +209,4 @@ class EmployeeService {
 
     #endregion
 
-    
 }

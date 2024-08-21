@@ -77,7 +77,7 @@ function editCalendarClick(){
 }
 
 function editEmployeeClick(){
-    toast.info("Edit employee click!!");
+    router.visit( route('employees.edit', props.employeeNumber));
 }
 
 function incidencesClick(){
