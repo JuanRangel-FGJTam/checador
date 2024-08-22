@@ -8,4 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class IncidentState extends Model
 {
     use HasFactory;
+    protected $fillable = [
+        'id',
+        'name'
+    ];
+
 }
