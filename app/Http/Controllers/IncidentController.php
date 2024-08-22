@@ -3,8 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use App\Services\EmployeeService;
+use App\Interfaces\EmployeeIncidentInterface;
 use App\ViewModels\EmployeeViewModel;
 use App\Models\{
     Employee,
@@ -14,9 +18,11 @@ use App\Models\{
 class IncidentController extends Controller
 {
     protected EmployeeService $employeeService;
+    protected EmployeeIncidentInterface $employeeIncidentService;
 
-    function __construct( EmployeeService $employeeService ) {
+    function __construct( EmployeeService $employeeService, EmployeeIncidentInterface $employeeIncidentService) {
         $this->employeeService = $employeeService;
+        $this->employeeIncidentService = $employeeIncidentService;
     }
 
     function index(){
@@ -88,7 +94,40 @@ class IncidentController extends Controller
         ]);
     }
 
-     #region private methods
+
+    /**
+     * retrive the incidents of the employee in json format
+     *
+     * @param  string $employee_number
+     * @return void
+     */
+    function employeeIncidentsJson(string $employee_number): JsonResponse{
+        try {
+            // * attempt to retrive the incidents
+            $data = $this->employeeIncidentService->getIncidents($employee_number);
+            return response()->json($data, 200);
+        }
+        catch (ModelNotFoundException $nf) {
+            Log::error("Employee not found at attempting to retrive the incidents of the employee '{employeeNmber}'",[
+                "employeeNmber" => $employee_number,
+                "message" => $nf->getMessage()
+            ]);
+            return response()->json([
+                "message" => "Employee not found"
+            ], 404);
+        }
+        catch (\Throwable $th) {
+            Log::error("Fail at attempting to retrive the incidents of the employee '{employeeNmber}: {message}'",[
+                "employeeNmber" => $employee_number,
+                "message" => $th->getMessage()
+            ]);
+            return response()->json([
+                "message" => "Fail at attempting to retrive the incidents"
+            ], 409);
+        }
+    }
+
+    #region private methods
     /**
      * find Employee
      *
