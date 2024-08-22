@@ -210,8 +210,10 @@ class EmployeeController extends Controller
         // TODO: retrive the query params to filter the catalogs
 
         // * retrive the employee
-        $employee = $this->employeeService->getEmployee($employee_number);
-
+        $employee = $this->findEmployee($employee_number);
+        if($employee instanceof \Illuminate\Http\RedirectResponse){
+            return $employee;
+        }
 
         // * retrive the catalogs
         $generalDirections = GeneralDirection::select('id','name')->get()->toArray();
@@ -241,26 +243,10 @@ class EmployeeController extends Controller
      */
     public function update(UpdateEmployeeRequest $request, string $employee_number)
     {
-        // * attempt to get the employee
-        try {
-            $employee = $this->employeeService->getEmployee($employee_number);
-        } catch (ModelNotFoundException $nf) {
-            Log::warning("Employee with employee number '$employee_number' not found");
-
-            // * redirect back
-            return redirect()->back()->withErrors([
-                "employee_number" => "Empleado no encontrado",
-                "message" => "Empleado no encontrado"
-            ])->withInput();
-
-        } catch (\Throwable $th) {
-            Log::error("Unhandle exception at attempting to get the employee at EmployeeController.show: {message}", [
-                "employee_number" => $employee_number,
-                "message" => $th->getMessage(),
-            ]);
-
-            //TODO: Redirect to error page
-            throw new Exception("Not implemented");
+        // * retrive the employee
+        $employee = $this->findEmployee($employee_number);
+        if($employee instanceof \Illuminate\Http\RedirectResponse){
+            return $employee;
         }
 
         // * update the employee data
@@ -300,6 +286,52 @@ class EmployeeController extends Controller
 
         return response()->json($events, 200);
     }
+
+
+    #region Incidents
+    public function incidentCreate(Request $request, string $employee_number) {
+        // * retrive the employee
+        $employee = $this->findEmployee($employee_number);
+        if($employee instanceof \Illuminate\Http\RedirectResponse){
+            return $employee;
+        }
+
+
+        // * return the view
+        return Inertia::render('Employees/Incidents/Create', [
+            "employeeNumber" => $employee->employeeNumber,
+            "employee" => $employee,
+        ]);
+
+    }
+    #endregion
+
+    #region private methods
+    /**
+     * find Employee
+     *
+     * @param  string $employee_number
+     * @return \App\ViewModels\EmployeeViewModel|\Illuminate\Http\RedirectResponse
+     */
+    private function findEmployee(string $employee_number){
+
+        // * attempt to get the employee
+        try {
+            return $this->employeeService->getEmployee($employee_number);
+        } catch (ModelNotFoundException $nf) {
+
+            Log::warning("Employee with employee number '$employee_number' not found");
+
+            //TODO: redirect to not found page
+
+            // * redirect back
+            return redirect()->back()->withErrors([
+                "employee_number" => "Empleado no encontrado",
+                "message" => "Empleado no encontrado"
+            ])->withInput();
+        }
+    }
+    #endregion
 
 }
 

@@ -82,6 +82,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('{employee_number}', [EmployeeController::class, 'show'])->name('show');
         Route::get('{employee_number}/edit', [EmployeeController::class, 'edit'])->name('edit');
         Route::patch('{employee_number}', [EmployeeController::class, 'update'])->name('update');
+        Route::get('{employee_number}/incidents/create', [EmployeeController::class, 'incidentCreate'])->name('incidents.create');
+
 
         Route::get('{employee_number}/raw-events', [EmployeeController::class, 'eventsJson'])->name('raw-events');
 

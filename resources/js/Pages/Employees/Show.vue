@@ -14,6 +14,9 @@ import multiMonthPlugin from '@fullcalendar/multimonth'
 
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import SuccessButton from '@/Components/SuccessButton.vue';
+import WarningButton from '@/Components/WarningButton.vue';
+import WhiteButton from '@/Components/WhiteButton.vue';
+import DisabledButton from '@/Components/DisabledButton.vue';
 import Breadcrumb from '@/Components/Breadcrumb.vue';
 import EmployeeGeneralData from './Partials/EmployeeGeneralData.vue';
 import EmployeeDataPanel from './Partials/EmployeeDataPanel.vue';
@@ -93,7 +96,7 @@ function downLoadkardexClick(form){
 }
 
 function makeIncidenceClick(){
-    toast.info('make incidence click!');
+    router.visit(route('employees.incidents.create', props.employeeNumber));
 }
 
 function showJustificationsClick(){
@@ -158,15 +161,21 @@ function calendarDayClick(info){
 
             <div class="col-span-12 bg-white shadow border rounded-lg px-4 py-2 dark:bg-gray-800 dark:border-gray-500">
                 <div class="flex gap-4 justify-center">
-                    <PrimaryButton v-on:click="makeIncidenceClick">
+
+                    <WarningButton v-on:click="makeIncidenceClick">
                         Generar Incidencias
-                    </PrimaryButton>
-                    <PrimaryButton v-on:click="showJustificationsClick">
+                    </WarningButton>
+
+                    <WhiteButton v-on:click="showJustificationsClick" class=" outline outline-1">
                         Ver justificaciones
-                    </PrimaryButton>
-                    <PrimaryButton v-if="calendarDaySelected.day" v-on:click="justifyDayClick">
+                    </WhiteButton>
+
+                    <WhiteButton v-if="calendarDaySelected.day" v-on:click="justifyDayClick" class=" outline outline-1">
                         Justificar ({{ formatDate(calendarDaySelected.day) }} )
-                    </PrimaryButton>
+                    </WhiteButton>
+                    <DisabledButton v-else>
+                        Justificar (seleccione un dia)
+                    </DisabledButton>
                 </div>
             </div>
 
