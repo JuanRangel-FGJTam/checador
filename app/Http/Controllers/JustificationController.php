@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Carbon;
+use Inertia\Inertia;
 use App\Services\EmployeeService;
 use App\ViewModels\EmployeeViewModel;
-use Inertia\Inertia;
+use App\Models\TypeJustify;
 
 class JustificationController extends Controller
 {
@@ -67,6 +69,49 @@ class JustificationController extends Controller
             "employeeNumber" => $employee->employeeNumber,
             "employee" => $employee,
             "justifications" => $justifications,
+            "breadcrumbs" => $breadcrumbs
+        ]);
+
+    }
+
+
+    /**
+     * show the view for justify a day
+     *
+     * @param  Request $request
+     * @param  string $employee_number
+     * @return mixed
+     */
+    function showJustifyDay( Request $request, string $employee_number) {
+
+        // * get the employee
+        $employee =  $this->findEmployee($employee_number);
+        if( $employee instanceof RedirectResponse ){
+            return $employee;
+        }
+
+        $initialDay = Carbon::today();
+        if( $request->query('day') != null){
+            $initialDay = Carbon::parse($request->query('day'));
+        }
+
+        // * get the justifications
+        $justificationsType = TypeJustify::select('id', 'name')->get()->toArray();
+
+        // TODO: calculate the breadcrumns based on where the request come from
+        $breadcrumbs = array (
+            ["name"=> "Inicio", "href"=> "/dashboard"],
+            ["name"=> "Vista Empleados", "href"=> route('employees.index') ],
+            ["name"=> "Empleado: $employee->employeeNumber", "href"=> route('employees.show', $employee->employeeNumber)],
+            ["name"=> "Justificar dia", "href"=>""],
+        );
+
+        // * return the view
+        return Inertia::render('Justifications/JustifyDay', [
+            "employeeNumber" => $employee->employeeNumber,
+            "employee" => $employee,
+            "justificationsType" => $justificationsType,
+            "initialDay" => $initialDay->format('Y-m-d'),
             "breadcrumbs" => $breadcrumbs
         ]);
 

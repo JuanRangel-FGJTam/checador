@@ -104,7 +104,18 @@ function showJustificationsClick(){
 }
 
 function justifyDayClick(){
-    toast.info('justify day click!');
+
+    var day = calendarDaySelected.value.day;
+
+    const formattedDate = day.getFullYear() + '-' +
+                      String(day.getMonth() + 1).padStart(2, '0') + '-' +
+                      String(day.getDate()).padStart(2, '0');
+
+    router.visit(route('employees.justifications.justify-day', {
+        "employee_number": props.employeeNumber,
+        "day" : formattedDate
+    }));
+
 }
 
 /**
@@ -123,8 +134,7 @@ function calendarDayClick(info){
     calendarDaySelected.value.element.style.backgroundColor = '#a9cce3';
     calendarDaySelected.value.day = info.date;
 
-    // TODO: load some data
-    toast.info(`Day ${info.dateStr} clicked!!`);
+    // TODO: validate if the day selected exist a incident
 }
 
 </script>
