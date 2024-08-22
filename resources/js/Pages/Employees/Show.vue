@@ -100,7 +100,7 @@ function makeIncidenceClick(){
 }
 
 function showJustificationsClick(){
-    toast.info('show justifications click!');
+    router.visit(route('employees.justifications.index', props.employeeNumber));
 }
 
 function justifyDayClick(){
