@@ -8,6 +8,7 @@ use App\Http\Controllers\{
     CatalogController,
     EmployeeController,
     EmployeeScheduleController,
+    IncidentController,
     JustificationController,
     ProfileController,
     UserController
@@ -97,6 +98,10 @@ Route::middleware(['auth'])->group(function () {
             Route::get('', [EmployeeScheduleController::class, 'edit'])->name('edit');
             Route::patch('', [EmployeeScheduleController::class, 'update'])->name('update');
         });
+    });
+
+    Route::prefix('incidents')->name("incidents.")->group(function(){
+        Route::get('/employee/{employee_number}', [IncidentController::class, 'getIncidentsByEmployee'])->name('employee.index');
     });
 
 });

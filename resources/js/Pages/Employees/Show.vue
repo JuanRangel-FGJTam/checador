@@ -84,7 +84,7 @@ function editEmployeeClick(){
 }
 
 function incidencesClick(){
-    toast.info("incidences click!!");
+    router.visit( route("incidents.employee.index", props.employeeNumber));
 }
 
 /**

@@ -9,6 +9,14 @@ class Incident extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'employee_id',
+        'record_id',
+        'incident_type_id',
+        'incident_state_id',
+        'date'
+    ];
+
     public function employee()
     {
         return $this->belongsTo(Employee::class);
