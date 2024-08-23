@@ -10,6 +10,7 @@ use App\Models\{
     Employee,
     Incident
 };
+use Carbon\Carbon;
 
 class EmployeeIncidentService implements EmployeeIncidentInterface {
 
@@ -20,8 +21,11 @@ class EmployeeIncidentService implements EmployeeIncidentInterface {
      * @param  mixed $employee_number
      * @return array
      */
-    public function getIncidents(string $employee_number): array
+    public function getIncidents(string $employee_number, string $date_from, string $date_to): array
     {
+        $from = Carbon::parse($date_from);
+        $to = Carbon::parse($date_to);
+
         // * get the employee
         $employee = Employee::where("plantilla_id", "9".$employee_number)->first();
         if( $employee == null){
@@ -29,7 +33,11 @@ class EmployeeIncidentService implements EmployeeIncidentInterface {
         }
 
         // * get the incidents
-        return Incident::with(['state', 'type'])->where("employee_id", $employee->id)->get()->toArray();
+        return Incident::with(['state', 'type'])
+            ->where("employee_id", $employee->id)
+            ->whereBetween("date", [$from->format("Y-m-d"), $to->format("Y-m-d")])
+            ->get()
+            ->toArray();
     }
 
 

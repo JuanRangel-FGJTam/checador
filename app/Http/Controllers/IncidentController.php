@@ -16,11 +16,14 @@ use App\Models\{
     IncidentState,
     WorkingHours
 };
+use Carbon\Carbon;
 
 class IncidentController extends Controller
 {
     protected EmployeeService $employeeService;
     protected EmployeeIncidentInterface $employeeIncidentService;
+
+    static $INCIDENT_STATE_PENDING = 1;
 
     function __construct( EmployeeService $employeeService, EmployeeIncidentInterface $employeeIncidentService) {
         $this->employeeService = $employeeService;
@@ -105,10 +108,25 @@ class IncidentController extends Controller
      * @param  string $employee_number
      * @return void
      */
-    function employeeIncidentsJson(string $employee_number): JsonResponse{
+    function employeeIncidentsJson(Request $request, string $employee_number): JsonResponse{
+
+        // * retrive the querys
+        $year = $request->query('year');
+        $month = $request->query('month');
+
+        // * make to range of dates
+        $startOfMonth = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+        $endOfMonth = Carbon::createFromDate($year, $month, 1)->endOfMonth();
+
         try {
             // * attempt to retrive the incidents
-            $data = $this->employeeIncidentService->getIncidents($employee_number);
+            $data = $this->employeeIncidentService->getIncidents($employee_number, $startOfMonth, $endOfMonth);
+
+            // * validate if the data need to be filtered
+            if( $request->query->has("onlyPendings") ){
+                $data = array_filter($data, fn($item)=> $item['incident_state_id'] == self::$INCIDENT_STATE_PENDING );
+            }
+
             return response()->json($data, 200);
         }
         catch (ModelNotFoundException $nf) {

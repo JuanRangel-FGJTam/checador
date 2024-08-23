@@ -15,7 +15,7 @@ interface EmployeeIncidentInterface {
      * @param  string $employee_number
      * @return array<Incident>
      */
-    public function getIncidents(string $employee_number): array;
+    public function getIncidents(string $employee_number, string $date_from, string $date_to): array;
 
 
     

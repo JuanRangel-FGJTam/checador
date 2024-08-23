@@ -99,7 +99,10 @@ function getIncidents(){
 
     // * attempt to get the incidentes of the employee
     axios.get( route('incidents.employee.raw',{
-        "employee_number": props.employeeNumber
+        "employee_number": props.employeeNumber,
+        "onlyPendings": 1,
+        "year": form.year,
+        "month": form.month
     }))
     .then((response)=>{
         const {data} = response;
@@ -108,7 +111,9 @@ function getIncidents(){
         }
     })
     .catch((err)=>{
-
+        const {message} = err;
+        toast.error(message??"Error at attempting to retrive the incendents of the month.");
+        console.dir(err);
     })
     .finally(()=>{
         loading.value = false;
@@ -248,36 +253,33 @@ function updateIncident(){
                 <InputError class="ml-auto" :message="formIncident.errors.state_id" />
 
                 <!-- timeline -->
-                <div class="pl-12 mt-4">
-                <fieldset>
-                    <legend class="pb-4 text-gray-600 dark:text-gray-200">Seleccione una incidencia para actualizar el estado</legend>
+                <div class="mt-4">
+                    <fieldset class="pl-12">
+                        <legend class="pb-4 text-gray-600 dark:text-gray-200">Seleccione una incidencia para actualizar el estado</legend>
+                        <VerticalTimeLine>
+                            <TimeLineItemCustom v-for="(item, index) in incidents" :key="item.id">
+                                <template #icon>
+                                    <input type="radio" :id="index" name="incident_id" :value="item.id" v-model="formIncident.incident_id" />
+                                </template>
 
-                    <VerticalTimeLine>
-
-                        <TimeLineItemCustom v-for="(item, index) in incidents" :key="item.id">
-                            <template #icon>
-                                <input type="radio" :id="index" name="incident_id" :value="item.id" v-model="formIncident.incident_id" />
-                            </template>
-
-                            <template #content>
-                                <label :for="index" class="flex flex-col gap-1 border-b border-transparent hover:border-slate-200 cursor-pointer">
-                                    <h3 class="flex items-center gap-2 mb-0 text-lg font-semibold text-gray-700 dark:text-white uppercase">
-                                        <span>{{ item.type.name }}</span>
-                                        <BadgeYellow v-if="item.state.name == 'Pendiente' ">{{ item.state.name }}</BadgeYellow>
-                                        <BadgeGreen v-else-if="item.state.name == 'Autorizado' || item.state.name == 'Cancelado' ">{{ item.state.name }}</BadgeGreen>
-                                        <BadgeRed v-else-if="item.state.name == 'Descontado' ">{{ item.state.name }}</BadgeRed>
-                                        <BadgeBlue v-else>{{ item.state.name }}</BadgeBlue>
-                                    </h3>
-                                    <time class="flex items-center gap-1 mt-0 mb-1 text-sm font-normal leading-none text-gray-500 dark:text-gray-500 uppercase">
-                                        <CalendarExclamationIcon class="w-6 h-6 p-1 text-slate-500" />
-                                        <span>{{ item.date }}</span>
-                                    </time>
-                                </label>
-                            </template>
-                        </TimeLineItemCustom>
-
-                    </VerticalTimeLine>
-                </fieldset>
+                                <template #content>
+                                    <label :for="index" class="flex flex-col gap-1 border-b border-transparent hover:border-slate-200 cursor-pointer">
+                                        <h3 class="flex items-center gap-2 mb-0 text-lg font-semibold text-gray-700 dark:text-white uppercase">
+                                            <span>{{ item.type.name }}</span>
+                                            <BadgeYellow v-if="item.state.name == 'Pendiente' ">{{ item.state.name }}</BadgeYellow>
+                                            <BadgeGreen v-else-if="item.state.name == 'Autorizado' || item.state.name == 'Cancelado' ">{{ item.state.name }}</BadgeGreen>
+                                            <BadgeRed v-else-if="item.state.name == 'Descontado' ">{{ item.state.name }}</BadgeRed>
+                                            <BadgeBlue v-else>{{ item.state.name }}</BadgeBlue>
+                                        </h3>
+                                        <time class="flex items-center gap-1 mt-0 mb-1 text-sm font-normal leading-none text-gray-500 dark:text-gray-500 uppercase">
+                                            <CalendarExclamationIcon class="w-6 h-6 p-1 text-slate-500" />
+                                            <span>{{ item.date }}</span>
+                                        </time>
+                                    </label>
+                                </template>
+                            </TimeLineItemCustom>
+                        </VerticalTimeLine>
+                    </fieldset>
                 </div>
 
             </div>
