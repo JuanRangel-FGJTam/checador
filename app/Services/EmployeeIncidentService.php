@@ -29,7 +29,7 @@ class EmployeeIncidentService implements EmployeeIncidentInterface {
         }
 
         // * get the incidents
-        return Incident::where("employee_id", $employee->id)->get()->toArray();
+        return Incident::with(['state', 'type'])->where("employee_id", $employee->id)->get()->toArray();
     }
 
 

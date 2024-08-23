@@ -12,6 +12,8 @@ use App\Interfaces\EmployeeIncidentInterface;
 use App\ViewModels\EmployeeViewModel;
 use App\Models\{
     Employee,
+    Incident,
+    IncidentState,
     WorkingHours
 };
 
@@ -42,7 +44,7 @@ class IncidentController extends Controller
             ["name"=> "Inicio", "href"=> "/dashboard"],
             ["name"=> "Vista Empleados", "href"=> route('employees.index') ],
             ["name"=> "Empleado: $employee->employeeNumber", "href"=> route('employees.show', $employee->employeeNumber)],
-            ["name"=> "Justificantes", "href"=>""],
+            ["name"=> "Incidencias", "href"=>""],
         );
 
         // * calculate status
@@ -81,7 +83,8 @@ class IncidentController extends Controller
             }
         }
 
-
+        // * catalog incident status
+        $incidentStatuses = IncidentState::where("id", ">", 1)->select('id', 'name')->get()->toArray();
 
         // * return the view
         return Inertia::render('Incidents/Index', [
@@ -90,7 +93,8 @@ class IncidentController extends Controller
             "breadcrumbs" => $breadcrumbs,
             "status" => (object) $status,
             "checa" => (object) $checa,
-            "workingHours" => $hours
+            "workingHours" => $hours,
+            "incidentStatuses" => array_values($incidentStatuses)
         ]);
     }
 
@@ -125,6 +129,65 @@ class IncidentController extends Controller
                 "message" => "Fail at attempting to retrive the incidents"
             ], 409);
         }
+    }
+
+
+    /**
+     * update the status of the incident
+     *
+     * @param  mixed $request
+     * @param  mixed $incident_id
+     * @return void
+     */
+    function updateIncidentState(Request $request, int $incident_id){
+
+        // * validate the request
+        $request->validate([
+            "state_id" => "required|exists:incident_states,id"
+        ]);
+
+        // * retrive the incident id
+        $incident = Incident::with('employee')->find($incident_id);
+        if( $incident == null){
+            Log::warning("Incident id '{incidentId}' not found when attempting to update the status at IncidentController.updateIncidentStatus", [ "incidentId" => $incident_id ]);
+            return redirect()->back()->withErrors([
+                "message" => "La incidencia no se encuentra en el sistema o no está disponible."
+            ])->withInput();
+        }
+
+        // tmp data for loggin
+        $oldStateValue = $incident->incident_state_id;
+        $employee = $incident->employee;
+
+        // * attempt to update the state of the incident
+        try {
+
+            $incident->incident_state_id = $request->input('state_id');
+            $incident->save();
+
+            Log::notice("The state of the incident with id '{incident_id}' of the employee with id '{employee_id}' was updated from '{old_value}' to '{new_value}'.", [
+                "incident_id" => $incident->id,
+                "employee_id" => $employee->id,
+                "old_value" => $oldStateValue,
+                "new_value" => $request->input('state_id')
+            ]);
+
+        }catch(\Throwable $th){
+
+            Log::error("Fail to update the state of the incident id '{incident_id}' at IncidentController.updateIncidentStatus: {message}", [
+                "message" => $th->getMessage(),
+                "incident_id" => $incident->id
+            ]);
+
+            return redirect()->back()->withErrors([
+                "message" => "Error al actualizar el estado de la incidencia, intente de nuevo o comuníquese con el administrador."
+            ])->withInput();
+
+        }
+
+        // TODO: Calculate where to redirect based on where the request is come from
+        return redirect()->back()->with('success', 'Estado de la incidencia actualizada.');
+
     }
 
     #region private methods

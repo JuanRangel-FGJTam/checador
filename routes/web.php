@@ -103,6 +103,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('incidents')->name("incidents.")->group(function(){
         Route::get('/employee/{employee_number}', [IncidentController::class, 'getIncidentsByEmployee'])->name('employee.index');
         Route::get('/employee/{employee_number}/raw-incidents', [IncidentController::class, 'employeeIncidentsJson'])->name('employee.raw');
+        Route::patch('{incident_id}/state', [IncidentController::class, 'updateIncidentState'])->name('state.update');
     });
 
 });
