@@ -5,19 +5,26 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
-use App\Services\EmployeeService;
+use App\Services\{
+    EmployeeService,
+    JustificationService
+};
 use App\ViewModels\EmployeeViewModel;
 use App\Models\TypeJustify;
 use App\Http\Requests\NewJustificationRequest;
+use Psy\Readline\Hoa\Console;
 
 class JustificationController extends Controller
 {
 
     protected EmployeeService $employeeService;
+    protected JustificationService $justificationService;
 
-    function __construct( EmployeeService $employeeService ) {
+    function __construct( EmployeeService $employeeService, JustificationService $justificationService ) {
         $this->employeeService = $employeeService;
+        $this->justificationService = $justificationService;
     }
 
 
@@ -131,15 +138,26 @@ class JustificationController extends Controller
             return $employee;
         }
 
-        dd( "You shall no pass!!", $request );
+        // * attempt to justify the day
+        try {
 
-        // * store the file
-        
+            $this->justificationService->justify(
+                request: $request,
+                employee: $employee
+            );
 
-        // * create the justification record
+        } catch (\Throwable $th) {
+            Log::error("Fail to justify the day: {message}", [
+                "message" => $th->getMessage()
+            ]);
 
-        // * return to the employee view
+            return redirect()->back()->withErrors([
+                "Error al justificar el día, intente de nuevo o comuníquese con el administrador."
+            ])->withInput();
+        }
 
+        // * redirect to employee show
+        return redirect()->route('employees.show', $employee->employeeNumber );
 
     }
 

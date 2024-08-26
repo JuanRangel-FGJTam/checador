@@ -16,7 +16,8 @@ class Justify extends Model
         'date_start',
         'date_finish',
         'file',
-        'details'
+        'details',
+        'user_id'
     ];
 
     protected $casts = [
