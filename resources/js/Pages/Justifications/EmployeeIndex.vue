@@ -29,7 +29,8 @@ const props = defineProps({
             { "name": 'Justificantes', "href": '/dashboard' },
             { "name": 'Empleado', "href": '' }
         ]
-    }
+    },
+    dateRange: String
 });
 
 const toast = useToast();
@@ -60,7 +61,7 @@ function redirectBack(){
 
         
         <PageTitle class="px-4 mt-4 text-center">
-            Justificantes del empleado '{{ employee.name }}'
+            Justificantes del empleado '{{ employee.name }}' {{ dateRange }}
         </PageTitle>
 
         <div class="px-4 py-4 rounded-lg min-h-screen max-w-screen-2xl mx-auto">

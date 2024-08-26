@@ -140,6 +140,26 @@ class JustificationService {
 
     }
 
+
+    /**
+     * get justifications of the employee
+     *
+     * @param  EmployeeViewModel $employee
+     * @param  string $startDate
+     * @param  string $endDate
+     * @return Collection<Justify>
+     */
+    public function getJustificationsEmployee(EmployeeViewModel $employee, $startDate, $endDate)
+    {
+        return Justify::with(['type'])
+            ->where("employee_id", $employee->id)
+            ->where(function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('date_start', [$startDate, $endDate])
+                    ->orWhereBetween('date_finish', [$startDate, $endDate]);
+            })
+            ->get();
+    }
+
     
     /**
      * store the justification file and return the path

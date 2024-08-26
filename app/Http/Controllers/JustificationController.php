@@ -34,7 +34,7 @@ class JustificationController extends Controller
      * @param  string $employee_number
      * @return mixed
      */
-    function showJustificationOfEmployee(string $employee_number) {
+    function showJustificationOfEmployee( Request $request, string $employee_number) {
         
         // * get the employee
         $employee =  $this->findEmployee($employee_number);
@@ -42,27 +42,24 @@ class JustificationController extends Controller
             return $employee;
         }
 
-        // TODO: get the justifications of the employee
-        $justifications = array(
-            (object)[
-                'id' => 1,
-                'employee_id' => 666,
-                'type_justify_id' => 1,
-                'date_start' => '2024-08-17 09:10',
-                'date_finish' => '2024-08-17 09:12',
-                'file' => 'path/file/document.pdf',
-                'details' => 'some descriptions 17'
-            ],
-            (object)[
-                'id' => 2,
-                'employee_id' => 666,
-                'type_justify_id' => 2,
-                'date_start' => '2024-08-21 09:24',
-                'date_finish' => '2024-08-21 09:28',
-                'file' => 'path/file/document2.pdf',
-                'details' => 'some descriptions 21'
-            ],
-        );
+        // * get the range day from the querys
+        $start = Carbon::now();
+        $end = Carbon::now();
+
+        if($request->query("y") && $request->query("m")){
+            $start = Carbon::createFromDate($request->query("y"), $request->query("m"), 1)->startOfMonth();
+            $end = Carbon::createFromDate($request->query("y"), $request->query("m"), 1)->endOfMonth();
+        }
+
+        if($request->query("from") && $request->query("to")){
+            $start = Carbon::parse($request->query("from"));
+            $end = Carbon::parse($request->query("to"));
+        }
+
+        $justifications = $this->justificationService->getJustificationsEmployee(
+            $employee,
+            $start->format("Y-m-d"), $end->format("Y-m-d")
+        )->toArray();
 
         // TODO: calculate the breadcrumns based on where the request come from
         $breadcrumbs = array(
@@ -76,8 +73,9 @@ class JustificationController extends Controller
         return Inertia::render('Justifications/EmployeeIndex', [
             "employeeNumber" => $employee->employeeNumber,
             "employee" => $employee,
-            "justifications" => $justifications,
-            "breadcrumbs" => $breadcrumbs
+            "justifications" => array_values($justifications),
+            "breadcrumbs" => $breadcrumbs,
+            "dateRange" => sprintf( "Del %s al %s", $start->format("d M y"), $end->format("d M y") )
         ]);
 
     }
