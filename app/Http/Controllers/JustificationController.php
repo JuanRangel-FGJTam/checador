@@ -9,6 +9,7 @@ use Inertia\Inertia;
 use App\Services\EmployeeService;
 use App\ViewModels\EmployeeViewModel;
 use App\Models\TypeJustify;
+use App\Http\Requests\NewJustificationRequest;
 
 class JustificationController extends Controller
 {
@@ -19,7 +20,7 @@ class JustificationController extends Controller
         $this->employeeService = $employeeService;
     }
 
-        
+
     /**
      * show the view for display the justifications of the employee
      *
@@ -114,6 +115,31 @@ class JustificationController extends Controller
             "initialDay" => $initialDay->format('Y-m-d'),
             "breadcrumbs" => $breadcrumbs
         ]);
+
+    }
+
+    /**
+     * store a justification
+     *
+     * @return mixed
+     */
+    function storeJustification(NewJustificationRequest $request, string $employee_number) {
+
+        // * get the employee
+        $employee =  $this->findEmployee($employee_number);
+        if( $employee instanceof RedirectResponse ){
+            return $employee;
+        }
+
+        dd( "You shall no pass!!", $request );
+
+        // * store the file
+        
+
+        // * create the justification record
+
+        // * return to the employee view
+
 
     }
 

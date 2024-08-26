@@ -55,7 +55,16 @@ function redirectBack(){
 }
 
 function submitForm(){
-    toast.warning("Not implemented");
+    form.post( route('employees.justifications.store', props.employeeNumber), {
+        onError: (err)=>{
+            const {message} = err;
+            if( message) {
+                toast.warning( message );
+            }else{
+                toast.warning("Campos invalidos o requeridos, Por favor, revisa los campos e intenta nuevamente.");
+            }
+        }
+    });
 }
 
 </script>
@@ -113,7 +122,7 @@ function submitForm(){
                                 <option value="" >Seleccione un elemento</option>
                                 <option v-for="item in justificationsType" :value="item.id" :key="item.id">{{ item.name }}</option>
                             </InputSelect>
-                            <InputError :message="form.errors.comments" />
+                            <InputError :message="form.errors.type_id" />
                         </div>
 
                         <div role="form-group">
@@ -125,7 +134,7 @@ function submitForm(){
 
                         <div role="form-group">
                             <InputLabel for="comments">Adjuntar archivo de justificación</InputLabel>
-                            <input type="file" id="file" class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full dark:bg-gray-700 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 "/>
+                            <input type="file" id="file" @input="form.file = $event.target.files[0]" class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full dark:bg-gray-700 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 "/>
                             <InputError :message="form.errors.file" />
                         </div>
 

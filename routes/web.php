@@ -90,6 +90,7 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('{employee_number}/justifications')->name('justifications.')->group(function(){
             Route::get('', [JustificationController::class, 'showJustificationOfEmployee'])->name('index');
             Route::get('justify-day', [JustificationController::class, 'showJustifyDay'])->name('justify-day');
+            Route::post('', [JustificationController::class, 'storeJustification'])->name('store');
         });
 
         Route::get('{employee_number}/raw-events', [EmployeeController::class, 'eventsJson'])->name('raw-events');
