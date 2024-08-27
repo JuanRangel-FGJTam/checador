@@ -65,12 +65,12 @@ const calendarOptions = {
     loading: (isLoading) => calendarLoading.value = isLoading,
     dateClick: (info)=> calendarDayClick(info),
     events: function(info, successCallback, failureCallback) {
-        const startDate = info.start.valueOf();
-        const endDate = info.end.valueOf();
+        var from = info.start.toISOString().split("T")[0];
+        var to = info.end.toISOString().split("T")[0];
         axios.get(route('employees.raw-events', {
             "employee_number": props.employeeNumber,
-            "start": startDate,
-            "end": endDate,
+            "from": from,
+            "to": to,
         }))
         .then((res)=> successCallback(res.data))
         .catch((ex)=> failureCallback(ex));

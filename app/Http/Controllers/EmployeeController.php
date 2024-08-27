@@ -5,17 +5,24 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 use Exception;
-use App\Services\EmployeeService;
+use App\Services\{
+    EmployeeService,
+    JustificationService
+};
 use App\Models\{
     Department,
     Employee,
     GeneralDirection,
     Direction,
     Subdirectorate,
-    WorkingHours
+    WorkingHours,
+    Record,
+    Incident,
+    Justify
 };
 use App\ViewModels\{
     CalendarEvent
@@ -28,10 +35,12 @@ class EmployeeController extends Controller
 {
 
     protected EmployeeService $employeeService;
+    protected JustificationService $justificationService;
 
-    function __construct( EmployeeService $employeeService )
+    function __construct( EmployeeService $employeeService, JustificationService $justificationService )
     {
         $this->employeeService = $employeeService;
+        $this->justificationService = $justificationService;
     }
 
     /**
@@ -267,23 +276,62 @@ class EmployeeController extends Controller
 
     public function eventsJson(Request $request, string $employee_number): JsonResponse{
 
-        $green = '#27ae60';
-        $amber = ' #f5b041';
-        $red = '#c0392b';
+        // * get the range day from the querys
+        $from = Carbon::now()->startOfMonth();
+        $to = Carbon::now()->endOfMonth();
+        if($request->query("from") && $request->query("to")){
+            $start = Carbon::parse($request->query("from"));
+            $end = Carbon::parse($request->query("to"));
+        }
 
-        $elementA = new CalendarEvent("Entrada", "2024-08-19 09:21", "2024-08-19 17:31");
-        $elementA->color = $red;
+        // * retrive the employee
+        $employee = $this->employeeService->getEmployee($employee_number);
 
-        $elementB = new CalendarEvent("Entrada", "2024-08-17 09:08", "2024-08-17 17:04");
-        $elementB->color = $amber;
+        // * get the records
+        $records = Record::where('employee_id', $employee->id)->whereBetween('check', [ $from->format('Y-m-d'), $to->format('Y-m-d') ])->get();
 
-        $events = Array(
-            $elementA,
-            new CalendarEvent("Entrada", "2024-08-18 08:59", "2024-08-18 17:01"),
-            new CalendarEvent("Periodo 2", "2024-08-18 18:04", "2024-08-18 21:12"),
-            $elementB,
-            new CalendarEvent("Entrada", "2024-08-16 09:21", "2024-08-16 17:58"),
-        );
+        // * get the incidents
+        $incidents = Incident::where('employee_id', $employee->id)->whereBetween('date', [ $from->format('Y-m-d'), $to->format('Y-m-d') ])->get();
+
+        // * get the justifications
+        $justifications = $this->justificationService->getJustificationsEmployee( $employee, $from->format('Y-m-d'), $to->format('Y-m-d') );
+
+
+        // * parse events
+        $events = array();
+
+        foreach($records as $record) {
+            $event = new CalendarEvent("Entrada", $record->check, $record->check);
+            $event->color = "#27ae60";
+            array_push( $events, $event);
+        }
+
+        foreach($incidents as $incident) {
+            $title = $incident->type->name;
+            $event = new CalendarEvent($title, $incident->date, $incident->date);
+            $event->color = "#dc7633";
+            array_push( $events, $event);
+        }
+
+        foreach($justifications as $justify) {
+            $justify_title = $justify->type->name;
+            if( $justify->date_finish != null ){
+                $_from = Carbon::parse($justify->date_start);
+                $_to = Carbon::parse($justify->date_finish);
+                // Loop through each day from start to end date
+                for ($date = $_from; $date->lte($_to); $date->addDay()) {
+                    $event = new CalendarEvent($justify_title, $date->format('Y-m-d'), $date->format('Y-m-d'));
+                    $event->color = "#5499c7";
+                    array_push( $events, $event);
+                }
+            }
+            else{
+                $event = new CalendarEvent($justify_title, $justify->date_start->format('Y-m-d'), $justify->date_start->format('Y-m-d'));
+                $event->color = "#5499c7";
+                array_push( $events, $event);
+            }
+
+        }
 
         return response()->json($events, 200);
     }
