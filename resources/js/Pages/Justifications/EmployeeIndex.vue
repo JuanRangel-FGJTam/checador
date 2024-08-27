@@ -13,9 +13,9 @@ import SuccessButton from '@/Components/SuccessButton.vue';
 import InputLabel from "@/Components/InputLabel.vue";
 import InputDate from '@/Components/InputDate.vue';
 import InputError from '@/Components/InputError.vue';
+import PreviewDocument from '@/Components/PreviewDocument.vue';
 import Breadcrumb from '@/Components/Breadcrumb.vue';
 import AnimateSpin from '@/Components/Icons/AnimateSpin.vue';
-import ChevronRightIcon from '@/Components/Icons/ChevronRightIcon.vue';
 import PdfIcon from '@/Components/Icons/PdfIcon.vue';
 import EditIcon from '@/Components/Icons/EditIcon.vue';
 
@@ -44,8 +44,15 @@ const form = useForm({
     to: props.to
 });
 
-
 const loading = ref(false);
+
+const previewDocumentModal = ref({
+    show: false,
+    title: "",
+    subtitle: "",
+    src: ""
+});
+
 
 function redirectBack(){
     router.visit( route('employees.show', props.employeeNumber), {
@@ -76,8 +83,13 @@ function handleUpdateJustifications(){
     });
 }
 
-function handleShowPdfClick(){
-    toast.warning("Show PDF click!");
+function handleShowPdfClick(id){
+    var item = props.justifications.find( i => i.id == id);
+
+    previewDocumentModal.value.title = `Justification ${item.type.name}`;
+    previewDocumentModal.value.subtitle = `${formatDate(item.date_start)} - ${formatDate(item.date_finish)}`;
+    previewDocumentModal.value.src = `/justifications/${item.id}/file`;
+    previewDocumentModal.value.show = true;
 }
 
 function handleEditClick(id){
@@ -171,7 +183,7 @@ function handleEditClick(id){
 
                             <td class="p-2 text-center">
                                 <div class="flex gap-2">
-                                    <WhiteButton v-on:click="handleShowPdfClick">
+                                    <WhiteButton v-on:click="handleShowPdfClick(item.id)">
                                         <PdfIcon class="w-4 h-4 mr-1" />
                                         <span>PDF</span>
                                     </WhiteButton>
@@ -195,6 +207,13 @@ function handleEditClick(id){
                 </tbody>
             </table>
         </div>
+
+        <PreviewDocument v-if="previewDocumentModal.show"
+            :title="previewDocumentModal.title"
+            :subtitle="previewDocumentModal.subtitle"
+            :src="previewDocumentModal.src"
+            v-on:close="previewDocumentModal.show = false"
+        />
  
     </AuthenticatedLayout>
 </template>

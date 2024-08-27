@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use App\Services\{
@@ -14,6 +15,7 @@ use App\Services\{
 use App\ViewModels\EmployeeViewModel;
 use App\Models\TypeJustify;
 use App\Http\Requests\NewJustificationRequest;
+use App\Models\Justify;
 use Psy\Readline\Hoa\Console;
 
 class JustificationController extends Controller
@@ -158,6 +160,34 @@ class JustificationController extends Controller
 
         // * redirect to employee show
         return redirect()->route('employees.show', $employee->employeeNumber );
+
+    }
+
+    /**
+     * retrive the document of the justification
+     *
+     * @param  int $justification_id
+     * @return void
+     */
+    function getJustificationFile(int $justification_id){
+
+        // * get the justify model
+        $justify = Justify::find($justification_id);
+        if( $justify == null){
+            return response()->json([ "message" => "Justification not found on the system." ], 404);
+        }
+
+        // * get the document
+        if (Storage::disk('local')->exists($justify->file)) {
+            $fileContents = Storage::disk('local')->get($justify->file);
+            $fileName = basename($justify->file);
+
+            return response($fileContents, 200)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline; filename="'.$fileName.'"');
+        } else {
+            return response()->json(['message' => 'File not found'], 404);
+        }
 
     }
 

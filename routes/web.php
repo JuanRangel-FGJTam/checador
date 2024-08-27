@@ -107,6 +107,10 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('{incident_id}/state', [IncidentController::class, 'updateIncidentState'])->name('state.update');
     });
 
+    Route::prefix("justifications")->name('justifications.')->group(function(){
+        Route::get('{justification_id}/file', [JustificationController::class, 'getJustificationFile'])->name('file');
+    });
+
 });
 
 Route::get('rh', function(){
