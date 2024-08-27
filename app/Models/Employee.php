@@ -53,4 +53,15 @@ class Employee extends Model
     public function workingHours() {
         return $this->hasOne(WorkingHours::class);
     }
+
+
+    /**
+     * return the employee number
+     *
+     * @return int
+     */
+    public function employeeNumber(){
+        return intval( substr($this->plantilla_id, 1) );
+    }
+
 }

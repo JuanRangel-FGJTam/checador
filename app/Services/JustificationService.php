@@ -13,7 +13,10 @@ use App\Models\{
     Justify,
     Incident
 };
-use App\Http\Requests\NewJustificationRequest;
+use App\Http\Requests\{
+    NewJustificationRequest,
+    UpdateJustificationRequest
+};
 use App\ViewModels\EmployeeViewModel;
 
 use function Laravel\Prompts\form;
@@ -140,6 +143,76 @@ class JustificationService {
 
     }
 
+    /**
+     * justify
+     *
+     * @param  NewJustificationRequest $request
+     * @param  EmployeeViewModel $employee
+     * @return void
+     */
+    public function updateJustify(int $justify_id, UpdateJustificationRequest $request, EmployeeViewModel $employee)
+    {
+
+        // * get the justify
+        $justify = Justify::findOrFail($justify_id);
+
+        DB::beginTransaction();
+
+        // get the current user
+        $currentUser = Auth::user();
+        $startDay = Carbon::parse($request->input("initialDay"));
+        $finishDay = Carbon::parse($request->input("endDay"));
+
+
+        // * udpate the justification record
+        try {
+
+            $justify->type_justify_id = $request->input('type_id');
+            $justify->date_start = $request->input('initialDay');
+            $justify->date_finish = $request->input('endDay');
+            $justify->details = $request->input('comments');
+            $justify->user_id = $currentUser->id;
+
+            // * store the file
+            if( $request->file('file') != null ){
+
+                // * store the new file
+                $filePath = $this->storeJustificationFile(
+                    file: $request->file('file'),
+                    employee_number: $employee->employeeNumber,
+                    date: $request->input('initialDay')
+                );
+
+                // * set the new file paths
+                $justify->file = $filePath;
+            }
+
+            $justify->save();
+
+        }catch(\Throwable $th){
+            Log::error("Fail to update justify of the employee {employeeName} from {startData} to {endDate} at JustificationService.updateJustify: {message}", [
+                "employeeName" => $employee->name,
+                "startData" => $request->input('initialDay'),
+                "endDate" => $request->input('endDay'),
+                "message" => $th->getMessage()
+            ]);
+            DB::rollback();
+            throw $th;
+        }
+
+        // TODO: Delete data from Mongo to re create object
+        // $mongoRecord = \App\Models\KardexRecord::where('employee_id', (int)$employee_id)->where('year', $today->format('Y'))->first();
+        // if ($mongoRecord) {
+        //     $mongoRecord->delete();
+        // }
+
+        DB::commit();
+
+        // * prinf some logs
+        Log::notice('El usuario '.Auth::user()->name.' modifico la justificacion id ' . $justify->id );
+
+    }
+
 
     /**
      * get justifications of the employee
@@ -173,6 +246,22 @@ class JustificationService {
         $cDate = Carbon::parse($date);
         $name = sprintf("%s-%s.pdf", $employee_number, $cDate->format("Y-m-d"));
         return Storage::disk("local")->putFileAs('justificantes', $file, $name );
+    }
+
+    /**
+     * store the justification file and return the path
+     *
+     * @param  string $fileName
+     */
+    private function removeFile($fileName): string {
+        try {
+            return Storage::disk("local")->delete($fileName);
+            Log::notice("File $fileName deleted after update the justification.");
+        } catch (\Throwable $th) {
+            Log::error("Error at attempting to delete the file $fileName after update the justification: {messagge}", [
+                "message" => $th->getMessage()
+            ]);
+        }
     }
     
 }

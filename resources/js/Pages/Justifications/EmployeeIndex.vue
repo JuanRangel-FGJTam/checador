@@ -93,7 +93,7 @@ function handleShowPdfClick(id){
 }
 
 function handleEditClick(id){
-    toast.warning(`Edit Justification ${id} click!`);
+    router.visit( route("justifications.edit", id) );
 }
 
 </script>

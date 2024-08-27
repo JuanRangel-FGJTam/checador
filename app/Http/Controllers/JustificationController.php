@@ -14,9 +14,13 @@ use App\Services\{
 };
 use App\ViewModels\EmployeeViewModel;
 use App\Models\TypeJustify;
-use App\Http\Requests\NewJustificationRequest;
+use App\Http\Requests\{
+    NewJustificationRequest,
+    UpdateJustificationRequest
+};
 use App\Models\Justify;
-use Psy\Readline\Hoa\Console;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Redirect;
 
 class JustificationController extends Controller
 {
@@ -27,6 +31,111 @@ class JustificationController extends Controller
     function __construct( EmployeeService $employeeService, JustificationService $justificationService ) {
         $this->employeeService = $employeeService;
         $this->justificationService = $justificationService;
+    }
+
+
+    /**
+     * returned view to edit the justify
+     *
+     * @param  int $justification_id
+     * @return void
+     */
+    function editJustify(Request $request, int $justification_id){
+
+        // * retrive the previous route
+        $parsedUrl = parse_url(url()->previous());
+
+        // * Check if query parameters exist and extract them
+        $queryParams = Array();
+        if (isset($parsedUrl['query'])) {
+            parse_str($parsedUrl['query'], $queryParams);
+
+            // * Store the query parameters in the session
+            session(['queryParams' => $queryParams]);
+        }
+
+        // * retrive the justify
+        $justify = Justify::with(['type','employee'])->find($justification_id);
+        if($justify == null){
+            //TODO: Redirecto to not found page
+            throw new \Exception("Element not found");
+        }
+
+        // * get the employee
+        $employee =  $this->findEmployee($justify->employee->employeeNumber());
+        if( $employee instanceof RedirectResponse ){
+            return $employee;
+        }
+
+        // * get the justifications
+        $justificationsType = TypeJustify::select('id', 'name')->get()->toArray();
+
+        // TODO: calculate the breadcrumns based on where the request come from
+        $breadcrumbs = array (
+            ["name"=> "Inicio", "href"=> "/dashboard"],
+            ["name"=> "Vista Empleados", "href"=> route('employees.index') ],
+            ["name"=> "Empleado: $employee->employeeNumber", "href"=> route('employees.show', $employee->employeeNumber)],
+            ["name"=> "Justificantes", "href"=> route('employees.justifications.index', [ "employee_number" => $employee->employeeNumber, ...$queryParams ])],
+            ["name"=> "Editar justificante", "href"=>""],
+        );
+
+        // * return the view
+        return Inertia::render('Justifications/EditJustifyDay', [
+            "employeeNumber" => $employee->employeeNumber,
+            "employee" => $employee,
+            "justificationsType" => $justificationsType,
+            "justify" => $justify,
+            "breadcrumbs" => $breadcrumbs
+        ]);
+
+    }
+
+    function updateJustify(UpdateJustificationRequest $request, $justification_id){
+
+        // * retrive the justify model
+        $justify = Justify::with(['type','employee'])->find($justification_id);
+        if($justify == null){
+            //TODO: Redirecto to not found page
+            throw new \Exception("Element not found");
+        }
+
+        // * get the employee
+        $employee =  $this->findEmployee($justify->employee->employeeNumber());
+        if( $employee instanceof RedirectResponse ){
+            return $employee;
+        }
+
+        // * attempt to justify the day
+        try {
+
+            $this->justificationService->updateJustify(
+                $justify->id,
+                request: $request,
+                employee: $employee
+            );
+
+        } catch (\Throwable $th) {
+            Log::error("Fail to update the justify the day: {message}", [
+                "message" => $th->getMessage()
+            ]);
+
+            return redirect()->back()->withErrors([
+                "Error al actualizar el justificante, intente de nuevo o comuníquese con el administrador."
+            ])->withInput();
+        }
+
+        // * retrive and clear queryParams of the session
+        $queryParams = session('queryParams', []);
+        if( !empty($queryParams)){
+            session()->forget('queryParams');
+        }
+
+        // * redirect to justifications of the employee
+        return redirect()->route('employees.justifications.index', [
+            "employee_number" => $employee->employeeNumber,
+            ...$queryParams
+        ]);
+
     }
 
 
