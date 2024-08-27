@@ -75,7 +75,9 @@ class JustificationController extends Controller
             "employee" => $employee,
             "justifications" => array_values($justifications),
             "breadcrumbs" => $breadcrumbs,
-            "dateRange" => sprintf( "Del %s al %s", $start->format("d M y"), $end->format("d M y") )
+            "dateRange" => sprintf( "Del %s al %s", $start->format("d M y"), $end->format("d M y") ),
+            "from" => $start->format("Y-m-d"),
+            "to" => $end->format("Y-m-d"),
         ]);
 
     }

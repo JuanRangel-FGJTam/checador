@@ -47,6 +47,8 @@ const calendarDaySelected = ref({
 
 const calendarLoading = ref(false);
 
+const fullCalenarObj = ref({});
+
 const calendarOptions = {
     plugins: [
         dayGridPlugin, timeGridPlugin, multiMonthPlugin, interactionPlugin
@@ -100,7 +102,19 @@ function makeIncidenceClick(){
 }
 
 function showJustificationsClick(){
-    router.visit(route('employees.justifications.index', props.employeeNumber));
+
+    // * get the range date
+    var currentDateStart = fullCalenarObj.value.calendar.view.currentStart;
+    var currentDateEnd = fullCalenarObj.value.calendar.view.currentEnd;
+    var from = currentDateStart.toISOString().split("T")[0];
+    var to = currentDateEnd.toISOString().split("T")[0];
+
+    // * redirect view
+    router.visit( route('employees.justifications.index', {
+        "employee_number": props.employeeNumber,
+        "from": from,
+        "to": to
+    }));
 }
 
 function justifyDayClick(){
@@ -190,7 +204,7 @@ function calendarDayClick(info){
             </div>
 
             <div class="col-span-12 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500 select-none">
-                <FullCalendar :options="calendarOptions" />
+                <FullCalendar ref="fullCalenarObj" :options="calendarOptions" />
             </div>
 
             <div class="col-span-12 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500 select-none">
