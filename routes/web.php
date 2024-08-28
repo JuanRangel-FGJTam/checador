@@ -11,7 +11,8 @@ use App\Http\Controllers\{
     IncidentController,
     JustificationController,
     ProfileController,
-    UserController
+    UserController,
+    ReportController
 };
 
 Route::get('/', function () {
@@ -111,6 +112,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('{justification_id}/file', [JustificationController::class, 'getJustificationFile'])->name('file');
         Route::get('{justification_id}/edit', [JustificationController::class, 'editJustify'])->name('edit');
         Route::post('{justification_id}/update', [JustificationController::class, 'updateJustify'])->name('update');
+    });
+
+    Route::prefix("reports")->name('reports.')->group(function(){
+        Route::get('daily', [ReportController::class, 'createReportDaily'])->name('daily.create');
     });
 
 });
