@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import { useToast } from 'vue-toastification';
 import { formatDate } from '@/utils/date.js';
@@ -49,6 +49,8 @@ const calendarLoading = ref(false);
 
 const fullCalenarObj = ref({});
 
+const calendarEvents = ref([]);
+
 const calendarOptions = {
     plugins: [
         dayGridPlugin, timeGridPlugin, multiMonthPlugin, interactionPlugin
@@ -72,8 +74,46 @@ const calendarOptions = {
             "from": from,
             "to": to,
         }))
-        .then((res)=> successCallback(res.data))
+        .then((res)=>{
+            calendarEvents.value = res.data;
+            successCallback(res.data);
+        })
         .catch((ex)=> failureCallback(ex));
+    }
+}
+
+const currentIncidences = computed(()=>{
+    
+    // * get the range date
+    if(calendarEvents.value && calendarEvents.value.length > 0){
+        var dateRange = getCurrentDateRange();
+        return calendarEvents.value
+            .filter(item => item.type === 'INCIDENT')
+            .filter(item => {
+                const eventDate = new Date(item.start);
+                return eventDate >= new Date(dateRange.from) && eventDate <= new Date(dateRange.to);
+            });
+    }else{
+        return [];
+    }
+
+});
+
+/**
+ * @typedef {Object} DateRange
+ * @property {string|null} from
+ * @property {string|null} to
+ * @returns {DateRange} dateRange
+ */
+function getCurrentDateRange(){
+    if( fullCalenarObj.value){
+        var currentDateStart = fullCalenarObj.value.calendar.view.currentStart;
+        var currentDateEnd = fullCalenarObj.value.calendar.view.currentEnd;
+        var from = currentDateStart.toISOString().split("T")[0];
+        var to = currentDateEnd.toISOString().split("T")[0];
+        return { from, to }
+    }else{
+        return { from:undefined, to:undefined };
     }
 }
 
@@ -104,16 +144,13 @@ function makeIncidenceClick(){
 function showJustificationsClick(){
 
     // * get the range date
-    var currentDateStart = fullCalenarObj.value.calendar.view.currentStart;
-    var currentDateEnd = fullCalenarObj.value.calendar.view.currentEnd;
-    var from = currentDateStart.toISOString().split("T")[0];
-    var to = currentDateEnd.toISOString().split("T")[0];
+    var dateRange = getCurrentDateRange();
 
     // * redirect view
     router.visit( route('employees.justifications.index', {
         "employee_number": props.employeeNumber,
-        "from": from,
-        "to": to
+        "from": dateRange.from,
+        "to": dateRange.to
     }));
 }
 
@@ -162,55 +199,60 @@ function calendarDayClick(info){
             <Breadcrumb :breadcrumbs="breadcrumbs" />
         </template>
 
-        <div class="grid grid-cols-12 my-4 p-4 gap-2 mx-auto w-screen max-w-screen-xl">
+        <div class="grid justify-center w-screen max-w-screen-2xl mx-auto" style="grid-template-columns: 1fr 16rem; grid-template-rows: 1fr;">
+            
+            <div class="grid grid-cols-12 mt-2 p-2 gap-2 w-full">
 
-            <div class="col-span-7 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500">
-                <EmployeeGeneralData
-                    :employee="employee"
-                    :status="status"
-                    :checa="checa"
-                    :workingHours="workingHours"
-                />
-            </div>
-
-            <div class="col-span-5 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500">
-                <EmployeeDataPanel
-                    :employee="employee"
-                    v-on:editCalendar="editCalendarClick"
-                    v-on:editEmployee="editEmployeeClick"
-                    v-on:incidencesClick="incidencesClick"
-                    v-on:downloadKardex="downLoadkardexClick"
-                />
-            </div>
-
-            <div class="col-span-12 bg-white shadow border rounded-lg px-4 py-2 dark:bg-gray-800 dark:border-gray-500">
-                <div class="flex gap-4 justify-center">
-
-                    <WarningButton v-on:click="makeIncidenceClick">
-                        Generar Incidencias
-                    </WarningButton>
-
-                    <WhiteButton v-on:click="showJustificationsClick" class=" outline outline-1">
-                        Ver justificaciones
-                    </WhiteButton>
-
-                    <WhiteButton v-if="calendarDaySelected.day" v-on:click="justifyDayClick" class=" outline outline-1">
-                        Justificar ({{ formatDate(calendarDaySelected.day) }} )
-                    </WhiteButton>
-                    <DisabledButton v-else>
-                        Justificar (seleccione un dia)
-                    </DisabledButton>
+                <div class="col-span-7 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500">
+                    <EmployeeGeneralData
+                        :employee="employee"
+                        :status="status"
+                        :checa="checa"
+                        :workingHours="workingHours"
+                    />
                 </div>
+
+                <div class="col-span-5 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500">
+                    <EmployeeDataPanel
+                        :employee="employee"
+                        v-on:editCalendar="editCalendarClick"
+                        v-on:editEmployee="editEmployeeClick"
+                        v-on:incidencesClick="incidencesClick"
+                        v-on:downloadKardex="downLoadkardexClick"
+                    />
+                </div>
+
+                <div class="col-span-12 bg-white shadow border rounded-lg px-4 py-2 dark:bg-gray-800 dark:border-gray-500">
+                    <div class="flex gap-4 justify-center">
+
+                        <WarningButton v-on:click="makeIncidenceClick">
+                            Generar Incidencias
+                        </WarningButton>
+
+                        <WhiteButton v-on:click="showJustificationsClick" class=" outline outline-1">
+                            Ver justificaciones
+                        </WhiteButton>
+
+                        <WhiteButton v-if="calendarDaySelected.day" v-on:click="justifyDayClick" class=" outline outline-1">
+                            Justificar ({{ formatDate(calendarDaySelected.day) }} )
+                        </WhiteButton>
+                        <DisabledButton v-else>
+                            Justificar (seleccione un dia)
+                        </DisabledButton>
+                    </div>
+                </div>
+
+                <div class="col-span-12 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500 select-none">
+                    <FullCalendar ref="fullCalenarObj" :options="calendarOptions" />
+                </div>
+
             </div>
 
-            <div class="col-span-12 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500 select-none">
-                <FullCalendar ref="fullCalenarObj" :options="calendarOptions" />
-            </div>
-
-            <div class="col-span-12 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500 select-none">
+            <div class="mt-4 mb-4 mx-2 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500 select-none ">
                 <AnimateSpin v-if="calendarLoading" class="w-4 h-4 mx-1 "/>
-                <IncidenciasPanel />
+                <IncidenciasPanel v-else :incidences="currentIncidences" />
             </div>
+
         </div>
 
     </AuthenticatedLayout>

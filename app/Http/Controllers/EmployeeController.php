@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
@@ -303,6 +304,7 @@ class EmployeeController extends Controller
         foreach($records as $record) {
             $event = new CalendarEvent("Entrada", $record->check, $record->check);
             $event->color = "#27ae60";
+            $event->type = "RECORD";
             array_push( $events, $event);
         }
 
@@ -310,6 +312,7 @@ class EmployeeController extends Controller
             $title = $incident->type->name;
             $event = new CalendarEvent($title, $incident->date, $incident->date);
             $event->color = "#dc7633";
+            $event->type = "INCIDENT";
             array_push( $events, $event);
         }
 
@@ -322,12 +325,14 @@ class EmployeeController extends Controller
                 for ($date = $_from; $date->lte($_to); $date->addDay()) {
                     $event = new CalendarEvent($justify_title, $date->format('Y-m-d'), $date->format('Y-m-d'));
                     $event->color = "#5499c7";
+                    $event->type = "JUSTIFY";
                     array_push( $events, $event);
                 }
             }
             else{
                 $event = new CalendarEvent($justify_title, $justify->date_start->format('Y-m-d'), $justify->date_start->format('Y-m-d'));
                 $event->color = "#5499c7";
+                $event->type = "JUSTIFY";
                 array_push( $events, $event);
             }
 
