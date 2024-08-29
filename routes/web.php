@@ -115,7 +115,9 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::prefix("reports")->name('reports.')->group(function(){
-        Route::get('daily', [ReportController::class, 'createReportDaily'])->name('daily.create');
+        Route::get('', [ReportController::class, 'index'])->name('index');
+        Route::get('daily', [ReportController::class, 'createDailyReport'])->name('daily.create');
+        Route::get('daily/{report_name}/download', [ReportController::class, 'downloadDailyReporte'])->name('daily.download');
     });
 
 });
@@ -123,10 +125,6 @@ Route::middleware(['auth'])->group(function () {
 Route::get('rh', function(){
     return Inertia::render('Dashboard');
 })->middleware(['auth'])->name('rh');
-
-Route::get('reports', function(){
-    return Inertia::render('Dashboard');
-})->middleware(['auth'])->name('reports');
 
 Route::get('new-employees', function(){
     return Inertia::render('Dashboard');

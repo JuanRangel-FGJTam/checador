@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Models\{
     GeneralDirection,
@@ -13,108 +15,80 @@ use App\Models\{
 };
 use App\Helpers\DailyReportFactory;
 use App\Helpers\DailyReportPdfFactory;
+use Inertia\Inertia;
 
 class ReportController extends Controller
 {
 
-    public function createReportDaily(Request $request) {
-        
+
+    /**
+     * returned the main view for generating reports
+     *
+     * @return void
+     */
+    public function index(){
+
+        // * get catalogs
+        $generalDirections = GeneralDirection::select('id','name')->get()->all();
+
+        $breadcrumbs = array(
+            ["name"=> "Inicio", "href"=> "/dashboard"],
+            ["name"=> "Generar reportes", "href"=>""],
+        );
+
+        return Inertia::render("Reports/Index", [
+            "generalDirections" => $generalDirections,
+            "breadcrumbs" => $breadcrumbs
+        ]);
+    }
+
+    public function createDailyReport(Request $request) {
+
+        // * validate request
+        if( !$request->has('gd') || !$request->has('d') ){
+            return redirect()->back()->withErrors([
+                "message" => "General Direction Id and Date required"
+            ])->withInput();
+        }
+
+
         // * prepared variables
         $generalDirection=null;
-        $dateReport = Carbon::parse($request->query('date'))->format("Y-m-d");
-        $allEmployees = $request->query('all', 0) == 1;
-        $now = new \DateTime();
-        $reportData = array();
+        $dateReport = Carbon::parse( $request->query('d') )->format("Y-m-d");
+        $includeAllEmployees = $request->query('a', false);
 
-        
+
+        // * generate breadcumbs for the view
+        $breadcrumbs = array(
+            ["name"=> "Inicio", "href"=> "/dashboard"],
+            ["name"=> "Generar reportes", "href"=> route('reports.index') ],
+            ["name"=> "Reporte diario de $dateReport", "href"=>""],
+        );
+
+
         // * get current user
         $AUTH_USER = Auth::user();
-        
+
 
         // * retrive the general_direction based on user level
         if( $AUTH_USER->level_id == 1 &&  $request->has('gd') )/*Admin*/{
-            $generalDirection = GeneralDirection::where('id', $request->query('gd'))->first();
+            $generalDirection = GeneralDirection::where('id', $request->query('gd') )->first();
         }
         else {
             $generalDirection = GeneralDirection::where('id', $AUTH_USER->general_direction_id)->first();
         }
 
 
-        // * attempt to get the report data from the MongoDB
-        $mongoReportRecord = $this->getDailyReportStored(
-            date: $dateReport,
-            generalDirectionId: $generalDirection->id,
-            options: [
-                'directionId' => ($AUTH_USER->level_id > 2) ?$AUTH_USER->direction_id :null,
-                'subdirectorateId' => ($AUTH_USER->level_id > 3) ?$AUTH_USER->subdirectorate_id :null,
-                'departmentId' => ($AUTH_USER->level_id > 4) ?$AUTH_USER->department_id :null,
-            ],
-            allEmployees: $allEmployees
-        );
+        // * retornar vista
+        return Inertia::render("Reports/Daily", [
+            "title" => "Generando reporte diario del " . Carbon::parse($request->query('date'))->format("d M Y"),
+            "breadcrumbs" => $breadcrumbs,
+            "report" => Inertia::lazy( fn() => $this->makeDailyReport($AUTH_USER, $dateReport, $generalDirection, $includeAllEmployees) ),
+        ]);
 
-
-        // * use the reportData stored if reportData is not off today
-        if ($mongoReportRecord && $now->format('Y-m-d') != $dateReport) {
-            $reportData = $mongoReportRecord->data;
-        }
-        else { // Not today and not store data from the selected day
-
-            // * get the employees associated to the user department
-            $employees = $this->getEmployees( $generalDirection->id, [
-                'directionId' => ($AUTH_USER->level_id > 2) ?$AUTH_USER->direction_id :null,
-                'subdirectorateId' => ($AUTH_USER->level_id > 3) ?$AUTH_USER->subdirectorate_id :null,
-                'departmentId' => ($AUTH_USER->level_id > 4) ?$AUTH_USER->department_id :null,
-            ]);
-
-
-            // * make dailyReport data
-            $dailyReportFactory = new DailyReportFactory( $employees, $dateReport );
-            $reportData = $dailyReportFactory->makeReportData();
-
-
-            // * attempt to store in mongoDB only if selected day is not today
-            if( Carbon::today()->format('Y-m-d') != $dateReport ) {
-                try {
-                    $recordMongo = new \App\Models\DailyRecord();
-                    $recordMongo->general_direction_id = $generalDirection->id;
-                    if( $AUTH_USER->level_id != 1) {
-                        $recordMongo->direction_id = $AUTH_USER->direction_id;
-                        $recordMongo->subdirectorate_id = $AUTH_USER->subdirectorate_id;
-                        $recordMongo->department_id = $AUTH_USER->department_id;
-                    }
-                    $recordMongo->report_date = $dateReport;
-                    $recordMongo->all_employees = $allEmployees;
-                    $recordMongo->data = $reportData;
-                    $recordMongo->save();
-                } catch (\Throwable $th) {
-                    Log::error($th->getMessage());
-                }
-            }
-
-        }
-
-
-        // * make pdf and stored
-        $dailyReportFactory = new DailyReportPdfFactory( $reportData, $dateReport, $generalDirection->name );
-        $dailyReportFactory->makePdf();
-        $pdfStringContent = $dailyReportFactory->Output('S');
-
-        $path = Storage::disk('local')->put( 'temporal/daily_report2.pdf', $pdfStringContent );
-
-        // dd( $path );
-
-
-        // Generate PDF
-        // $pdf = new PdfController('P','mm','letter');
-        // $pdf->setData($data, $generalDirection->name, $dateReport);
-        // $pdf->AliasNbPages();
-        // $pdf->AddPage();
-        // $pdf->body();
-        // Log::info('User ' . $AUTH_USER->name . ' generate daily report for date ' . $dateReport);
-        // $pdf->Output();
     }
 
-    public function reportsMonthly(Request $request) {
+    public function createMonthlyReport(Request $request) {
         // * validate the request
         $validate = $request->validate([
             'general_direction_id' => 'required',
@@ -216,8 +190,132 @@ class ReportController extends Controller
         $excel->create($fileName);
     }
 
+    public function downloadDailyReporte(Request $request, $report_name){
+
+        $filePath = sprintf("tmp/dailyreports/$report_name");
+
+        // * validate if the report exist
+        if( !Storage::disk('local')->exists( $filePath)){
+            return response()->json([
+                "message" => "El reporte que está tratando de acceder no se encuentra disponible."
+            ], 404);
+        };
+
+        // * download the file
+        $name = "reporte-diario.pdf";
+        return Storage::disk('local')->download($filePath, $name);
+
+    }
+
 
     #region private functions
+
+    /**
+     * makeReport
+     *
+     * @return array|null
+     */
+    private function makeDailyReport($AUTH_USER, $dateReport, $generalDirection, $includeAllEmployees ){
+
+        $now = new \DateTime();
+        $reportData = array();
+
+        // * attempt to make the daily report
+        try {
+
+            // * attempt to get the report data from the MongoDB
+            $mongoReportRecord = $this->getDailyReportStored(
+                date: $dateReport,
+                generalDirectionId: $generalDirection->id,
+                options: [
+                    'directionId' => ($AUTH_USER->level_id > 2) ?$AUTH_USER->direction_id :null,
+                    'subdirectorateId' => ($AUTH_USER->level_id > 3) ?$AUTH_USER->subdirectorate_id :null,
+                    'departmentId' => ($AUTH_USER->level_id > 4) ?$AUTH_USER->department_id :null,
+                ],
+                allEmployees: $includeAllEmployees
+            );
+
+
+            // * use the reportData stored if reportData is not off today
+            if ($mongoReportRecord && $now->format('Y-m-d') != $dateReport) {
+                $reportData = $mongoReportRecord->data;
+            }
+            else { // Not today and not store data from the selected day
+
+                // * get the employees associated to the user department
+                $employees = $this->getEmployees( $generalDirection->id, [
+                    'directionId' => ($AUTH_USER->level_id > 2) ?$AUTH_USER->direction_id :null,
+                    'subdirectorateId' => ($AUTH_USER->level_id > 3) ?$AUTH_USER->subdirectorate_id :null,
+                    'departmentId' => ($AUTH_USER->level_id > 4) ?$AUTH_USER->department_id :null,
+                ]);
+
+
+                // * make dailyReport data
+                $dailyReportFactory = new DailyReportFactory( $employees, $dateReport );
+                $reportData = $dailyReportFactory->makeReportData();
+
+
+                // * attempt to store in mongoDB only if selected day is not today
+                if( Carbon::today()->format('Y-m-d') != $dateReport ) {
+                    try {
+                        $recordMongo = new \App\Models\DailyRecord();
+                        $recordMongo->general_direction_id = $generalDirection->id;
+                        if( $AUTH_USER->level_id != 1) {
+                            $recordMongo->direction_id = $AUTH_USER->direction_id;
+                            $recordMongo->subdirectorate_id = $AUTH_USER->subdirectorate_id;
+                            $recordMongo->department_id = $AUTH_USER->department_id;
+                        }
+                        $recordMongo->report_date = $dateReport;
+                        $recordMongo->all_employees = $includeAllEmployees;
+                        $recordMongo->data = $reportData;
+                        $recordMongo->save();
+                    } catch (\Throwable $th) {
+                        Log::error($th->getMessage());
+                    }
+                }
+
+            }
+
+
+            // * make pdf and stored
+            $dailyReportFactory = new DailyReportPdfFactory( $reportData, $dateReport, $generalDirection->name );
+            $dailyReportFactory->makePdf();
+            $pdfStringContent = $dailyReportFactory->Output('S');
+
+
+            // * store pdf
+            $fileName = sprintf("%s.pdf", (string) Str::uuid() );
+            $filePath = sprintf("tmp/dailyreports/$fileName");
+            if( Storage::disk('local')->put( $filePath, $pdfStringContent ) ){
+                Log::info('User ' . $AUTH_USER->name . ' generate daily report for date ' . $dateReport);
+            }else {
+                Log::warning('Fail at stored the pdf of the daily report by User ' . $AUTH_USER->name . ' for date ' . $dateReport);
+            }
+
+            $size = Storage::disk('local')->size($filePath);
+            $sizeInKB = number_format($size / 1024, 2);
+
+            // * return the data related to the pdf created
+            return [
+                "fileName" => $fileName,
+                "date" => Carbon::now()->format("Y-m-d H:i:s"),
+                "userName" => $AUTH_USER->name,
+                "size" => $sizeInKB . " KB"
+            ];
+
+        } catch (\Throwable $th) {
+            Log::error("Fail to generate the daily report of day {date}: {message}", [
+                "date" => $dateReport,
+                "message" => $th->getMessage()
+            ]);
+
+            return [
+                "error" => "Error al generar el reporte diario del día '$dateReport' intente de nuevo o comuníquese con el administrador."
+            ];
+        }
+
+    }
+
     private function getEmployees( $generalDirectionId, $options ){
 
         // * get employees of the current general-direction
