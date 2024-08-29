@@ -26,7 +26,7 @@ class DailyReportFactory {
      */
     function __construct($employees, $dateReport) {
         if( $employees instanceof Collection){
-            $this->employees = $employees->toArray();
+            $this->employees = $employees->all();
         }else{
             $this->employees = $employees;
         }
@@ -60,16 +60,19 @@ class DailyReportFactory {
     /**
      * makeEmployeeRow
      *
-     * @param  Employee $employee
+     * @param  Employee|array $employee
      * @return mixed
      */
     private function makeEmployeeRow($employee){
         
         // * prepare response data
+        if(is_array($employee)){
+            $employee = (object) $employee;
+        }
         
         $responseData = array();
-        $responseData['name'] = $employee['name'];
-        $responseData['employee_number'] = substr($employee['plantilla_id'], 1);
+        $responseData['name'] = $employee->name;
+        $responseData['employee_number'] = substr( $employee->plantilla_id, 1);
         $responseData['checkin'] = 'S/H';
         $responseData['toeat'] = 'S/H';
         $responseData['toarrive'] = 'S/H';
@@ -92,8 +95,8 @@ class DailyReportFactory {
         if(empty($employee['working_hours'])) {
             return $responseData;
         }
-        $workingHours = (object)$employee['working_hours'];
 
+        $workingHours = $employee->working_hours;
         // * validate if the employee has a check record on the day
         if ( !$workingHours->checkin && !$workingHours->checkout){
             return $responseData;
@@ -108,7 +111,7 @@ class DailyReportFactory {
         
         // * get check records of the employee
         $records = Record::select('check')
-            ->where('employee_id', $employee['id'])
+            ->where('employee_id', $employee->id)
             ->whereDate('check', $this->dateReport->format('Y-m-d'))
             ->get();
         

@@ -57,28 +57,18 @@ class ReportController extends Controller
         }
         else { // Not today and not store data from the selected day
 
-            // * get employees of the current general-direction
-            $employeesQuery = Employee::with(['workingHours'])
-                ->select('id', 'general_direction_id', 'direction_id', 'subdirectorate_id', 'department_id', 'plantilla_id', 'name')
-                ->where('status_id', 1)
-                ->where('active', 1)
-                ->where('general_direction_id', $generalDirection->id);
-
-            if ($AUTH_USER->level_id > 2) { // Director
-                $employeesQuery = $employeesQuery->where('direction_id', $AUTH_USER->direction_id);
-            }
-            if ($AUTH_USER->level_id > 3) { // Subdirectorate
-                $employeesQuery = $employeesQuery->where('subdirectorate_id', $AUTH_USER->subdirectorate_id);
-            }
-            if ($AUTH_USER->level_id > 4) { // department
-                $employeesQuery = $employeesQuery->where('department_id', $AUTH_USER->subdirectorate_id);
-            }
-            $employees = $employeesQuery->orderBy('name', 'ASC')->get();
+            // * get the employees associated to the user department
+            $employees = $this->getEmployees( $generalDirection->id, [
+                'directionId' => ($AUTH_USER->level_id > 2) ?$AUTH_USER->direction_id :null,
+                'subdirectorateId' => ($AUTH_USER->level_id > 3) ?$AUTH_USER->subdirectorate_id :null,
+                'departmentId' => ($AUTH_USER->level_id > 4) ?$AUTH_USER->department_id :null,
+            ]);
 
 
             // * make dailyReport data
             $dailyReportFactory = new DailyReportFactory( $employees, $dateReport );
             $reportData = $dailyReportFactory->makeReportData();
+
 
             // * attempt to store in mongoDB only if selected day is not today
             if( Carbon::today()->format('Y-m-d') != $dateReport ) {
@@ -113,7 +103,7 @@ class ReportController extends Controller
         // $pdf->Output();
     }
 
-    public function reportsMonthly(Request $request) {  
+    public function reportsMonthly(Request $request) {
         // * validate the request
         $validate = $request->validate([
             'general_direction_id' => 'required',
@@ -217,6 +207,30 @@ class ReportController extends Controller
 
 
     #region private functions
+    private function getEmployees( $generalDirectionId, $options ){
+
+        // * get employees of the current general-direction
+        $employeesQuery = Employee::with(['workingHours'])
+            ->select('id', 'general_direction_id', 'direction_id', 'subdirectorate_id', 'department_id', 'plantilla_id', 'name')
+            ->where('status_id', 1)
+            ->where('active', 1)
+            ->where('general_direction_id', $generalDirectionId);
+
+        if(isset($options['directionId']) ){
+            $employeesQuery = $employeesQuery->where('direction_id', $options['directionId']);
+        }
+
+        if(isset($options['subdirectorateId']) ){
+            $employeesQuery = $employeesQuery->where('subdirectorate_id', $options['directionId']);
+        }
+
+        if(isset($options['departmentId']) ){
+            $employeesQuery = $employeesQuery->where('department_id', $options['departmentId']);
+        }
+
+        return $employeesQuery->orderBy('name', 'ASC')->get();
+    }
+
     /**
      * getDailyReportStored
      *
