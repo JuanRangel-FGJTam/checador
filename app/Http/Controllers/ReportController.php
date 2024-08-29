@@ -4,13 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 use App\Models\{
     GeneralDirection,
     DailyRecord,
     Employee
 };
 use App\Helpers\DailyReportFactory;
-use Carbon\Carbon;
+use App\Helpers\DailyReportPdfFactory;
 
 class ReportController extends Controller
 {
@@ -91,7 +93,16 @@ class ReportController extends Controller
 
         }
 
-        dd('reportData', $reportData);
+
+        // * make pdf and stored
+        $dailyReportFactory = new DailyReportPdfFactory( $reportData, $dateReport, $generalDirection->name );
+        $dailyReportFactory->makePdf();
+        $pdfStringContent = $dailyReportFactory->Output('S');
+
+        $path = Storage::disk('local')->put( 'temporal/daily_report2.pdf', $pdfStringContent );
+
+        // dd( $path );
+
 
         // Generate PDF
         // $pdf = new PdfController('P','mm','letter');
@@ -263,7 +274,6 @@ class ReportController extends Controller
         return $mongoRecordQuery->first();
     }
     
-
     private function makeMonthlyRecords($employees, $generalDirectionId, $year, $month, $all_employees)
     {
         foreach ($employees as $employee) {

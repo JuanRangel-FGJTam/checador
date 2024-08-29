@@ -6,6 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "codedge/laravel-fpdf": "^1.12",
         "inertiajs/inertia-laravel": "^1.0",
         "jenssegers/mongodb": "^4.8",
         "laravel/framework": "^11.9",
