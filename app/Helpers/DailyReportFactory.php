@@ -51,7 +51,8 @@ class DailyReportFactory {
         $data = array();
 
         foreach( $this->employees as $employee) {
-            array_push( $data, $this->makeEmployeeRow( $employee ));
+            $employeeData = $employee->toArray();
+            array_push( $data, $this->makeEmployeeRow( $employeeData ));
         }
 
         return $data;
@@ -60,43 +61,39 @@ class DailyReportFactory {
     /**
      * makeEmployeeRow
      *
-     * @param  Employee|array $employee
+     * @param  Employee|Array $employee
      * @return mixed
      */
     private function makeEmployeeRow($employee){
-        
-        // * prepare response data
-        if(is_array($employee)){
-            $employee = (object) $employee;
+
+        if( $employee instanceof Employee){
+            $employee = $employee->toArray();
         }
         
+        // * prepare response data
         $responseData = array();
-        $responseData['name'] = $employee->name;
-        $responseData['employee_number'] = substr( $employee->plantilla_id, 1);
+        $responseData['name'] = $employee['name'];
+        $responseData['employee_number'] = substr( $employee['plantilla_id'], 1);
         $responseData['checkin'] = 'S/H';
         $responseData['toeat'] = 'S/H';
         $responseData['toarrive'] = 'S/H';
         $responseData['checkout'] = 'S/H';
 
-
         $checaComida = false;
-
         
-        // TODO:  Get Data from RH DB
-        // $employee_info = EmployeeRh::select('NUMEMP', 'NOMBRE', 'APELLIDO', 'RFC')
-        //     ->where('NUMEMP', $employee_number)
-        //     ->first();
+        // TODO:  Get general data from RH DB
+        // $employee_info = EmployeeRh::select('NUMEMP', 'NOMBRE', 'APELLIDO', 'RFC')->where('NUMEMP', $employee_number)->first();
         // if ($employee_info) {
-        //     $name = $employee_info->APELLIDO.' '.$employee_info->NOMBRE;
-        //     $name = Str::title($name);
+        //     $name = Str::title( $employee_info->APELLIDO.' '.$employee_info->NOMBRE );
         // }
 
         // * validate if the employee has working hours assigned
-        if(empty($employee['working_hours'])) {
+        if( empty($employee['working_hours']) ) {
             return $responseData;
         }
 
-        $workingHours = $employee->working_hours;
+        $workingHours = (object) $employee['working_hours'];
+        
         // * validate if the employee has a check record on the day
         if ( !$workingHours->checkin && !$workingHours->checkout){
             return $responseData;
@@ -111,7 +108,7 @@ class DailyReportFactory {
         
         // * get check records of the employee
         $records = Record::select('check')
-            ->where('employee_id', $employee->id)
+            ->where('employee_id', $employee['id'])
             ->whereDate('check', $this->dateReport->format('Y-m-d'))
             ->get();
         

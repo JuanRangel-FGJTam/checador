@@ -280,9 +280,9 @@ class EmployeeController extends Controller
         // * get the range day from the querys
         $from = Carbon::now()->startOfMonth();
         $to = Carbon::now()->endOfMonth();
-        if($request->query("from") && $request->query("to")){
-            $start = Carbon::parse($request->query("from"));
-            $end = Carbon::parse($request->query("to"));
+        if($request->has("from") && $request->has("to")){
+            $from = Carbon::parse($request->query("from"));
+            $to = Carbon::parse($request->query("to"));
         }
 
         // * retrive the employee
