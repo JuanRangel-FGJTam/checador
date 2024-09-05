@@ -9,7 +9,11 @@ const props = defineProps({
     employee: Object,
     status: Object,
     checa: Object,
-    workingHours: Array
+    workingHours: Array,
+    showStatus: {
+        type: Boolean,
+        default: true
+    }
 });
 
 </script>
@@ -24,7 +28,7 @@ const props = defineProps({
 
             <h1 class="font-bold text-lg uppercase">{{ employee.name }}</h1>
             
-            <div class="flex gap-2">
+            <div v-if="showStatus" class="flex gap-2">
                 <div class="border rounded-lg px-2" :class="status.class">
                     {{status.name}}
                 </div>

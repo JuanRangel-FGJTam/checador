@@ -202,6 +202,7 @@ function calendarDayClick(info){
                         :employee="employee"
                         :status="status"
                         :checa="checa"
+                        :showStatus="false"
                         :workingHours="workingHours"
                     />
                 </div>
