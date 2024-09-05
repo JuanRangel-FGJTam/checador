@@ -18,10 +18,9 @@ import WarningButton from '@/Components/WarningButton.vue';
 import WhiteButton from '@/Components/WhiteButton.vue';
 import DisabledButton from '@/Components/DisabledButton.vue';
 import Breadcrumb from '@/Components/Breadcrumb.vue';
-import EmployeeGeneralData from './Partials/EmployeeGeneralData.vue';
-import EmployeeDataPanel from './Partials/EmployeeDataPanel.vue';
-import IncidenciasPanel from './Partials/IncidenciasPanel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
+import EmployeeGeneralData from '@/Components/Employee/EmployeeGeneralData.vue';
+import EmployeeDataPanel from '@/Components/Employee/EmployeeDataPanel.vue';
+import IncidenciasPanel from '@/Components/Employee/IncidenciasPanel.vue';
 import AnimateSpin from '@/Components/Icons/AnimateSpin.vue';
 
 const props = defineProps({

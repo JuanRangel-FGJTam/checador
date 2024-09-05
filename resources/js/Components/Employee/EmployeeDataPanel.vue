@@ -13,6 +13,10 @@ const props = defineProps({
     years: {
         type: Array,
         default: [2024,2023,2022,2021,2020]
+    },
+    showButtons: {
+        type: Boolean,
+        default: true
     }
 });
 
@@ -57,7 +61,7 @@ function downloadKardexClick(){
             {{ employee.department}}
         </p>
         
-        <div class="w-full flex justify-around mt-2">
+        <div v-if="showButtons" class="w-full flex justify-around mt-2">
             <WhiteButton class="border-1 border-blue-400" v-on:click="editCalendarClick">
                 <CalendarEditIcon class="w-4 h-4 mx-1" />
                 <span>Horiario</span>
