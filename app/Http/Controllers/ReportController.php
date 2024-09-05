@@ -11,11 +11,15 @@ use Carbon\Carbon;
 use App\Models\{
     GeneralDirection,
     DailyRecord,
-    Employee
+    Employee,
+    Record,
+    WorkingDays,
+    WorkingHours
 };
 use App\Helpers\DailyReportFactory;
 use App\Helpers\DailyReportPdfFactory;
 use Inertia\Inertia;
+use Date;
 
 class ReportController extends Controller
 {
@@ -71,7 +75,7 @@ class ReportController extends Controller
 
 
         // * retrive the general_direction based on user level
-        if( $AUTH_USER->level_id == 1 &&  $request->has('gd') )/*Admin*/{
+        if( $AUTH_USER->level_id == 1 && $request->has('gd') )/*Admin*/{
             $generalDirection = GeneralDirection::where('id', $request->query('gd') )->first();
         }
         else {
@@ -89,105 +93,48 @@ class ReportController extends Controller
     }
 
     public function createMonthlyReport(Request $request) {
-        // * validate the request
-        $validate = $request->validate([
-            'general_direction_id' => 'required',
-            'year' => 'required',
-            'month' => 'required',
+
+        // * validate request
+        if( !$request->has('gd') || !$request->has('y') || !$request->has('m') ){
+            return redirect()->back()->withErrors([
+                "message" => "General Direction, Year and Month parameters are required."
+            ])->withInput();
+        }
+
+
+        // * prepared variables
+        $generalDirection = null;
+        $year = $request->query('y', 0);
+        $month = $request->query('m', 0);
+        $dateReport = Date::createFromFormat('Y-m-d', $year.'-'.$month.'-01');
+        $includeAllEmployees = $request->query('a', 0) == 1;
+        $AUTH_USER = Auth::user();
+
+
+        // * generate breadcumbs for the view
+        $breadcrumbs = array(
+            ["name"=> "Inicio", "href"=> "/dashboard"],
+            ["name"=> "Generar reportes", "href"=> route('reports.index') ],
+            ["name"=> "Reporte mensual de " . $dateReport->format('M Y'), "href"=>""],
+        );
+
+
+        // * retrive the general_direction based on user level
+        if( $AUTH_USER->level_id == 1 && $request->has('gd') )/*Admin*/{
+            $generalDirection = GeneralDirection::where('id', $request->query('gd') )->first();
+        }
+        else {
+            $generalDirection = GeneralDirection::where('id', $AUTH_USER->general_direction_id)->first();
+        }
+
+
+        // * retornar vista
+        return Inertia::render("Reports/Monthly", [
+            "title" => "Generando reporte mensual de " . $dateReport->format("M Y"),
+            "breadcrumbs" => $breadcrumbs,
+            "report" => Inertia::lazy( fn() => $this->makeMonthlyReport($AUTH_USER, $dateReport, $generalDirection, $includeAllEmployees) ),
         ]);
 
-        $AUTH_USER = Auth::user();
-        $users = array();
-        $generalDirection = '';
-        $year = $request->input('year');
-        $month = $request->input('month');
-        $allEmployees = $request->input('all') ?? false;
-        if ($allEmployees == 1) {
-            $allEmployees = true;
-        }
-
-        if ($AUTH_USER->level_id == 1) {
-            $generalDirectionId = $request->input('general_direction_id');
-            $queryGeneralDirection = GeneralDirection::select('name')->where('id', $generalDirectionId)->first();
-            $generalDirection = $queryGeneralDirection->name;
-            $dataMongo = \App\Models\MonthlyRecord::where('general_direction_id', $generalDirectionId);
-        } else {
-            if ($AUTH_USER->generalDirection) {
-                $generalDirection = $AUTH_USER->generalDirection->name;
-            }
-            $generalDirectionId = $AUTH_USER->general_direction_id;
-
-            $dataMongo = \App\Models\MonthlyRecord::where('general_direction_id', $generalDirectionId)
-                ->where('direction_id', Auth::user()->direction_id)
-                ->where('subdirectorate_id', Auth::user()->subdirectorate_id)
-                ->where('department_id', Auth::user()->department_id);
-        }
-        // Re create actual month report
-        $today = new \DateTime();
-        if ($today->format('Y') == $year && $today->format('m') == $month) {
-            $dataMongo = false;
-        } else {
-            $dataMongo = $dataMongo->where('year', $year)
-                ->where('month', $month)
-                ->where('all_employees', $allEmployees)
-                ->first();
-        }
-
-        // * make mongo record if is nothing alredy stored
-        if (!$dataMongo)
-        {
-            $employees = Employee::select('id', 'general_direction_id', 'direction_id', 'subdirectorate_id', 'department_id', 'plantilla_id', 'name')
-                ->where('status_id', 1)
-                ->where('active', 1)
-                ->where('general_direction_id', $generalDirectionId);
-
-
-            // * filter employee by current user level
-            if ($AUTH_USER->level_id > 2) { // Director
-                $employees = $employees->where('direction_id', $AUTH_USER->direction_id);
-            }
-            // else {
-            //     if ($allEmployees == NULL) {
-            //         $employees = $employees->where('direction_id', 1);
-            //     }
-            // }
-
-            if ($AUTH_USER->level_id > 3) { // Subdirectorate
-                $employees = $employees->where('subdirectorate_id', $AUTH_USER->subdirectorate_id);
-            }
-            // else {
-            //     if ($allEmployees == NULL) {
-            //         $employees = $employees->where('subdirectorate_id', 1);
-            //     }
-            // }
-
-            if ($AUTH_USER->level_id > 4) { // department
-                $employees = $employees->where('department_id', $AUTH_USER->subdirectorate_id);
-            }
-            // else {
-            //     if ($allEmployees == NULL) {
-            //         $employees = $employees->where('department_id', 1);
-            //     }
-            // }
-
-            $employees = $employees->orderBy('name', 'ASC')->get();
-
-            $data = $this->makeMonthlyRecords(
-                $employees,
-                $generalDirectionId,
-                $year,
-                $month,
-                $allEmployees
-            );
-        } else {
-            $data = $dataMongo->data;
-        }
-
-
-        $excel = new ExcelController($data, $generalDirection);
-        $fileName = 'reporte_mensual_' .Str::slug($generalDirection, '_') . '_' . $month . $year.'.xlsx';
-        Log::info('User '.Auth::user()->name.' generated monthly report '. $month . '_' . $year . ' '. $generalDirection);
-        $excel->create($fileName);
     }
 
     public function downloadDailyReporte(Request $request, $report_name){
@@ -207,11 +154,26 @@ class ReportController extends Controller
 
     }
 
+    public function downloadMonthlyReporte(Request $request, $report_name){
+
+        $filePath = sprintf("tmp/monthlyreports/$report_name");
+
+        // * validate if the report exist
+        if( !Storage::disk('local')->exists( $filePath)){
+            return response()->json([
+                "message" => "El reporte que está tratando de acceder no se encuentra disponible."
+            ], 404);
+        };
+
+        // * download the file
+        $name = "reporte-mensual.xlsx";
+        return Storage::disk('local')->download($filePath, $name);
+
+    }
 
     #region private functions
-
     /**
-     * makeReport
+     * makeDailyReport
      *
      * @return array|null
      */
@@ -313,6 +275,91 @@ class ReportController extends Controller
                 "error" => "Error al generar el reporte diario del día '$dateReport' intente de nuevo o comuníquese con el administrador."
             ];
         }
+
+    }
+
+    /**
+     * make monthly report
+     *
+     * @return array|null
+     */
+    private function makeMonthlyReport($AUTH_USER, $dateReport, $generalDirection, $includeAllEmployees ){
+        $today = new \DateTime();
+        $dataMongo = array();
+
+        // * attempt to retrive the report data only if the yaer-month of the report is not the same as today year-month
+        if( $today->format('Ym') != $dateReport->format('Ym') ) {
+            $dataMongoQuery = \App\Models\MonthlyRecord::where([
+                ['general_direction_id','=', $generalDirection->id],
+                ['year','=', $dateReport->year],
+                ['month','=', $dateReport->month],
+                ['all_employees','=', $includeAllEmployees]
+            ]);
+            if($AUTH_USER->level_id > 2){
+                $dataMongoQuery->where('direction_id', $AUTH_USER->direction_id);
+            }
+            if($AUTH_USER->level_id > 3){
+                $dataMongoQuery->where('subdirectorate_id', $AUTH_USER->subdirectorate_id);
+            }
+            if($AUTH_USER->level_id > 4){
+                $dataMongoQuery->where('department_id', $AUTH_USER->department_id);
+            }
+            $dataMongo = $dataMongoQuery->first();
+        }
+
+        // * make mongo record if is nothing alredy stored
+        if (!$dataMongo) {
+
+            // * get the employees associated to the user department
+            $employees = $this->getEmployees( $generalDirection->id, [
+                'directionId' => ($AUTH_USER->level_id > 2) ?$AUTH_USER->direction_id :null,
+                'subdirectorateId' => ($AUTH_USER->level_id > 3) ?$AUTH_USER->subdirectorate_id :null,
+                'departmentId' => ($AUTH_USER->level_id > 4) ?$AUTH_USER->department_id :null,
+            ]);
+
+
+            // * make monthly report
+            $data = $this->makeMonthlyRecords(
+                $employees,
+                $generalDirection->id,
+                $dateReport->year,
+                $dateReport->month,
+                $includeAllEmployees
+            );
+
+        } else {
+            $data = $dataMongo->data;
+        }
+
+
+        // * make the excel document
+        $monthlyReportMaker = new \App\Helpers\MonthlyReportExcel($data, $generalDirection->name);
+        $documentContent = $monthlyReportMaker->make();
+        if( $documentContent === false){
+            // TODO: Log fail
+            throw new \Exception("Fail to make the report document");
+        }
+
+
+        // * store the file
+        $fileName = sprintf("%s.xlsx", (string) Str::uuid() );
+        $filePath = sprintf("tmp/monthlyreports/$fileName");
+        if( Storage::disk('local')->put( $filePath, $documentContent ) ){
+            Log::info('User ' . $AUTH_USER->name . ' generate daily report for date ' . $dateReport->format('Y-m-d'));
+        }else {
+            Log::warning('Fail at stored the pdf of the daily report by User ' . $AUTH_USER->name . ' for date ' . $dateReport->format('Y-m-d'));
+        }
+
+
+        // * return the data related to the pdf created
+        $size = Storage::disk('local')->size($filePath);
+        $sizeInKB = number_format($size / 1024, 2);
+        return [
+            "fileName" => $fileName,
+            "date" => Carbon::now()->format("Y-m-d H:i:s"),
+            "userName" => $AUTH_USER->name,
+            "size" => $sizeInKB . " KB"
+        ];
 
     }
 
@@ -475,10 +522,10 @@ class ReportController extends Controller
             'users' => $users
         );
 
-        // Store in mongoDB
+        // * store the report-data only if the report year-month is not same as the current year-month
         try {
             $today = new \DateTime();
-            //if ($today->format('Yn') != $year.$month) {
+            if ($today->format('Yn') != $year.$month) {
                 $recordMongo = new \App\Models\MonthlyRecord();
                 $recordMongo->general_direction_id = $generalDirectionId;
                 if (Auth::user()->level_id != 1) {
@@ -491,12 +538,29 @@ class ReportController extends Controller
                 $recordMongo->all_employees = $all_employees;
                 $recordMongo->data = $data;
                 $recordMongo->save();
-            //}
+            }
         } catch (\Throwable $th) {
             Log::error($th->getMessage());
         }
 
         return $data;
+    }
+
+    private function translateDayName($name) {
+        $days['Mon'] = 'Lun';
+        $days['Tue'] = 'Mar';
+        $days['Wed'] = 'Mie';
+        $days['Thu'] = 'Jue';
+        $days['Fri'] = 'Vie';
+        $days['Sat'] = 'Sab';
+        $days['Sun'] = 'Dom';
+
+        return $days[$name];
+    }
+
+    private function months($month) {
+        $names = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        return $names[$month - 1];
     }
     #endregion
 
