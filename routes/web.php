@@ -126,6 +126,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix("new-employees")->name('newEmployees.')->group(function(){
         Route::get('', [NewEmployeeController::class, 'index'])->name('index');
+        Route::get('{employee_number}/edit', [NewEmployeeController::class, 'edit'])->name('edit');
+        Route::patch('{employee_number}', [NewEmployeeController::class, 'update'])->name('update');
     });
 
 });

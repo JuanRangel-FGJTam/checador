@@ -56,11 +56,11 @@ function handleInputSearch(search){
 
 <template>
 
-    <Head title="Administrador" />
+    <Head title="Nuevos empleados" />
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Vista Empleados</h2>
+            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Nuevos empleados registrados o sin área asignada</h2>
         </template>
 
         <div class="px-4 py-4 rounded-lg min-h-screen max-w-screen-xl mx-auto">
@@ -104,9 +104,9 @@ function handleInputSearch(search){
                             </td>
 
                             <td class="p-2 text-center">
-                                <NavLink :href=" route('employees.show', employee.employeeNumber )">
+                                <NavLink :href=" route('newEmployees.edit', employee.employeeNumber )">
                                     <div class="flex gap-2 shadow bg-slate-200 px-4 py-1">
-                                        <span>Asistencia</span>
+                                        <span>Asignar Area</span>
                                         <ChevronRightIcon class="w-4 h-4 ml-1" />
                                     </div>
                                 </NavLink>

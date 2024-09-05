@@ -105,9 +105,22 @@ class EmployeeService {
             $employee->direction_id = $data['direction_id'];
             $employee->subdirectorate_id = $data['subdirectorate_id'];
             $employee->department_id = $data['department_id'];
-            $employee->status_id = $data['canCheck'];
-            $employee->active = $data['status_id'];
+
+            if( isset($data['name'])){
+                $employee->name = $data['name'];
+            }
+
+            if( isset($data['canCheck'])){
+                $employee->status_id = $data['canCheck'];
+            }
+
+            if( isset($data['status_id'])){
+                $employee->active = $data['status_id'];
+            }
+
             $employee->save();
+            Log::notice("Employee '$employeeNumber:$employee->name' was updated.");
+
         } catch (\Throwable $th) {
             Log::error("Fail to update the employee '{employeeNumber}': {message}", [
                 "employeeNumber" => $employee->employeeNumber,
