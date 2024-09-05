@@ -172,7 +172,7 @@ function changePage(pageNumber){
                             </td>
 
                             <td class="p-2 text-center">
-                                <NavLink :href=" route('employees.show', employee.employeeNumber)">
+                                <NavLink :href=" route('staff.show', employee.employeeNumber)">
                                     <div class="flex gap-2 shadow bg-slate-200 px-4 py-1">
                                         <span>Asistencia</span>
                                         <ChevronRightIcon class="w-4 h-4 ml-1" />

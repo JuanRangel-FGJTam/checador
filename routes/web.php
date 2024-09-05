@@ -134,7 +134,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('staff')->name('staff.')->group(function(){
         Route::get('', [StaffController::class, 'index'])->name('index');
-        // Route::get('{employee_number}', [EmployeeController::class, 'show'])->name('show');
+        Route::get('{employee_number}', [StaffController::class, 'show'])->name('show');
         // Route::get('{employee_number}/edit', [EmployeeController::class, 'edit'])->name('edit');
         // Route::patch('{employee_number}', [EmployeeController::class, 'update'])->name('update');
 

@@ -99,4 +99,76 @@ class StaffController extends Controller
         ]);
     }
 
+    public function show(string $employee_number)
+    {
+
+        // * attempt to get the employee
+        try {
+            $employee = $this->employeeService->getEmployee($employee_number);
+        } catch (ModelNotFoundException $nf) {
+            Log::warning("Employee with employee number '$employee_number' not found");
+
+            // * redirect back
+            return redirect()->back()->withErrors([
+                "employee_number" => "Empleado no encontrado",
+                "message" => "Empleado no encontrado"
+            ])->withInput();
+
+        } catch (\Throwable $th) {
+            Log::error("Unhandle exception at attempting to get the employee at EmployeeController.show: {message}", [
+                "employee_number" => $employee_number,
+                "message" => $th->getMessage(),
+            ]);
+
+            //TODO: Redirect to error page
+            throw new Exception("Not implemented");
+        }
+
+        // calculate status
+        $status = array(
+            'name' => 'BAJA',
+            'class' => 'border border-red-400 text-red-600'
+        );
+        if ($employee->active) {
+            $status = array(
+                'name' => 'ACTIVO',
+                'class' => 'border border-green-400 text-green-600'
+            );
+        }
+
+        // calculate status checa
+        $checa = array(
+            'name' => 'REGISTRA ASISTENCIA',
+            'class' => 'border border-green-400 text-green-600'
+        );
+        if ($employee->checa != 1) {
+            $checa = array(
+                'name' => 'NO REGISTRA ASISTENCIA',
+                'class' => 'border border-red-400 text-red-600'
+            );
+        }
+
+        // * get working hours
+        $hours = array();
+        $workingHours = WorkingHours::where("employee_id", $employee->id)->first();
+        if( $workingHours != null){
+            if( $workingHours->toeat == null){
+                array_push($hours, $workingHours->checkin . "-" . $workingHours->checkout);
+            }else {
+                array_push($hours, $workingHours->checkin . "-" . $workingHours->toeat);
+                array_push($hours, $workingHours->toarrive . "-" . $workingHours->checkout);
+            }
+        }
+
+
+        // * return the view
+        return Inertia::render('Staff/Show', [
+            "employeeNumber" => $employee_number,
+            "employee" => isset($employee) ?$employee :null,
+            "status" => (object) $status,
+            "checa" => (object) $checa,
+            "workingHours" => $hours
+        ]);
+    }
+
 }
