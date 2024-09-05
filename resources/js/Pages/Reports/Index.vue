@@ -87,6 +87,22 @@ function handleReportDailyClick(){
     });
 }
 
+function handleReportMonthlyClick(){
+    router.visit( route('reports.monthly.create', {
+        "gd": formMonthly.generalDirectionId,
+        "y": formMonthly.year,
+        "m": formMonthly.month,
+        "a": formMonthly.allEmployees
+    }), {
+        onError:((err)=>{
+            const {message} = err;
+            if(message){
+                toast.error(message);
+            }
+        })
+    });
+}
+
 </script>
 
 <template>
@@ -144,7 +160,7 @@ function handleReportDailyClick(){
                     <PageTitle>Generar Reporte Mensual</PageTitle>
                 </template>
                 <template #content>
-                    <div class="flex gap-4 items-center pb-2">
+                    <form class="flex gap-4 items-center pb-2" @submit.prevent="handleReportMonthlyClick">
 
                         <div role="form-group">
                             <InputLabel for="monthlyGeneralDirectionId" value="Area" />
@@ -176,12 +192,11 @@ function handleReportDailyClick(){
                             <input type="checkbox" class="ml-4 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" id="monthlyAllEmployees" style="width: 1.5rem; height: 1.5rem;" v-model="formMonthly.allEmployees" />
                         </div>
 
-                        <PrimaryButton class="ml-auto">
+                        <PrimaryButton type="submit" class="ml-auto">
                             <span> Generar Reporte </span>
-                            <AnimateSpin class=" inline-block w-3 h-3 mx-1"/>
                         </PrimaryButton>
                         
-                    </div>
+                    </form>
                 </template>
             </Card>
 

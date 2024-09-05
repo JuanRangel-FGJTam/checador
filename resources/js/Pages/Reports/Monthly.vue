@@ -21,7 +21,7 @@ import SuccessButton from '@/Components/SuccessButton.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import Breadcrumb from '@/Components/Breadcrumb.vue';
 import AnimateSpin from '@/Components/Icons/AnimateSpin.vue';
-import PdfIcon from '@/Components/Icons/PdfIcon.vue';
+import ExcelIcon from '@/Components/Icons/ExcelIcon.vue';
 
 const props = defineProps({
     breadcrumbs: Object,
@@ -39,6 +39,7 @@ const props = defineProps({
 const toast = useToast();
 
 onMounted(()=>{
+
     setTimeout(() => {
         router.reload({
             only: ['report'],
@@ -51,7 +52,7 @@ onMounted(()=>{
 
 function handleDownloadReport() {
 
-    const url = route('reports.daily.download', props.report.fileName );
+    const url = route('reports.monthly.download', props.report.fileName );
     const link = document.createElement('a');
     link.href = url;
     document.body.appendChild(link);
@@ -91,7 +92,7 @@ function handleDownloadReport() {
                         
                         <div v-if="report" v-on:click="handleDownloadReport" class="flex gap-2 items-center p-2 text-xs uppercase rounded-xl bg-emerald-200 text-emerald-600 mx-auto dark:bg-emerald-500 dark:text-emerald-100 hover:bg-emerald-400 border-2 border-white outline outline-0 hover:outline-2 cursor-pointer">
                             
-                            <PdfIcon class="h-24 mx-4" />
+                            <ExcelIcon class="h-24 mx-4" />
 
                             <div class="flex flex-col gap-1 w-[20rem]">
                                 <div class="flex flex-col gap-1 p-1 items-start">

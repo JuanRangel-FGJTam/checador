@@ -118,6 +118,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('', [ReportController::class, 'index'])->name('index');
         Route::get('daily', [ReportController::class, 'createDailyReport'])->name('daily.create');
         Route::get('daily/{report_name}/download', [ReportController::class, 'downloadDailyReporte'])->name('daily.download');
+
+        Route::get('monthly', [ReportController::class, 'createMonthlyReport'])->name('monthly.create');
+        Route::get('monthly/{report_name}/download', [ReportController::class, 'downloadMonthlyReporte'])->name('monthly.download');
     });
 
 });
