@@ -10,6 +10,7 @@ use App\Http\Controllers\{
     EmployeeScheduleController,
     IncidentController,
     JustificationController,
+    NewEmployeeController,
     ProfileController,
     UserController,
     ReportController
@@ -123,15 +124,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('monthly/{report_name}/download', [ReportController::class, 'downloadMonthlyReporte'])->name('monthly.download');
     });
 
+    Route::prefix("new-employees")->name('newEmployees.')->group(function(){
+        Route::get('', [NewEmployeeController::class, 'index'])->name('index');
+    });
+
 });
 
 Route::get('rh', function(){
     return Inertia::render('Dashboard');
 })->middleware(['auth'])->name('rh');
-
-Route::get('new-employees', function(){
-    return Inertia::render('Dashboard');
-})->middleware(['auth'])->name('newEmployees');
 
 Route::get('show', function(){
     return Inertia::render('Dashboard');

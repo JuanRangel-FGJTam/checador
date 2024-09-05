@@ -119,6 +119,27 @@ class EmployeeService {
 
     }
 
+    /**
+     * return the employees that dont have assigned a general-direction, direction or subdirection
+     *
+     * @return array<EmployeeViewModel>
+     */
+    public function getNewEmployees() {
+        $employeesRaw = Employee::where('general_direction_id', 1)
+            ->orWhere('general_direction_id', null)
+            ->orWhere('general_direction_id', '')
+            ->get()
+            ->all();
+
+        $employees = array();
+
+        foreach ($employeesRaw as $employee) {
+            array_push($employees, EmployeeViewModel::fromEmployeeModel($employee));
+        }
+
+        return $employees;
+    }
+
     #region schedule
 
     /**

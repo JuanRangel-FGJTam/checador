@@ -47,7 +47,7 @@ const showingNavigationDropdown = ref(false);
                                 Reportes
                             </NavLink>
 
-                            <NavLink :href="route('newEmployees')" :active="route().current('new-employees')">
+                            <NavLink :href="route('newEmployees.index')" :active="route().current('new-employees')">
                                 Nuevos registros
                             </NavLink>
 
