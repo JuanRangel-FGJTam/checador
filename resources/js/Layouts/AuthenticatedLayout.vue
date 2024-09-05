@@ -35,23 +35,23 @@ const showingNavigationDropdown = ref(false);
                                 Dashboard
                             </NavLink>
 
-                            <NavLink :href="route('admin.index')" :active="route().current('admin')">
+                            <NavLink :href="route('admin.index')" :active="route().current('admin.index')">
                                 Admin
                             </NavLink>
 
-                            <NavLink :href="route('employees.index')" :active="route().current('employees')">
+                            <NavLink :href="route('employees.index')" :active="route().current('employees.index')">
                                 Empleados
                             </NavLink>
 
-                            <NavLink :href="route('reports.index')" :active="route().current('reports')">
+                            <NavLink :href="route('reports.index')" :active="route().current('reports.index')">
                                 Reportes
                             </NavLink>
 
-                            <NavLink :href="route('newEmployees.index')" :active="route().current('new-employees')">
+                            <NavLink :href="route('newEmployees.index')" :active="route().current('newEmployees.index')">
                                 Nuevos registros
                             </NavLink>
 
-                            <NavLink :href="route('show')" :active="route().current('show')">
+                            <NavLink :href="route('staff.index')" :active="route().current('staff.index')">
                                 Consulta
                             </NavLink>
 

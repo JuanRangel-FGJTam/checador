@@ -13,7 +13,8 @@ use App\Http\Controllers\{
     NewEmployeeController,
     ProfileController,
     UserController,
-    ReportController
+    ReportController,
+    StaffController
 };
 
 Route::get('/', function () {
@@ -128,6 +129,29 @@ Route::middleware(['auth'])->group(function () {
         Route::get('', [NewEmployeeController::class, 'index'])->name('index');
         Route::get('{employee_number}/edit', [NewEmployeeController::class, 'edit'])->name('edit');
         Route::patch('{employee_number}', [NewEmployeeController::class, 'update'])->name('update');
+    });
+
+
+    Route::prefix('staff')->name('staff.')->group(function(){
+        Route::get('', [StaffController::class, 'index'])->name('index');
+        // Route::get('{employee_number}', [EmployeeController::class, 'show'])->name('show');
+        // Route::get('{employee_number}/edit', [EmployeeController::class, 'edit'])->name('edit');
+        // Route::patch('{employee_number}', [EmployeeController::class, 'update'])->name('update');
+
+        // Route::get('{employee_number}/incidents/create', [EmployeeController::class, 'incidentCreate'])->name('incidents.create');
+
+        // Route::prefix('{employee_number}/justifications')->name('justifications.')->group(function(){
+        //     Route::get('', [JustificationController::class, 'showJustificationOfEmployee'])->name('index');
+        //     Route::get('justify-day', [JustificationController::class, 'showJustifyDay'])->name('justify-day');
+        //     Route::post('', [JustificationController::class, 'storeJustification'])->name('store');
+        // });
+
+        // Route::get('{employee_number}/raw-events', [EmployeeController::class, 'eventsJson'])->name('raw-events');
+
+        // Route::prefix('{employee_number}/schedule')->name('schedule.')->group(function(){
+        //     Route::get('', [EmployeeScheduleController::class, 'edit'])->name('edit');
+        //     Route::patch('', [EmployeeScheduleController::class, 'update'])->name('update');
+        // });
     });
 
 });

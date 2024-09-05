@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Models\{
     Employee,
@@ -30,18 +31,51 @@ class EmployeeService {
         $employees = array();
         $query = Employee::query();
 
-        // * apply some filters
-        if( !empty($filters) ){
-            if(isset($filters['general_direction_id'])){
-                $query->where('general_direction_id', $filters['general_direction_id'] );
+        // * filter the employees by the user level
+        if( Auth::user()->level_id == 1) /* Admin */{
+            // * apply some filters
+            if( !empty($filters) ){
+                if(isset($filters['general_direction_id'])){
+                    $query->where('general_direction_id', $filters['general_direction_id'] );
+                }
+
+                if(isset($filters['subdirectorate_id'])){
+                    $query->where('subdirectorate_id', $filters['subdirectorate_id'] );
+                }
+
+                if(isset($filters['direction_id'])){
+                    $query->where('direction_id', $filters['direction_id'] );
+                }
+
+                if( isset($filters['search'])){
+                    $query->where(function($q) use ($filters) {
+                        $q->where('name', 'like', "%".$filters['search']."%")
+                          ->orWhere('plantilla_id', 'like', "%".$filters['search']."%");
+                    });
+                }
+
+            }
+        }else{
+            $__authUser = Auth::user();
+            $__currentLevel = Auth::user()->level_id;
+
+            if($__currentLevel >= 2){
+                $query->where('general_direction_id', $__authUser->general_direction_id );
             }
 
-            if(isset($filters['subdirectorate_id'])){
-                $query->where('subdirectorate_id', $filters['subdirectorate_id'] );
+            if($__currentLevel >= 3){
+                $query->where('direction_id', $__authUser->direction_id);
             }
 
-            if(isset($filters['direction_id'])){
-                $query->where('direction_id', $filters['direction_id'] );
+            if($__currentLevel >= 4){
+                $query->where('subdirectorate_id', $__authUser->subdirectorates_id);
+            }
+
+            if( isset($filters['search'])){
+                $query->where(function($q) use ($filters) {
+                    $q->where('name', 'like', "%".$filters['search']."%")
+                      ->orWhere('plantilla_id', 'like', "%".$filters['search']."%");
+                });
             }
         }
 
