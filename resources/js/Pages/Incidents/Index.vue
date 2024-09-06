@@ -1,140 +1,115 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from 'vue-toastification';
+import { debounce } from '@/utils/debounce';
 
-import NavLink from '@/Components/NavLink.vue';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Card from '@/Components/Card.vue';
 import CardTitle from '@/Components/CardTitle.vue';
 import CardText from '@/Components/CardText.vue';
 import InputSelect from "@/Components/InputSelect.vue";
 import InputError from '@/Components/InputError.vue';
-import BadgeBlue from "@/Components/BadgeBlue.vue";
-import BadgeGreen from "@/Components/BadgeGreen.vue";
-import BadgeYellow from "@/Components/BadgeYellow.vue";
-import BadgeRed from "@/Components/BadgeRed.vue";
 import SuccessButton from '@/Components/SuccessButton.vue';
-import VerticalTimeLine from '@/Components/VerticalTimeLine.vue';
-import TimeLineItemCustom from '@/Components/TimeLineItemCustom.vue';
-import Breadcrumb from '@/Components/Breadcrumb.vue';
 import AnimateSpin from '@/Components/Icons/AnimateSpin.vue';
-import CalendarExclamationIcon from '@/Components/Icons/CalendarExclamationIcon.vue';
+import DownloadIcon from '@/Components/Icons/DownloadIcon.vue';
+import { options } from '@fullcalendar/core/preact';
+import { diffDates } from '@fullcalendar/core/internal';
 
 const props = defineProps({
-    employeeNumber: String,
-    employee: Object,
-    status: Object,
-    checa: Object,
-    workingHours: Object,
-    breadcrumbs: {
-        type: Array,
-        default: [
-            { "name": 'Inicio', "href": '/dashboard' },
-            { "name": 'Justificantes', "href": '/dashboard' },
-            { "name": 'Empleado', "href": '' }
-        ]
-    },
     years: {
         type: Array,
         default: [2024,2023,2022,2021,2020]
     },
-    months: {
-        type: Array,
-        default: [
-            {value:1, label:"Enero"},
-            {value:2, label:"Febrero"},
-            {value:3, label:"Marzo"},
-            {value:4, label:"Abril"},
-            {value:5, label:"Mayo"},
-            {value:6, label:"Junio"},
-            {value:7, label:"Julio"},
-            {value:8, label:"Agosto"},
-            {value:9, label:"Septiembre"},
-            {value:10, label:"Octubre"},
-            {value:11, label:"Noviembre"},
-            {value:12, label:"Diciembre"}
-        ]
-    },
-    incidentStatuses: Array
+    incidentStatuses: Array,
+    generalDirections: Array,
+    employees: Array,
+    reportTypes: Object,
+    periods: Object,
+    options: {
+        type: Object,
+        default: {
+            generalDirecctionId: 0,
+            year: 0,
+            period: 0,
+            type: ''
+        }
+    }
 });
 
 const toast = useToast();
 
 const form = useForm({
-    year: props.years[0],
-    month: undefined
+    general_direction_id: props.options.generalDirecctionId,
+    year: props.options.year,
+    period: props.options.period,
+    report_type: props.options.type,
 });
-
-const formIncident = useForm({
-    incident_id: undefined,
-    state_id: undefined
-});
-
-const incidents = ref([]);
 
 const loading = ref(false);
 
 watch(form, (oldValue, newValue)=>{
-    if( newValue.year && newValue.month){
+    debounce(()=>{
         getIncidents();
-    }
+    }, 750)
 });
 
 onMounted(()=>{
-    // set the current month
-    const date = new Date();
-    const currentMonth = date.getMonth() + 1;
-    form.month = currentMonth;
+    //
 });
 
 function getIncidents(){
 
-    // * clear incident form
-    formIncident.incident_id = undefined;
-    formIncident.state_id = undefined;
+    // prevet call the data if the general direction and the period are not selected
+    if( form.general_direction_id == null || form.general_direction_id <= 0  || !form.period){
+        return;
+    }
 
-    incidents.value = [];
     loading.value = true;
 
-    // * attempt to get the incidentes of the employee
-    axios.get( route('incidents.employee.raw',{
-        "employee_number": props.employeeNumber,
-        "onlyPendings": 1,
-        "year": form.year,
-        "month": form.month
-    }))
-    .then((response)=>{
-        const {data} = response;
-        if(data){
-            incidents.value = data;
+    // prepared the query params
+    var params = [];
+    params.push(`gdi=${form.general_direction_id}`);
+    params.push(`t=${form.report_type}`);
+    params.push(`y=${form.year}`);
+    params.push(`p=${form.period}`);
+
+    // call for the data
+    router.visit("?" + params.join("&"), {
+        replace: true,
+        preserveState: true,
+        only: ["options","periods","employees"],
+        onError: ()=>{
+            toast.error("Error al actualizar los datos, intente de nuevo o comuniquese con el administrador.")
+        },
+        onFinish: ()=>{
+            loading.value = false;
         }
-    })
-    .catch((err)=>{
-        const {message} = err;
-        toast.error(message??"Error at attempting to retrive the incendents of the month.");
-        console.dir(err);
-    })
-    .finally(()=>{
-        loading.value = false;
     });
 
 }
 
-function updateIncident(){
-    formIncident.patch( route('incidents.state.update', formIncident.incident_id ), {
-        onSuccess:(()=>{
-            toast.info("El estado de la incidencia sé ha actualizado.")
-            getIncidents();
-        }),
-        onError:((err)=>{
-            const {message} = err;
-            if( message){
-                toast.warning(message);
-            }
-        })
+function reportTypeChanged(){
+    form.period = undefined;
+
+    var params = [];
+    params.push(`gdi=${form.general_direction_id}`);
+    params.push(`t=${form.report_type}`);
+    params.push(`y=${form.year}`);
+
+    router.visit("?" + params.join("&"), {
+        replace: true,
+        preserveState: true,
+        only: ["options","periods","employees" ],
+        onError: ()=>{
+            toast.error("Error al actualizar los datos, intente de nuevo o comuniquese con el administrador.")
+        },
+        onFinish: ()=>{
+            loading.value = false;
+        }
     });
 }
+
 
 </script>
 
@@ -145,143 +120,108 @@ function updateIncident(){
     <AuthenticatedLayout>
 
         <template #header>
-            <Breadcrumb :breadcrumbs="breadcrumbs" />
+            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Incidencias</h2>
         </template>
 
-        <div class="px-4 py-4 rounded-lg min-h-screen max-w-screen-lg mx-auto">
+        <div class="px-4 py-4 h-full rounded-lg max-w-screen-xl mx-auto grid grid-rows-[5rem_1fr] ">
 
-            <!-- employee data -->
             <Card class="outline outline-1 outline-gray-300 dark:outline-gray-500" :shadow="false">
-                <template #header>
-                    <div class="flex gap-4">
-                        <h1 class="font-bold text-lg uppercase">{{ employee.name }}</h1>
-                        <div class="border rounded-lg px-2 dark:border-gray-500" :class="status.class">
-                            {{status.name}}
-                        </div>
-                        <div class="border rounded-lg px-2 dark:border-gray-500" :class="checa.class">
-                            {{checa.name}}
-                        </div>
-                    </div>
-                </template>
-
                 <template #content>
-                    <div class="flex gap-4">
+                    <form @submit.prevent="submitFilter" class="flex pt-1 gap-1 items-center">
 
-                        <div class="flex items-center justify-start">
-                            <img :src="employee.photo" class="mx-auto w-48 aspect-auto rounded-lg border bg-slate-400 text-center dark:border-gray-500" alt="Foto empleado"/>
-                        </div>
+                        <InputSelect v-model="form.general_direction_id" id="general_direction_id" class="max-w-[24rem]">
+                            <option value="" class="uppercase"> Seleccione una opcion</option>
+                            <option v-for="element in generalDirections" :value="element.id" class="uppercase"> {{ element.name }}</option>
+                        </InputSelect>
 
-                        <div class="flex gap-4 w-full">
-                            <div class="flex flex-col items-start gap-1 w-2/5">
+                        <InputSelect v-model="form.year" id="year" class="max-w-[8rem]">
+                            <option v-for="y in years" :value="y"> {{ y }}</option>
+                        </InputSelect>
 
-                                <div class="flex gap-2 justify-end">
-                                    <CardTitle class="pt-0.5">Numero de empleado: </CardTitle>
-                                    <CardText> {{ employee.employeeNumber }}</CardText>
-                                </div>
+                        <InputSelect v-model="form.report_type" id="report_type" class="max-w-[12rem]" v-on:change="reportTypeChanged">
+                            <option v-for="(key, index) in Object.keys(reportTypes)" :key="index" :value="key">{{ reportTypes[key] }}</option>
+                        </InputSelect>
 
-                                <div class="flex gap-2 justify-end">
-                                    <CardTitle class="pt-0.5">Curp: </CardTitle>
-                                    <CardText> {{ employee.curp }}</CardText>
-                                </div>
+                        <InputSelect v-model="form.period" id="period" class="max-w-[18rem]">
+                            <option value=""> Seleccione una opcion</option>
+                            <option v-for="(key, index) in Object.keys(periods)" :key="index" :value="key"> {{ periods[key] }}</option>
+                        </InputSelect>
 
-                                <div class="flex gap-2 justify-end">
-                                    <CardTitle class="pt-0.5">Horario: </CardTitle>
-                                    <CardText v-for="item in workingHours">{{ item }}</CardText>
-                                </div>
+                        <SuccessButton type="submit" class="ml-auto">
+                            <DownloadIcon class="w-5 h-5 mr-1" />
+                            <span>Descargar</span>
+                        </SuccessButton>
 
-                                <div class="flex gap-2 justify-end">
-                                    <CardTitle class="pt-0.5">Dias laborales: </CardTitle>
-                                    <CardText> {{ employee.days }}</CardText>
-                                </div>
-
-                            </div>
-
-                            <div class="flex flex-col items-start gap-1 w-3/5">
-                                <p class="text-gray-700 dark:text-gray-300 uppercase font-semibold">
-                                    {{ employee.generalDirection }}
-                                </p>
-
-                                <p class="text-gray-700 dark:text-gray-300 uppercase font-semibold">
-                                    {{ employee.direction }}
-                                </p>
-
-                                <p v-if="employee.subDirection" class="text-gray-600 dark:text-gray-300 uppercase font-semibold text-sm">
-                                    {{ employee.subDirection}}
-                                </p>
-
-                                <p v-if="employee.department" class="text-gray-600 dark:text-gray-300 uppercase font-semibold text-sm">
-                                    {{ employee.department}}
-                                </p>
-                            </div>
-                        </div>
-
-                    </div>
+                    </form>
                 </template>
             </Card>
 
-            
-            <!-- Incidents -->
-            <div class="outline outline-1 outline-gray-300 flex flex-col gap-2 bg-white p-2 rounded dark:bg-gray-700 dark:outline-gray-500">
-                
-                <!-- Options -->
-                <div class="w-full flex gap-2 mt-2 dark:border-gray-500">
-                    <div class="w-32">
-                        <InputSelect v-model="form.year">
-                            <option v-for="y in props.years" :key="y" :value="y"> {{y}}</option>
-                        </InputSelect>
-                    </div>
+            <div class="h-full overflow-y-auto">
+                <table class="table w-full shadow text-sm text-left border rtl:text-right text-gray-500 dark:text-gray-400 dark:border-gray-500">
+                    <thead class="sticky top-0 z-20 text-xs uppercase text-gray-700 border bg-gradient-to-b from-gray-50 to-slate-100 dark:from-gray-800 dark:to-gray-700 dark:text-gray-200 dark:border-gray-500">
+                        <AnimateSpin v-if="loading" class="w-5 h-5 mx-2 absolute top-2.5" />
+                        <tr>
+                            <th scope="col" class="w-1/8 text-center px-6 py-3 ">#</th>
 
-                    <div class="w-32">
-                        <InputSelect v-model="form.month">
-                            <option v-for="y in props.months" :key="y.value" :value="y.value"> {{y.label}}</option>
-                        </InputSelect>
-                    </div>
+                            <th scope="col" class="w-2/8 text-center px-6 py-3 tracking-wider">
+                                Nombre
+                            </th>
+                            <th scope="col" class="w-2/8 text-center px-6 py-3 uppercase tracking-wider">
+                                Unidad
+                            </th>
+                            <th scope="col" class="w-1/8 text-center px-6 py-3 uppercase tracking-wider">
+                                # Incidencias
+                            </th>
+                            <th scope="col" class="w-2/8 before:relative px-6 py-3">
+                                <span class="sr-only">Información</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr v-if="employees && employees.length>0" v-for="(employee, index) in employees" :key="index">
+                            <td class="text-sm text-center font-medium text-gray-900 px-2">
+                                {{ index + 1 }}
+                            </td>
 
-                    <AnimateSpin v-if="loading" class="w-6 h-6 my-auto text-slate-800" />
+                            <td class="px-6 py-4 flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <img class="h-10 w-10 rounded-full" :src="employee.photo" alt="User photo">
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ employee.name }}
+                                    </div>
+                                </div>
+                            </td>
 
-                    <div v-if="formIncident.incident_id != null" class="ml-auto flex gap-1">
-                        <InputSelect v-model="formIncident.state_id">
-                            <option value="" selected> * Seleccione un elemento</option>
-                            <option v-for="item in incidentStatuses" :key="item.id" :value="item.id"> {{ item.name }}</option>
-                        </InputSelect>
-                        <SuccessButton v-if="formIncident.state_id != null" v-on:click="updateIncident" class="w-fit px-1">
-                            Actualzar
-                        </SuccessButton>
-                    </div>
+                            <td class="px-6 py-4 text-center">
+                                <div class="text-sm text-gray-600">
+                                    {{ employee.general_direction.abbreviation }}
+                                </div>
+                                <div class="text-sm text-gray-900">
+                                    {{ employee.direction.name }}
+                                </div>
+                            </td>
 
-                </div>
-                <InputError class="ml-auto" :message="formIncident.errors.state_id" />
+                            <td class="px-6 py-4 text-center whitespace-normal text-sm text-gray-500">
+                                {{ employee.totalIncidents }}
+                            </td>
 
-                <!-- timeline -->
-                <div class="mt-4">
-                    <fieldset class="pl-12">
-                        <legend class="pb-4 text-gray-600 dark:text-gray-200">Seleccione una incidencia para actualizar el estado</legend>
-                        <VerticalTimeLine>
-                            <TimeLineItemCustom v-for="(item, index) in incidents" :key="item.id">
-                                <template #icon>
-                                    <input type="radio" :id="index" name="incident_id" :value="item.id" v-model="formIncident.incident_id" />
-                                </template>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <a href="#" target="_blank"
+                                    class="p-2 rounded-md text-blue-600 border border-blue-500 outline-none focus:ring-4 shadow-lg transform active:scale-x-75 transition-transform flex justify-center items-center hover:bg-blue-100"
+                                >
+                                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="#3b83f6"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+                                    <span class="ml-2">Incidencias</span>
+                                </a>
+                            </td>
+                        </tr>
 
-                                <template #content>
-                                    <label :for="index" class="flex flex-col gap-1 border-b border-transparent hover:border-slate-200 cursor-pointer">
-                                        <h3 class="flex items-center gap-2 mb-0 text-lg font-semibold text-gray-700 dark:text-white uppercase">
-                                            <span>{{ item.type.name }}</span>
-                                            <BadgeYellow v-if="item.state.name == 'Pendiente' ">{{ item.state.name }}</BadgeYellow>
-                                            <BadgeGreen v-else-if="item.state.name == 'Autorizado' || item.state.name == 'Cancelado' ">{{ item.state.name }}</BadgeGreen>
-                                            <BadgeRed v-else-if="item.state.name == 'Descontado' ">{{ item.state.name }}</BadgeRed>
-                                            <BadgeBlue v-else>{{ item.state.name }}</BadgeBlue>
-                                        </h3>
-                                        <time class="flex items-center gap-1 mt-0 mb-1 text-sm font-normal leading-none text-gray-500 dark:text-gray-500 uppercase">
-                                            <CalendarExclamationIcon class="w-6 h-6 p-1 text-slate-500" />
-                                            <span>{{ item.date }}</span>
-                                        </time>
-                                    </label>
-                                </template>
-                            </TimeLineItemCustom>
-                        </VerticalTimeLine>
-                    </fieldset>
-                </div>
-
+                        <tr v-else>
+                            <td colspan="5" class="text-center text-yellow-600 py-6">Sin información que mostrar</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
 
         </div>

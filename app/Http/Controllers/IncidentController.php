@@ -2,21 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use \Date;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 use Inertia\Inertia;
 use App\Services\EmployeeService;
 use App\Interfaces\EmployeeIncidentInterface;
 use App\ViewModels\EmployeeViewModel;
 use App\Models\{
     Employee,
+    GeneralDirection,
     Incident,
     IncidentState,
     WorkingHours
 };
-use Carbon\Carbon;
 
 class IncidentController extends Controller
 {
@@ -30,8 +32,104 @@ class IncidentController extends Controller
         $this->employeeIncidentService = $employeeIncidentService;
     }
 
-    function index(){
-        throw new \Exception("Not implemnted");
+    function index(Request $request){
+
+        // * attempt to retrive the query params
+        $generalDirecctionId = $request->filled('gdi') ? $request->input("gdi") :null;
+        $repType = $request->filled('t') ? $request->input("t") : 'monthly';
+        $year = $request->filled('y') ? $request->input("y") : Carbon::now()->year;
+        $period = $request->filled('p') ? $request->input("p") : null;
+
+        // * get the incidents
+        $employees = array();
+        if( $period != null && $generalDirecctionId != null ){
+            // * prepare options
+            if($repType == 'monthly'){
+                $startOfMonth = Carbon::parse("$year-$period-01")->startOfDay();
+                $endOfMonth = Carbon::parse("$year-$period-01")->endOfMonth()->endOfDay();
+
+            }else{
+                $month = explode("-", $period)[0];
+                $quin = explode("-", $period)[1];
+                if( $quin == 1){
+                    $startOfMonth = Carbon::parse("$year-$month-01");
+                    $endOfMonth = Carbon::parse("$year-$month-15");
+                }else{
+                    $startOfMonth = Carbon::parse("$year-$month-15");
+                    $endOfMonth = Carbon::parse("$year-$month-01")->endOfMonth()->endOfDay();
+                }
+            }
+
+            $employees = $this->getEmployeesWithIncidentsByDirection($generalDirecctionId, $startOfMonth, $endOfMonth);
+
+        }
+
+
+        // * catalog incident status
+        $incidentStatuses = IncidentState::where("id", ">", 1)->select('id', 'name')->get()->toArray();
+        $generalDirections = GeneralDirection::select(['id', 'name'])->get()->all();
+        $reportTypes = [
+            "monthly" => "Mensual",
+            "fortnight" => "Quincenal"
+        ];
+        if($repType == 'monthly'){
+            $periods = [
+                "1"  => "Enero",
+                "2"  => "Febrero",
+                "3"  => "Marzo",
+                "4"  => "Abril",
+                "5"  => "Mayo",
+                "6"  => "Junio",
+                "7"  => "Julio",
+                "8"  => "Agosto",
+                "9"  => "Septiembre",
+                "10" => "Octubre",
+                "11" => "Noviembre",
+                "12" => "Diciembre"
+            ];
+        }else{
+            $periods = [
+                "1-1"  => "1ra Quincena de Enero",
+                "1-2"  => "2da Quincena de Enero",
+                "2-1"  => "1ra Quincena de Febrero",
+                "2-2"  => "2da Quincena de Febrero",
+                "3-1"  => "1ra Quincena de Marzo",
+                "3-2"  => "2da Quincena de Marzo",
+                "4-1"  => "1ra Quincena de Abril",
+                "4-2"  => "2da Quincena de Abril",
+                "5-1"  => "1ra Quincena de Mayo",
+                "5-2"  => "2da Quincena de Mayo",
+                "6-1"  => "1ra Quincena de Junio",
+                "6-2"  => "2da Quincena de Junio",
+                "7-1"  => "1ra Quincena de Julio",
+                "7-2"  => "2da Quincena de Julio",
+                "8-1"  => "1ra Quincena de Agosto",
+                "8-2"  => "2da Quincena de Agosto",
+                "9-1"  => "1ra Quincena de Septiembre",
+                "9-2"  => "2da Quincena de Septiembre",
+                "10-1" => "1ra Quincena de Octubre",
+                "10-2" => "2da Quincena de Octubre",
+                "11-1" => "1ra Quincena de Noviembre",
+                "11-2" => "2da Quincena de Noviembre",
+                "12-1" => "1ra Quincena de Diciembre",
+                "12-2" => "2da Quincena de Diciembre"
+            ];
+        }
+
+        // * return the view
+        return Inertia::render('Incidents/Index', [
+            "incidentStatuses" => array_values($incidentStatuses),
+            "generalDirections" => $generalDirections,
+            "employees" => $employees,
+            "reportTypes" => $reportTypes,
+            "periods" => $periods,
+            "options" => [
+                "generalDirecctionId" => $generalDirecctionId,
+                "year" => $year,
+                "period" => $period,
+                "type" => $repType
+            ]
+        ]);
     }
 
 
@@ -90,7 +188,7 @@ class IncidentController extends Controller
         $incidentStatuses = IncidentState::where("id", ">", 1)->select('id', 'name')->get()->toArray();
 
         // * return the view
-        return Inertia::render('Incidents/Index', [
+        return Inertia::render('Incidents/Employee', [
             "employeeNumber" => $employee->employeeNumber,
             "employee" => $employee,
             "breadcrumbs" => $breadcrumbs,
@@ -233,6 +331,45 @@ class IncidentController extends Controller
             ])->withInput();
         }
     }
+
+    /**
+     * get incidents of direction by range date
+     *
+     * @param  int|string $generalDirecctionId
+     * @param  string|Date|Carbon $from
+     * @param  string|Date|Carbon $to
+     * @return array
+     */
+    private function getEmployeesWithIncidentsByDirection(int $generalDirecctionId, $from, $to){
+
+        // * get the incidents
+        $incidents = Incident::whereBetween('date', [$from, $to])
+        ->whereHas("employee", function($employee) use($generalDirecctionId) {
+            return $employee->where('general_direction_id', $generalDirecctionId);
+        })->get();
+
+
+        // * group by employee
+        $groupedByEmployee = $incidents->groupBy('employee_id')->all();
+
+        // * get the employees
+        $employees = Employee::with([
+            'generalDirection',
+            'direction'
+        ])->whereIn('id', array_keys( $groupedByEmployee ))->get()->toArray();
+
+        // * append the total of incidences on the period
+        foreach($employees as &$empl){
+            try {
+                $empl["totalIncidents"] = count( $groupedByEmployee[$empl['id']] );
+            } catch (\Throwable $th) {
+                $empl["totalIncidents"] = 0;
+            }
+        }
+
+        return $employees;
+    }
+
     #endregion
 
 }

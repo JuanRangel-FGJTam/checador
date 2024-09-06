@@ -55,7 +55,7 @@ const showingNavigationDropdown = ref(false);
                                 Consulta
                             </NavLink>
 
-                            <NavLink :href="route('incidents')" :active="route().current('incidents')">
+                            <NavLink :href="route('incidents.index')" :active="route().current('incidents.index')">
                                 Incidencias
                             </NavLink>
                             

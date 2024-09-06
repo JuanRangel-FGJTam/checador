@@ -135,42 +135,14 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('staff')->name('staff.')->group(function(){
         Route::get('', [StaffController::class, 'index'])->name('index');
         Route::get('{employee_number}', [StaffController::class, 'show'])->name('show');
-        // Route::get('{employee_number}/edit', [EmployeeController::class, 'edit'])->name('edit');
-        // Route::patch('{employee_number}', [EmployeeController::class, 'update'])->name('update');
+    });
 
-        // Route::get('{employee_number}/incidents/create', [EmployeeController::class, 'incidentCreate'])->name('incidents.create');
-
-        // Route::prefix('{employee_number}/justifications')->name('justifications.')->group(function(){
-        //     Route::get('', [JustificationController::class, 'showJustificationOfEmployee'])->name('index');
-        //     Route::get('justify-day', [JustificationController::class, 'showJustifyDay'])->name('justify-day');
-        //     Route::post('', [JustificationController::class, 'storeJustification'])->name('store');
-        // });
-
-        // Route::get('{employee_number}/raw-events', [EmployeeController::class, 'eventsJson'])->name('raw-events');
-
-        // Route::prefix('{employee_number}/schedule')->name('schedule.')->group(function(){
-        //     Route::get('', [EmployeeScheduleController::class, 'edit'])->name('edit');
-        //     Route::patch('', [EmployeeScheduleController::class, 'update'])->name('update');
-        // });
+    Route::prefix('incidents')->name('incidents.')->group(function(){
+        Route::get('', [IncidentController::class, 'index'])->name('index');
     });
 
 });
 
-Route::get('rh', function(){
-    return Inertia::render('Dashboard');
-})->middleware(['auth'])->name('rh');
-
-Route::get('show', function(){
-    return Inertia::render('Dashboard');
-})->middleware(['auth'])->name('show');
-
-Route::get('incidents', function(){
-    return Inertia::render('Dashboard');
-})->middleware(['auth'])->name('incidents');
-
-Route::get('incidents', function(){
-    return Inertia::render('Dashboard');
-})->middleware(['auth'])->name('incidents');
 
 Route::get('inactive', function(){
     return Inertia::render('Dashboard');
