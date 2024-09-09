@@ -99,6 +99,35 @@ class EmployeeService {
         return $employees;
     }
 
+    /**
+     * get the list of employees assigned to the current user
+     *
+     * @return Collection<Employee>
+     */
+    public function getEmployeesOfUser(){
+        $query = Employee::query();
+
+        // * filter the employees by the user level
+        if( Auth::user()->level_id > 1) {
+            $__authUser = Auth::user();
+            $__currentLevel = Auth::user()->level_id;
+
+            if($__currentLevel >= 2){
+                $query->where('general_direction_id', $__authUser->general_direction_id );
+            }
+
+            if($__currentLevel >= 3){
+                $query->where('direction_id', $__authUser->direction_id);
+            }
+
+            if($__currentLevel >= 4){
+                $query->where('subdirectorate_id', $__authUser->subdirectorates_id);
+            }
+        }
+
+        return $query->get();
+    }
+
 
     /**
      * get the employee by the employee number

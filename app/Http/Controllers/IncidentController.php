@@ -485,24 +485,12 @@ class IncidentController extends Controller
         $employeesQuery = Employee::with([
             'generalDirection',
             'direction'
-        ])->whereIn('id', array_keys( $groupedByEmployee ));
+        ])->whereIn('id', array_keys($groupedByEmployee));
 
         // * filter employees by the user-level
         if( Auth::user()->level_id > 1) {
-            $__authUser = Auth::user();
-            $__currentLevel = Auth::user()->level_id;
-
-            if($__currentLevel >= 2){
-                $employeesQuery->where('general_direction_id', $__authUser->general_direction_id );
-            }
-
-            if($__currentLevel >= 3){
-                $employeesQuery->where('direction_id', $__authUser->direction_id);
-            }
-
-            if($__currentLevel >= 4){
-                $employeesQuery->where('subdirectorate_id', $__authUser->subdirectorates_id);
-            }
+            $employeesOfUser = $this->employeeService->getEmployeesOfUser();
+            $employeesQuery->whereIn('id', $employeesOfUser->pluck('id')->all() );
         }
 
         $employees = $employeesQuery->get()->toArray();
