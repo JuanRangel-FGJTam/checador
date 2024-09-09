@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from 'vue-toastification';
 import { debounce } from '@/utils/debounce';
+import axios from 'axios';
 
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Card from '@/Components/Card.vue';
@@ -13,8 +14,8 @@ import InputError from '@/Components/InputError.vue';
 import SuccessButton from '@/Components/SuccessButton.vue';
 import AnimateSpin from '@/Components/Icons/AnimateSpin.vue';
 import DownloadIcon from '@/Components/Icons/DownloadIcon.vue';
-import { options } from '@fullcalendar/core/preact';
-import { diffDates } from '@fullcalendar/core/internal';
+
+
 
 const props = defineProps({
     years: {
@@ -47,6 +48,7 @@ const form = useForm({
 });
 
 const loading = ref(false);
+const makingReport = ref(false);
 
 watch(form, (oldValue, newValue)=>{
     debounce(()=>{
@@ -110,6 +112,38 @@ function reportTypeChanged(){
     });
 }
 
+function makeReportClick(){
+
+    if(makingReport.value){
+        return;
+    }
+
+    makingReport.value = true;
+
+    // * prepared payload
+    const dataPayload = {
+        'general_direction_id': form.general_direction_id,
+        'year' : form.year,
+        'period' : form.period,
+        'report_type' : form.report_type
+    };
+
+    // * make the report
+    const url = route('incidents.report.make', dataPayload);
+    const link = document.createElement('a');
+    link.href = url;
+    document.body.appendChild(link);
+    link.click();
+
+    // clean up
+    window.URL.revokeObjectURL(url);
+
+    setTimeout(()=>{
+        makingReport.value = false;
+    },1000)
+
+}
+
 
 </script>
 
@@ -127,7 +161,7 @@ function reportTypeChanged(){
 
             <Card class="outline outline-1 outline-gray-300 dark:outline-gray-500" :shadow="false">
                 <template #content>
-                    <form @submit.prevent="submitFilter" class="flex pt-1 gap-1 items-center">
+                    <form @submit.prevent="makeReportClick" class="flex pt-1 gap-1 items-center">
 
                         <InputSelect v-model="form.general_direction_id" id="general_direction_id" class="max-w-[24rem]">
                             <option value="" class="uppercase"> Seleccione una opcion</option>
@@ -148,7 +182,8 @@ function reportTypeChanged(){
                         </InputSelect>
 
                         <SuccessButton type="submit" class="ml-auto">
-                            <DownloadIcon class="w-5 h-5 mr-1" />
+                            <AnimateSpin v-if="makingReport || loading" class="w-5 h-5 mr-1 text-white" />
+                            <DownloadIcon v-else class="w-5 h-5 mr-1" />
                             <span>Descargar</span>
                         </SuccessButton>
 

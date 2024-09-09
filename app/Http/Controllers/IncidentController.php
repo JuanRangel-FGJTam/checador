@@ -7,11 +7,15 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Inertia\Inertia;
 use App\Services\EmployeeService;
 use App\Interfaces\EmployeeIncidentInterface;
 use App\ViewModels\EmployeeViewModel;
+use App\Helpers\IncidentsReport;
 use App\Models\{
     Employee,
     GeneralDirection,
@@ -19,6 +23,8 @@ use App\Models\{
     IncidentState,
     WorkingHours
 };
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Facades\Storage;
 
 class IncidentController extends Controller
 {
@@ -199,7 +205,6 @@ class IncidentController extends Controller
         ]);
     }
 
-
     /**
      * retrive the incidents of the employee in json format
      *
@@ -306,6 +311,130 @@ class IncidentController extends Controller
 
     }
 
+
+    /**
+     * make the incident report
+     *
+     * @param  mixed $request
+     * @return void
+     */
+    function makeReport(Request $request){
+
+        // * validate the request data
+        $validator = Validator::make( $request->query(), [
+            'general_direction_id' => 'required|numeric',
+            'year' => 'required|numeric|min:2020',
+            'period' => 'required',
+            'report_type' => 'required|in:monthly,fortnight'
+        ]);
+        if ($validator->fails()) {
+            return redirect(status:422)->back()->withErrors([
+                "error" => $validator->errors()
+            ])->withInput();
+        }
+
+
+        // * prepare the inputs
+        $__generalDirection = $request->input('general_direction_id');
+        $__year = $request->input('year');
+        $__period = $request->input('period');
+        $__reportType = $request->input('report_type');
+        $generalDirection = GeneralDirection::find($__generalDirection);
+        $startDate = null;
+        $endDate = null;
+        $totales = array(
+            'omissions' => 0,
+            'delays' => 0,
+            'absents' => 0,
+            'acumulations' => 0,
+            'total' => 0,
+        );
+        $title = "Reporte de incidencias";
+
+
+        // * get employees with incidences
+        $employees = array();
+        if( $__reportType == 'monthly'){
+            $startDate = Carbon::parse("$__year-$__period-01")->startOfDay();
+            $endDate = Carbon::parse("$__year-$__period-01")->endOfMonth()->endOfDay();
+            $title = "Reporte de incidencias del mes de " . $this->monthName($__period);
+        }
+        if( $__reportType == 'fortnight'){
+            $month = explode("-", $__period)[0];
+            $quin = explode("-", $__period)[1];
+            if( $quin == 1){
+                $startDate = Carbon::parse("$__year-$month-01");
+                $endDate = Carbon::parse("$__year-$month-15");
+            }else{
+                $startDate = Carbon::parse("$__year-$month-15");
+                $endDate = Carbon::parse("$__year-$month-01")->endOfMonth()->endOfDay();
+            }
+            $title = "Reporte de incidencias del " . $startDate->format('d M Y') . ' al ' . $endDate->format('d M Y') ;
+        }
+        $employees = $this->getEmployeesWithIncidentsByDirection( $__generalDirection, $startDate, $endDate );
+
+
+        // * get the incident of each employee for the report
+        $totales = array(
+            'omissions' => 0,
+            'delays' => 0,
+            'absents' => 0,
+            'acumulations' => 0,
+            'total' => 0,
+        );
+
+        /**
+         * @var array<string,mixed> $employee
+         */
+        foreach ($employees as &$employee) {
+
+            // * get the resume of incidents
+            $resumeIncidents = $this->getIncidentsOfEmployeeGrupedByType($employee['id'], $startDate, $endDate);
+
+            // * append the properties ('noEmployee', 'nivel', 'puesto', 'delays', 'absents', 'acumulations', 'totalAbsentsd' )
+            $employee['noEmployee'] = (int)substr($employee['plantilla_id'], 1);
+            $employee['nivel'] = "*No disponible";
+            $employee['puesto'] = "*No disponible";
+            $employee['delays'] = $resumeIncidents['delays'];
+            $employee['absents'] = $resumeIncidents['absents'];
+            $employee['acumulations'] = $resumeIncidents['acumulations'];
+            $employee['totalAbsents'] = $resumeIncidents['totalAbsents'];
+
+            // * add totals
+            $totales['delays'] = $totales['delays'] + $resumeIncidents['delays'];
+            $totales['absents'] = $totales['absents'] + $resumeIncidents['absents'];
+            $totales['acumulations'] = $totales['acumulations'] + $resumeIncidents['acumulations'];
+            $totales['total'] = $totales['total'] + $resumeIncidents['totalAbsents'];
+
+        }
+
+
+        // * make excel document
+        $date = ["start" => $startDate, "end" => $endDate ];
+        $incidentReport = new IncidentsReport($employees, $date, $generalDirection->name, $totales, $title);
+        $documentContent = $incidentReport->create();
+        if( $documentContent === false){
+            // TODO: Log fail
+            throw new \Exception("Fail to make the report document");
+        }
+
+
+        // * save the file on a temporally file and downlaod them
+        $fileName = sprintf("%s.xlsx", (string) Str::uuid() );
+        $filePath = sprintf("tmp/incidentReports/$fileName");
+        if( Storage::disk('local')->put( $filePath, $documentContent ) ){
+            Log::notice("User {userName} generate a incident report of period {start} to {end}", [
+                "userName" => Auth::user()->name,
+                ...$date
+            ]);
+        }
+
+        // * download the file
+        return Storage::disk('local')->download($filePath, "reporte-incidencias.xlsx");
+
+    }
+
+
     #region private methods
     /**
      * find Employee
@@ -353,10 +482,30 @@ class IncidentController extends Controller
         $groupedByEmployee = $incidents->groupBy('employee_id')->all();
 
         // * get the employees
-        $employees = Employee::with([
+        $employeesQuery = Employee::with([
             'generalDirection',
             'direction'
-        ])->whereIn('id', array_keys( $groupedByEmployee ))->get()->toArray();
+        ])->whereIn('id', array_keys( $groupedByEmployee ));
+
+        // * filter employees by the user-level
+        if( Auth::user()->level_id > 1) {
+            $__authUser = Auth::user();
+            $__currentLevel = Auth::user()->level_id;
+
+            if($__currentLevel >= 2){
+                $employeesQuery->where('general_direction_id', $__authUser->general_direction_id );
+            }
+
+            if($__currentLevel >= 3){
+                $employeesQuery->where('direction_id', $__authUser->direction_id);
+            }
+
+            if($__currentLevel >= 4){
+                $employeesQuery->where('subdirectorate_id', $__authUser->subdirectorates_id);
+            }
+        }
+
+        $employees = $employeesQuery->get()->toArray();
 
         // * append the total of incidences on the period
         foreach($employees as &$empl){
@@ -368,6 +517,52 @@ class IncidentController extends Controller
         }
 
         return $employees;
+    }
+
+    /**
+     * get the resume of incidents of the employee in a period
+     *
+     * @param  int $employee_id
+     * @param  Date|string $from
+     * @param  Date|string $to
+     * @return array [ 'id', 'delays', 'absents', 'acumulations', 'totalAbsents' ]
+     */
+    private function getIncidentsOfEmployeeGrupedByType($employee_id, $from, $to){
+
+        // * get incidents by type
+        $delays = Incident::where('employee_id', $employee_id)
+            ->whereDate('date', '>=', $from)
+            ->whereDate('date', '<=', $to)
+            ->whereIn('incident_type_id', array(2, 6))
+            ->count();
+
+        $absents = Incident::where('employee_id', $employee_id)
+            ->whereDate('date', '>=', $from)
+            ->whereDate('date', '<=', $to)
+            ->whereIn('incident_type_id', array(1, 3, 4, 5, 7, 8, 9, 10))
+            ->count();
+
+        $response = [
+            'id' => $employee_id,
+            'delays' => $delays,
+            'absents' => $absents,
+            'acumulations' => 0,
+            'totalAbsents' => $absents
+        ];
+
+        if ($delays > 0 || $absents > 0) {
+            // for 5 delays 1 absent
+            $acumulations = (int)($delays / 5);
+            $response['acumulations'] = $acumulations;
+            $response['totalAbsents'] = $absents + $acumulations;
+        }
+
+        return $response;
+    }
+
+    private function monthName($i){
+        $months = array('Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre');
+        return $months[$i];
     }
 
     #endregion

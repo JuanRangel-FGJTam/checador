@@ -139,6 +139,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('incidents')->name('incidents.')->group(function(){
         Route::get('', [IncidentController::class, 'index'])->name('index');
+        Route::get('report', [IncidentController::class, 'makeReport'])->name('report.make');
     });
 
 });
