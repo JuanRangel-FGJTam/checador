@@ -89,6 +89,7 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('{employee_number}', [EmployeeController::class, 'update'])->name('update');
 
         Route::get('{employee_number}/incidents/create', [EmployeeController::class, 'incidentCreate'])->name('incidents.create');
+        Route::post('{employee_number}/incidents/store', [IncidentController::class, 'makeIncidentsOfEmployee'])->name('incidents.store');
 
         Route::prefix('{employee_number}/justifications')->name('justifications.')->group(function(){
             Route::get('', [JustificationController::class, 'showJustificationOfEmployee'])->name('index');

@@ -40,10 +40,8 @@ function redirectBack(){
 }
 
 function submitForm(){
-    toast.warning("Not implemented");
-    return;
 
-    form.patch( route('employees.schedule.update', props.employeeNumber), {
+    form.post( route('employees.incidents.store', props.employeeNumber), {
         replace: true,
         onError:(res)=>{
             const { message } = res;

@@ -12,19 +12,24 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Inertia\Inertia;
-use App\Services\EmployeeService;
 use App\Interfaces\EmployeeIncidentInterface;
 use App\ViewModels\EmployeeViewModel;
 use App\Helpers\IncidentsReport;
+use App\Services\{
+    EmployeeService,
+    IncidentService
+};
 use App\Models\{
     Employee,
     GeneralDirection,
     Incident,
     IncidentState,
+    WorkingDays,
     WorkingHours
 };
-use Illuminate\Http\Exceptions\HttpResponseException;
+use Exception;
 use Illuminate\Support\Facades\Storage;
+use PhpParser\Node\Stmt\Catch_;
 
 class IncidentController extends Controller
 {
@@ -449,6 +454,80 @@ class IncidentController extends Controller
 
         // * download the file
         return Storage::disk('local')->download($filePath, "reporte-incidencias.xlsx");
+
+    }
+
+    function makeIncidentsOfEmployee(Request $request, string $employee_number ){
+
+        // * validate the user level
+        if (Auth::user()->level_id != 1) {
+            Log::warning('User '.Auth::user()->name . ' tried to create incidents.');
+            abort(404);
+        }
+
+        $request->validate([
+            'date' => 'required|date|before:today',
+        ]);
+
+        // * get employee
+        try {
+            $employee = $this->employeeService->getEmployee($employee_number);
+        }catch(ModelNotFoundException $ex){
+            //TODO: log exception
+        }
+
+        // * get working hours and working days of the employee
+        $workingHours = WorkingHours::where('employee_id', $employee->id)->first();
+        $workingDays = WorkingDays::where('employee_id', $employee->id)->first();
+
+        // * calculate if the date is midweek or weekend
+        // *    Get the day of the week as a number (7 = Sunday, 6 = Saturday, 5 = Friday, ...)
+        $date = Carbon::parse( $request->input('date'));
+        $dayNumber = $date->format('N');
+        $workDays = array('week');
+        $dayIs = ($dayNumber < 6) ?"week" :"weekend";
+
+        if($workingDays) {
+            if ($workingDays->weekend == 1) {
+                array_push($workDays, 'weekend');
+            }
+            if ($workingDays->week == 0) {
+                $key = array_search('week', $workDays);
+                array_splice($workDays, $key, 1);
+            }
+        }
+
+
+        // * calculate the incidents if the date target is on the employee schedule work
+        if(in_array($dayIs, $workDays)) {
+            try {
+
+                $incidentService = new IncidentService(
+                    $employee->id,
+                    $workingHours,
+                    $date->format('Y-m-d')
+                );
+
+                $incidentService->calculateAndStoreIncidents();
+
+            } catch (\Exception $e) {
+                Log::error('Error al crear la incidencias del empleado id: '.$employee->id . ' - ' . $e->getMessage() . ' - ' . $e->getTraceAsString() );
+
+                // return redirect()
+                //     ->route('employee', ['employee_id' => $employee->id, 'general_direction_id' => $employee->general_direction_id])
+                //     ->with('error', 'Ocurrió un error. Por favor, verifique que el empleado cuente con un horario establecido correctamente e intente nuevamente.');
+                return redirect()->back()->withErrors([
+                    "message" => "Error al generar las incidencias del dia " . $date->format('Y-M-d')
+                ])->withInput();
+            }
+        }
+
+        Log::info('El usuario '.Auth::user()->name .' creó las incidencias para el empleado id: '. $employee->id.' del día ' .$date->format('Y-m-d'));
+
+        // return redirect()
+        //     ->route('employee', ['employee_id' => $employee->id, 'general_direction_id' => $employee->general_direction_id])
+        //     ->with('success', 'Incidencias generadas correctamente.');
+
 
     }
 
