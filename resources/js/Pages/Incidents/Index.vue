@@ -14,7 +14,7 @@ import InputError from '@/Components/InputError.vue';
 import SuccessButton from '@/Components/SuccessButton.vue';
 import AnimateSpin from '@/Components/Icons/AnimateSpin.vue';
 import DownloadIcon from '@/Components/Icons/DownloadIcon.vue';
-
+import ChevronRightIcon from '@/Components/Icons/ChevronRightIcon.vue';
 
 
 const props = defineProps({
@@ -144,6 +144,13 @@ function makeReportClick(){
 
 }
 
+function visitIncidenceEmployee(employee){
+    router.visit( route('incidents.employee.index', {
+        "employee_number": employee.plantilla_id.toString().substring(1),
+        "year": form.year,
+        "month": form.period.split("-")[0]
+    }));
+}
 
 </script>
 
@@ -243,12 +250,10 @@ function makeReportClick(){
                             </td>
 
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <a href="#" target="_blank"
-                                    class="p-2 rounded-md text-blue-600 border border-blue-500 outline-none focus:ring-4 shadow-lg transform active:scale-x-75 transition-transform flex justify-center items-center hover:bg-blue-100"
-                                >
-                                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="#3b83f6"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
-                                    <span class="ml-2">Incidencias</span>
-                                </a>
+                                <div v-on:click="visitIncidenceEmployee(employee)" class="inline-flex items-center pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-700 focus:outline-none focus:text-gray-700 dark:focus:text-gray-300 focus:border-gray-300 dark:focus:border-gray-700 transition duration-150 ease-in-out gap-2 shadow bg-slate-200 px-4 py-1 cursor-pointer">
+                                    <span>Incidencias</span>
+                                    <ChevronRightIcon class="w-4 h-4 ml-1" />
+                                </div>
                             </td>
                         </tr>
 

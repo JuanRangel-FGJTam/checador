@@ -16,6 +16,7 @@ import Breadcrumb from '@/Components/Breadcrumb.vue';
 const props = defineProps({
     employeeNumber: String,
     employee: Object,
+    options: Object
 });
 
 const toast = useToast();

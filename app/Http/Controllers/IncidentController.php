@@ -139,20 +139,37 @@ class IncidentController extends Controller
     }
 
 
-    function getIncidentsByEmployee(string $employee_number) {
+    function getIncidentsByEmployee(Request $request, string $employee_number) {
 
         $employee =  $this->findEmployee($employee_number);
         if( $employee instanceof RedirectResponse ){
             return $employee;
         }
+
+        // * retrive the query params
+        if( $request->filled('year') && $request->filled('month') ){            $options = [
+                'year' => $request->input('year'),
+                'month' => $request->input('month'),
+            ];
+        }
         
-        // TODO: calculate the breadcrumns based on where the request come from
-        $breadcrumbs = array(
-            ["name"=> "Inicio", "href"=> "/dashboard"],
-            ["name"=> "Vista Empleados", "href"=> route('employees.index') ],
-            ["name"=> "Empleado: $employee->employeeNumber", "href"=> route('employees.show', $employee->employeeNumber)],
-            ["name"=> "Incidencias", "href"=>""],
-        );
+        // todo: calculate the breadcrumns based on where the request come from
+        $previous_path = parse_url( url()->previous(), PHP_URL_PATH);
+        if( $previous_path == '/incidents' ){
+            $breadcrumbs = array(
+                ["name"=> "Inicio", "href"=> "/dashboard"],
+                ["name"=> "Incidencias", "href"=> url()->previous()],
+                ["name"=> "Incidencias del empleado", "href"=>""],
+            );
+        }else{
+            $breadcrumbs = array(
+                ["name"=> "Inicio", "href"=> "/dashboard"],
+                ["name"=> "Vista Empleados", "href"=> route('employees.index') ],
+                ["name"=> "Empleado: $employee->employeeNumber", "href"=> route('employees.show', $employee->employeeNumber)],
+                ["name"=> "Incidencias", "href"=>""],
+            );
+        }
+
 
         // * calculate status
         $status = array(
@@ -201,7 +218,8 @@ class IncidentController extends Controller
             "status" => (object) $status,
             "checa" => (object) $checa,
             "workingHours" => $hours,
-            "incidentStatuses" => array_values($incidentStatuses)
+            "incidentStatuses" => array_values($incidentStatuses),
+            "options" => isset($options) ?$options :null
         ]);
     }
 

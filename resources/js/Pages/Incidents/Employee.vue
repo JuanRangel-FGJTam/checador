@@ -56,7 +56,8 @@ const props = defineProps({
             {value:12, label:"Diciembre"}
         ]
     },
-    incidentStatuses: Array
+    incidentStatuses: Array,
+    options: Object
 });
 
 const toast = useToast();
@@ -83,9 +84,16 @@ watch(form, (oldValue, newValue)=>{
 
 onMounted(()=>{
     // set the current month
-    const date = new Date();
-    const currentMonth = date.getMonth() + 1;
-    form.month = currentMonth;
+
+    if( props.options != null){
+        form.year = props.options.year;
+        form.month = props.options.month;
+    }else{
+        const date = new Date();
+        const currentMonth = date.getMonth() + 1;
+        form.month = currentMonth;
+    }
+
 });
 
 function getIncidents(){
