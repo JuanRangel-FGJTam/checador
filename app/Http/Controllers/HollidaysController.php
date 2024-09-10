@@ -25,16 +25,49 @@ class HollidaysController extends Controller
     }
 
 
-    public function create(){
+    public function create(Request $request){
 
         // * get catalogs
-        $justificationsType = TypeJustify::select('id', 'name')->get()->all();
-        $generalDirections = GeneralDirection::select('id', 'name')->get()->all();
+        $justifyIds = array(10, 25, 26);
+        if (Auth::user()->level_id == 1) { // Admin General can justify error by system
+            $justifyIds = array(1, 10, 25, 26, 27, 28);
+        }
+        $justificationsType = TypeJustify::select('id', 'name')->whereIn('id', $justifyIds)->get()->all();
 
+
+        // * retrive the general direction and the catalog
+        $generalDirection = null;
+        $generalDirections = array();
+        if( Auth::user()->level_id == 1){
+            $generalDirection = $request->filled('gd') ?GeneralDirection::find($request->query('gd')) :null;
+            $generalDirections = GeneralDirection::select('id', 'name')->get()->all();
+        }else {
+            $generalDirection = GeneralDirection::find(Auth::user()->general_direction_id);
+            $generalDirections = GeneralDirection::select('id', 'name')
+                ->get()
+                ->where('id', Auth::user()->general_direction_id)
+                ->all();
+        }
+
+
+        // * attempt to get the employees based on the user level
+        $employees = array();
+        if($generalDirection != null){
+            $employees = $this->employeeService->getEmployeesOfUser()
+                ->where('active',1)
+                ->where('status_id',1)
+                ->where('general_direction_id', $generalDirection->id)
+                ->all();
+        }
+
+        // * return the view
         return Inertia::render('Hollidays/Create', [
             "justificationsType" => $justificationsType,
-            "generalDirections" => $generalDirections,
-            "breadcrumbs" => null
+            "generalDirections" => array_values($generalDirections),
+            "generalDirection" => $generalDirection,
+            "breadcrumbs" => null,
+            "employees" => empty($employees) ?null :array_values($employees),
+            "admin" => Auth::user()->level_id == 1
         ]);
     }
 
@@ -110,7 +143,11 @@ class HollidaysController extends Controller
 
         // * return the view
         return Inertia::render('Hollidays/ValidateEmployees', [
-            "employees" => array_values( $data['employees']->toArray() )
+            "employees" => array_values( $data['employees']->toArray() ),
+            "justifyType" => $data['justifyType'],
+            "generalDirection" => $data['generalDirection'],
+            "startDay" => $data['startDay'],
+            "endDay" => $data['endDay'],
         ]);
     }
 
