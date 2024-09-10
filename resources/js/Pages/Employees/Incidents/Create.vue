@@ -16,7 +16,8 @@ import Breadcrumb from '@/Components/Breadcrumb.vue';
 const props = defineProps({
     employeeNumber: String,
     employee: Object,
-    options: Object
+    options: Object,
+    date: String
 });
 
 const toast = useToast();
@@ -29,7 +30,7 @@ const breadcrumbs = ref([
 ]);
 
 const form = useForm({
-    date: undefined,
+    date: props.date ?? undefined,
     comments: undefined
 });
 

@@ -289,10 +289,15 @@ class EmployeeController extends Controller
         $employee = $this->employeeService->getEmployee($employee_number);
 
         // * get the records
-        $records = Record::where('employee_id', $employee->id)->whereBetween('check', [ $from->format('Y-m-d'), $to->format('Y-m-d') ])->get();
+        $records = Record::where('employee_id', $employee->id)
+            ->whereBetween('check', [ $from->format('Y-m-d'), $to->format('Y-m-d') ])
+            ->get();
 
         // * get the incidents
-        $incidents = Incident::where('employee_id', $employee->id)->whereBetween('date', [ $from->format('Y-m-d'), $to->format('Y-m-d') ])->get();
+        $incidents = Incident::with(['type', 'state'])
+            ->where('employee_id', $employee->id)
+            ->whereBetween('date', [ $from->format('Y-m-d'), $to->format('Y-m-d') ])
+            ->get();
 
         // * get the justifications
         $justifications = $this->justificationService->getJustificationsEmployee( $employee, $from->format('Y-m-d'), $to->format('Y-m-d') );
@@ -308,7 +313,7 @@ class EmployeeController extends Controller
             array_push( $events, $event);
         }
 
-        foreach($incidents as $incident) {
+        foreach($incidents as $incident){
             $title = $incident->type->name;
             $event = new CalendarEvent($title, $incident->date, $incident->date);
             $event->color = "#dc7633";
@@ -344,17 +349,18 @@ class EmployeeController extends Controller
 
     #region Incidents
     public function incidentCreate(Request $request, string $employee_number) {
+
         // * retrive the employee
         $employee = $this->findEmployee($employee_number);
         if($employee instanceof \Illuminate\Http\RedirectResponse){
             return $employee;
         }
 
-
         // * return the view
         return Inertia::render('Employees/Incidents/Create', [
             "employeeNumber" => $employee->employeeNumber,
             "employee" => $employee,
+            "date" => $request->filled('date') ?$request->query('date') :null
         ]);
 
     }

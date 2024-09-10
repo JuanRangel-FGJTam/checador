@@ -520,14 +520,12 @@ class IncidentController extends Controller
                     "message" => "Error al generar las incidencias del dia " . $date->format('Y-M-d')
                 ])->withInput();
             }
+
+            Log::notice('El usuario '.Auth::user()->name .' creó las incidencias para el empleado id: '. $employee->id.' del día ' .$date->format('Y-m-d'));
+
         }
-
-        Log::info('El usuario '.Auth::user()->name .' creó las incidencias para el empleado id: '. $employee->id.' del día ' .$date->format('Y-m-d'));
-
-        // return redirect()
-        //     ->route('employee', ['employee_id' => $employee->id, 'general_direction_id' => $employee->general_direction_id])
-        //     ->with('success', 'Incidencias generadas correctamente.');
-
+        
+        return redirect()->route('employees.show', $employee_number);
 
     }
 

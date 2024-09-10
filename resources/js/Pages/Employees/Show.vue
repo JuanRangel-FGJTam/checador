@@ -137,7 +137,14 @@ function downLoadkardexClick(form){
 }
 
 function makeIncidenceClick(){
-    router.visit(route('employees.incidents.create', props.employeeNumber));
+    var dateSelectedString = undefined;
+    if( calendarDaySelected.value.day ){
+        dateSelectedString = calendarDaySelected.value.day.toISOString().split('T')[0];
+    }
+    router.visit( route('employees.incidents.create', {
+        "employee_number": props.employeeNumber,
+        "date": dateSelectedString
+    }));
 }
 
 function showJustificationsClick(){
