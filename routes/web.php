@@ -146,7 +146,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('hollidays')->name('hollidays.')->group(function(){
         Route::get('create', [HollidaysController::class, 'create'])->name('create');
-        Route::post('', [HollidaysController::class, 'store'])->name('store');
+        Route::post('', [HollidaysController::class, 'preStore'])->name('store');
+        Route::get('validate/{session}', [HollidaysController::class, 'validateEmployees'])->name('validateEmployees');
     });
 
 });

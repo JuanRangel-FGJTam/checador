@@ -123,7 +123,7 @@ function submitForm(){
                     </div>
                     
                     <div class="flex flex-wrap gap-4 p-4 justify-between">
-                        <SuccessButton class="ml-auto"  type="submit">Justificar</SuccessButton>
+                        <SuccessButton class="ml-auto" type="submit">Confirmar empleados</SuccessButton>
                     </div>
 
                 </form>

@@ -125,7 +125,7 @@ class EmployeeService {
             }
         }
 
-        return $query->get();
+        return $query->orderBy('name', 'ASC')->get();
     }
 
 
