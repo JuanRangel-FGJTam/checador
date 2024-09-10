@@ -59,7 +59,7 @@ const showingNavigationDropdown = ref(false);
                                 Incidencias
                             </NavLink>
                             
-                            <NavLink :href="route('hollidays')" :active="route().current('hollidays')">
+                            <NavLink :href="route('hollidays.create')" :active="route().current('hollidays.create')">
                                 Días inhábiles
                             </NavLink>
 

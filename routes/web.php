@@ -8,6 +8,7 @@ use App\Http\Controllers\{
     CatalogController,
     EmployeeController,
     EmployeeScheduleController,
+    HollidaysController,
     IncidentController,
     JustificationController,
     NewEmployeeController,
@@ -143,6 +144,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('report', [IncidentController::class, 'makeReport'])->name('report.make');
     });
 
+    Route::prefix('hollidays')->name('hollidays.')->group(function(){
+        Route::get('create', [HollidaysController::class, 'create'])->name('create');
+        Route::post('', [HollidaysController::class, 'store'])->name('store');
+    });
+
 });
 
 
@@ -150,10 +156,6 @@ Route::get('inactive', function(){
     return Inertia::render('Dashboard');
 })->middleware(['auth'])->name('inactive');
 
-
-Route::get('/hollidays', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('hollidays');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
