@@ -51,33 +51,54 @@ class EmployeeController extends Controller
     {
         $currentPage = $request->query('p', 1);
         $elementsToTake = 50;
+        $generalDirectionId = null;
+        $directionId = null;
+        $subdirectionId = null;
+        if(Auth::user()->level_id > 1){
+            $generalDirectionId = Auth::user()->general_direction_id;
+
+            if( Auth::user()->level_id > 2){
+                $directionId = Auth::user()->direction_id;
+            }else{
+                $directionId = $request->filled('d') ?$request->query("d") :null;
+            }
+
+        }else{
+            if( $request->filled('gd')){
+                $generalDirectionId = $request->query("gd");
+            }
+            if( $request->filled('d')){
+                $directionId = $request->query("d");
+            }
+            if( $request->filled('sb')){
+                $subdirectionId = $request->query("sb");
+            }
+        }
+
 
         // * get catalogs
-        $general_direction = GeneralDirection::select('id', 'name')->get();
+        $generalDirections = GeneralDirection::select('id', 'name')->get();
         $directions = Direction::select('id', 'name', 'general_direction_id')->get();
         $subdirectorate = Subdirectorate::select('id', 'name', 'direction_id')->get();
 
+
         // * prepare the filters
         $filters = array();
-        if(!empty($request->query())){
-            if($request->query("gd")){
-                $filters[ EmployeeFiltersEnum::GD ] = $request->query("gd");
-                
-                // filter the subdirectorates 
-                $directions = $directions->reject(fn($query) => $query->general_direction_id != $request->query("gd") );
-            }
-
-            if($request->query("d")){
-                $filters[ EmployeeFiltersEnum::D ] = $request->query("d");
-                
-                // filter the subdirectorates 
-                $subdirectorate = $subdirectorate->reject(fn($query) => $query->direction_id != $request->query("d") );
-            }
-
-            if($request->query("sd")){
-                $filters[ EmployeeFiltersEnum::SD ] = $request->query("sd");
-            }
+        if( $generalDirectionId != null){
+            $filters[ EmployeeFiltersEnum::GD ] = $generalDirectionId;
+            $directions = $directions->where('general_direction_id', $generalDirectionId);
         }
+        if( $directionId != null){
+            $filters[ EmployeeFiltersEnum::D ] = $directionId;
+            $subdirectorate = $directions->where('direction_id', $directionId);
+        }
+        if( $subdirectionId != null){
+            $filters[ EmployeeFiltersEnum::SD ] = $subdirectionId;
+        }
+        if( $request->filled("se")){
+            $filters['search'] = $request->query("se");
+        }
+
 
         // * get employees
         $totalEmployees = 0;
@@ -105,15 +126,16 @@ class EmployeeController extends Controller
         // * return the viewe
         return Inertia::render('Employees/Index', [
             "employees" => $data,
-            "general_direction" => $general_direction,
+            "general_direction" => $generalDirections,
             "directions" => array_values( $directions->toArray() ),
             "subdirectorate" => array_values( $subdirectorate->toArray() ),
             "showPaginator" => $showPaginator,
             "filters" => [
-                "gd" => $request->query('gd', null),
-                "d" => $request->query('d', null),
-                "sd" => $request->query('sd', null),
-                "page" => $currentPage
+                "gd" => $generalDirectionId,
+                "d" => $directionId,
+                "sd" => $subdirectionId,
+                "page" => $currentPage,
+                "search" => $request->filled("se") ?$request->input("se") :null
             ],
             "paginator" => $paginator
         ]);

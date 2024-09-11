@@ -42,7 +42,6 @@ class EmployeeService {
                 if(isset($filters['subdirectorate_id'])){
                     $query->where('subdirectorate_id', $filters['subdirectorate_id'] );
                 }
-
                 if(isset($filters['direction_id'])){
                     $query->where('direction_id', $filters['direction_id'] );
                 }
@@ -63,16 +62,28 @@ class EmployeeService {
             $__authUser = Auth::user();
             $__currentLevel = Auth::user()->level_id;
 
-            if($__currentLevel >= 2){
+            if($__currentLevel > 2){
                 $query->where('general_direction_id', $__authUser->general_direction_id );
+            }else{
+                if(isset($filters['general_direction_id'])){
+                    $query->where('general_direction_id', $filters['general_direction_id'] );
+                }
             }
 
-            if($__currentLevel >= 3){
+            if($__currentLevel > 3){
                 $query->where('direction_id', $__authUser->direction_id);
+            }else{
+                if(isset($filters['direction_id'])){
+                    $query->where('direction_id', $filters['direction_id'] );
+                }
             }
 
-            if($__currentLevel >= 4){
+            if($__currentLevel > 4){
                 $query->where('subdirectorate_id', $__authUser->subdirectorates_id);
+            }else {
+                if(isset($filters['subdirectorate_id'])){
+                    $query->where('subdirectorate_id', $filters['subdirectorate_id'] );
+                }
             }
 
             if( isset($filters['search'])){

@@ -52,10 +52,13 @@ onMounted(()=>{
     form.d = props.filters.d ?? 0;
     form.sd = props.filters.sd ?? 0;
     form.p = props.filters.page ?? 1;
+    form.search = props.filters.search ?? undefined;
 });
 
 function handleInputSearch(search){
-    toast.warning(`Searching ${search}, no implemented!`);
+    form.search = search;
+    form.p = 1;
+    reloadData();
 }
 
 function reloadData(){
@@ -79,6 +82,10 @@ function reloadData(){
             params.push(`p=${form.page}`);
         }
         
+        if(form.search){
+            params.push(`se=${form.search}`);
+        }
+
         // * reload the view
         router.visit("?" + params.join("&"), {
             method: 'get',
@@ -134,7 +141,7 @@ function changePage(pageNumber){
 
                 <div role="form-group" class="flex flex-col">
                     <InputLabel value="Direccion General" for="gd" />
-                    <InputSelect id="gd" v-model="form.gd" v-on:change="handleGeneralDirectionSelect">
+                    <InputSelect id="gd" v-model="form.gd" v-on:change="handleGeneralDirectionSelect" :disabled="$page.props.auth.user.level_id > 1" >
                         <option selected value="0">Todos</option>
                         <option v-for="item in general_direction" :key="item.id" :value="item.id" > {{item.name }}</option>
                     </InputSelect>
@@ -142,7 +149,7 @@ function changePage(pageNumber){
 
                 <div role="form-group" class="flex flex-col">
                     <InputLabel value="Direccion" for="d"/>
-                    <InputSelect id="d" v-model="form.d" v-on:change="handleDirectionSelect">
+                    <InputSelect id="d" v-model="form.d" v-on:change="handleDirectionSelect" :disabled="$page.props.auth.user.level_id > 2">
                         <option selected value="0">Todos</option>
                         <option v-for="item in directions" :key="item.id" :value="item.id" > {{item.name }}</option>
                     </InputSelect>
