@@ -9,6 +9,7 @@ use App\Http\Controllers\{
     EmployeeController,
     EmployeeScheduleController,
     HollidaysController,
+    InactiveController,
     IncidentController,
     JustificationController,
     NewEmployeeController,
@@ -150,12 +151,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('create/done', [HollidaysController::class, 'createDone'])->name('create.done');
     });
 
+    Route::prefix('inactive')->name('inactive.')->group(function(){
+        Route::get('', [InactiveController::class, 'index'])->name('index');
+    });
+
 });
-
-
-Route::get('inactive', function(){
-    return Inertia::render('Dashboard');
-})->middleware(['auth'])->name('inactive');
 
 
 Route::middleware('auth')->group(function () {

@@ -22,7 +22,7 @@ class EmployeeService {
      *
      * @param  int $take elemento to return, if its 0 return all
      * @param  int $skip record to skip when take
-     * @param  array<string,mixed> $filters filter to apply ['general_direction_id', 'subdirectorate_id', 'direction_id']
+     * @param  array<string,mixed> $filters filter to apply ['general_direction_id', 'subdirectorate_id', 'direction_id', 'active']
      * @param  int $total out of total
      * @return Array<EmployeeViewModel>
      */
@@ -54,6 +54,10 @@ class EmployeeService {
                     });
                 }
 
+                if( isset($filters['active'])){
+                    $query->where('active', $filters['active']);
+                }
+
             }
         }else{
             $__authUser = Auth::user();
@@ -77,6 +81,11 @@ class EmployeeService {
                       ->orWhere('plantilla_id', 'like', "%".$filters['search']."%");
                 });
             }
+
+            if( isset($filters['active'])){
+                $query->where('active', $filters['active']);
+            }
+
         }
 
         // * set the total people

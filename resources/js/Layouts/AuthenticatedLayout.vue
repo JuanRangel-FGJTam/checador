@@ -63,7 +63,7 @@ const showingNavigationDropdown = ref(false);
                                 Días inhábiles
                             </NavLink>
 
-                            <NavLink :href="route('inactive')" :active="route().current('inactive')">
+                            <NavLink :href="route('inactive.index')" :active="route().current('inactive.index')">
                                 Bajas
                             </NavLink>
 
