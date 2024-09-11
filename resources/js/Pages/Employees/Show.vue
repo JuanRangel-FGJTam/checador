@@ -29,15 +29,11 @@ const props = defineProps({
     status: Object,
     checa: Object,
     workingHours: Array,
+    breadcrumbs: Object
 });
 
 const toast = useToast();
 
-const breadcrumbs = ref([
-    { "name": 'Inicio', "href": '/dashboard' },
-    { "name": 'Vista Empleados', "href": '/employees' },
-    { "name": `Empleado: ${props.employeeNumber}`, "href": '' }
-]);
 
 const calendarDaySelected = ref({
     element: undefined,

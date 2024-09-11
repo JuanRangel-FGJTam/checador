@@ -138,7 +138,7 @@ class EmployeeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $employee_number)
+    public function show(Request $request, string $employee_number)
     {
 
         // * attempt to get the employee
@@ -200,13 +200,26 @@ class EmployeeController extends Controller
         }
 
 
+        // * calculate the breadcrumns based on where the request come from
+        $breadcrumbs = array(
+            ["name"=> "Inicio", "href"=> "/dashboard"],
+            ["name"=> "Vista Empleados", "href"=> route('employees.index') ],
+            ["name"=> "Empleado: $employee->employeeNumber", "href"=> route('employees.show', $employee->employeeNumber)],
+        );
+        if( parse_url( $request->headers->get('referer'), PHP_URL_PATH ) == '/inactive' ){
+            $breadcrumbs[1] = [
+                "name"=> "Inactivos", "href"=> $request->headers->get('referer'),
+            ];
+        }
+
         // * return the view
         return Inertia::render('Employees/Show', [
             "employeeNumber" => $employee_number,
             "employee" => isset($employee) ?$employee :null,
             "status" => (object) $status,
             "checa" => (object) $checa,
-            "workingHours" => $hours
+            "workingHours" => $hours,
+            "breadcrumbs" => $breadcrumbs
         ]);
     }
 
@@ -307,7 +320,7 @@ class EmployeeController extends Controller
         $events = array();
 
         foreach($records as $record) {
-            $event = new CalendarEvent("Entrada", $record->check, $record->check);
+            $event = new CalendarEvent("Registro", $record->check, $record->check);
             $event->color = "#27ae60";
             $event->type = "RECORD";
             array_push( $events, $event);
