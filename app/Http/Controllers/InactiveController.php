@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Services\{
@@ -11,7 +12,6 @@ use App\Models\{
     Employee,
     GeneralDirection
 };
-
 
 class InactiveController extends Controller
 {
@@ -29,19 +29,30 @@ class InactiveController extends Controller
         $currentPage = $request->query('p', 1);
         $elementsToTake = 50;
 
+        // * get the general direction based on the user level
+        $generalDirectionId = null;
+        if(Auth::user()->level_id > 1){
+            $generalDirectionId = Auth::user()->general_direction_id;
+        }else{
+            if( $request->filled('gd')){
+                $generalDirectionId = $request->query("gd");
+            }
+        }
+
+
         // * get catalogs
-        $general_direction = GeneralDirection::select('id', 'name')->get();
+        $generalDirections = GeneralDirection::select('id', 'name')->get();
         
 
         // * prepare the filters
         $filters = array();
         $filters['active'] = 0;
-
-
-        if( $request->filled('gd')){
-            $filters[ "general_direction_id" ] = $request->query("gd");
+        if( $generalDirectionId != null && $generalDirectionId > 0){
+            $filters["general_direction_id"] = $generalDirectionId;
         }
-
+        if( $request->filled("se")){
+            $filters['search'] = $request->query("se");
+        }
 
         // * get employees
         $totalEmployees = 0;
@@ -66,13 +77,12 @@ class InactiveController extends Controller
         // * return the viewe
         return Inertia::render('Inactive/Index', [
             "employees" => $data,
-            "general_direction" => $general_direction,
+            "general_direction" => $generalDirections,
             "showPaginator" => $showPaginator,
             "filters" => [
-                "gd" => $request->query('gd', null),
-                "d" => $request->query('d', null),
-                "sd" => $request->query('sd', null),
-                "page" => $currentPage
+                "gd" => $generalDirectionId,
+                "page" => $currentPage,
+                "search" => $request->filled("se") ?$request->input("se") :null
             ],
             "paginator" => $paginator
         ]);

@@ -46,10 +46,13 @@ const loading = ref(false);
 onMounted(()=>{
     form.gd = props.filters.gd ?? 0;
     form.p = props.filters.page ?? 1;
+    form.search = props.filters.search ?? undefined;
 });
 
 function handleInputSearch(search){
-    toast.warning(`Searching ${search}, no implemented!`);
+    form.search = search;
+    form.p = 1;
+    reloadData();
 }
 
 function reloadData(){
@@ -59,6 +62,10 @@ function reloadData(){
         var params = [];
         if(form.gd){
             params.push(`gd=${form.gd}`);
+        }
+
+        if(form.search){
+            params.push(`se=${form.search}`);
         }
 
         if(form.page && form.page > 1){
@@ -107,7 +114,7 @@ function changePage(pageNumber){
 
                 <div role="form-group" class="flex flex-col">
                     <InputLabel value="Direccion General" for="gd" />
-                    <InputSelect id="gd" v-model="form.gd" v-on:change="handleGeneralDirectionSelect">
+                    <InputSelect id="gd" v-model="form.gd" v-on:change="handleGeneralDirectionSelect" :disabled="$page.props.auth.user.level_id > 1">
                         <option selected value="0">Todos</option>
                         <option v-for="item in general_direction" :key="item.id" :value="item.id" > {{item.name }}</option>
                     </InputSelect>
