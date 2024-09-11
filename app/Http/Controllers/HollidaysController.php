@@ -6,14 +6,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Carbon\Carbon;
 use App\Services\EmployeeService;
 use App\Models\{
     TypeJustify,
-    GeneralDirection
+    GeneralDirection,
+    Employee,
+    Justify,
+    Incident
 };
+use App\Http\Requests\HollidaysRequest;
 
 class HollidaysController extends Controller
 {
@@ -23,7 +28,6 @@ class HollidaysController extends Controller
     function __construct(EmployeeService $employeeService) {
         $this->employeeService = $employeeService;
     }
-
 
     public function create(Request $request){
 
@@ -71,22 +75,7 @@ class HollidaysController extends Controller
         ]);
     }
 
-    public function preStore(Request $request){
-
-        // * validate the request
-        $request->validate([
-            "initialDay" => "required|date",
-            "endDay" => "nullable|date|after:initialDay",
-            "type_id" => "required|integer|exists:type_justifies,id",
-            "file" => "required|file|mimes:pdf|max:15240",
-            "general_direction" => 'required|integer|exists:general_directions,id'
-        ],[],[
-            "initialDay" => "fecha inicial",
-            "endDay" => "fecha final",
-            "type_id" => "tipo de justificacion",
-            "general_direction" =>"direccion general",
-            "file" => "oficio"
-        ]);
+    public function store(HollidaysRequest $request){
 
         // * validate the days are in the same month
         if($request->filled('endDay')){
@@ -104,51 +93,170 @@ class HollidaysController extends Controller
             ]);
         }
 
-        $sessionId = Str::uuid();
 
         // * store the file uploaded
-        $filepath = "/tmp/$sessionId/" . $request->file('file')->getClientOriginalName();
+        $start = Carbon::parse( $request->input('initialDay') );
+        $filepath = "/justificantes/justificante_general-" . $start->format('Ymd') . '-' . $request->file('file')->hashName();
         Storage::disk('local')->put($filepath, $request->file('file')->get() );
 
-        // * get employees of the user
-        $employees = $this->employeeService->getEmployeesOfUser()
-            ->where('active',1)
-            ->where('status_id',1);
 
-        if( Auth::user()->level_id == 1){
-            $employees = $employees->where('general_direction_id', $request->input('general_direction'));
+        // * get employees of the user and filtered by the request employees
+        $employees = $this->employeeService->getEmployeesOfUser()->all();
+        $employeesFiltered = array_filter( $employees, function($employee) use($request){
+            return in_array( $employee->id, $request->input('employees'));
+        });
+
+
+        // * todo justify each employee
+        $employeesResult = array();
+        foreach ($employeesFiltered as $employee) {
+
+            $response = $this->justifyEmployee($employee, $request->request->all(), $filepath);
+
+            if( $response == null ){
+                $employeesResult[$employee->id] = [ "name" => $employee->name, "ok" => true ];
+            }else{
+                $employeesResult[$employee->id] = [ "name" => $employee->name, "ok" => false ];
+            }
         }
 
-        // * store flash data (only available for the next request)
-        $request->session()->flash( $sessionId, [
-            "justifyType" => TypeJustify::find($request->input('type_id')),
-            "generalDirection" => GeneralDirection::find( $request->input('general_direction')),
-            "startDay" => Carbon::parse( $request->input('initialDay') ),
-            "endDay" => $request->filled('endDay') ?Carbon::parse( $request->input('endDay') ) :null,
-            "filepath" => $filepath,
-            "employees" => $employees
-        ]);
-
-        // * redirect to the next view
-        return redirect()->route('hollidays.validateEmployees', ['session' => $sessionId]);
+        // * redirecto to done view
+        session()->flash('employeesResult', $employeesResult);
+        return redirect()->route('hollidays.create.done');
     }
 
-    public function validateEmployees(Request $request, string $session){
+    public function createDone(Request $request){
 
-        // * retrive the data from the previous step
-        $data = session($session);
-        if( $data == null){
-            return redirect()->route('hollidays.create');
+        // * retrive the employees results from the session data
+        $employeesResult = session("employeesResult");
+        if( $employeesResult == null ){
+            return redirect()->route('dashboard');
         }
 
         // * return the view
-        return Inertia::render('Hollidays/ValidateEmployees', [
-            "employees" => array_values( $data['employees']->toArray() ),
-            "justifyType" => $data['justifyType'],
-            "generalDirection" => $data['generalDirection'],
-            "startDay" => $data['startDay'],
-            "endDay" => $data['endDay'],
+        return Inertia::render('Hollidays/Results',[
+            "employeesResult" => $employeesResult
         ]);
     }
+
+    #region private functions
+    /**
+     * create a justify record for the employee and attemp to remove the incidents
+     *
+     * @param  Employee $employee
+     * @param  array $request
+     * @param  string $filepath
+     * @return void|false
+     */
+    private function justifyEmployee(Employee $employee, $request, $filepath){
+        DB::beginTransaction();
+
+        // * make a justify record
+        try {
+            $justify = new Justify();
+            $justify->employee_id = $employee->id;
+            $justify->type_justify_id = $request['type_id'];
+            $justify->date_start = $request['initialDay'];
+            $justify->date_finish = $request['endDay'];
+            $justify->file = $filepath;
+            $justify->details = $request['comments'];
+            $justify->user_id = Auth::id();
+            $justify->save();
+
+            $message = "del dia ". $request['initialDay'] . ( isset($request['endDay']) ?" al " . $request['endDay'] :"");
+            Log::notice("El usuario '{userName}' justificó al empleado {employeeName}: {message}", [
+                "userName" => Auth::user()->name,
+                "employeeName" => $employee->name,
+                "message" => $message
+            ]);
+        }catch(\Throwable $th){
+            DB::rollback();
+            Log::error("Fail to make the jusify record for the employee {employeeId} : {message}", [
+                "employeeId" => $employee->id,
+                "message" => $th->getMessage()
+            ]);
+            return false;
+        }
+
+        // * attempt to delete the employe kardex data from Mongo to re create object
+        try {
+            $mongoRecord = \App\Models\KardexRecord::where('employee_id', $employee->id)
+                ->where('year', Carbon::now()->year )
+                ->first();
+            if ($mongoRecord) {
+                $mongoRecord->delete();
+            }
+        }catch(\Throwable $th){
+            Log::error("Fail at attempting to delete the kardex-record of the mongodb after justify the employee {employeeId}:{employeeName}: {message}",[
+                "employeeId" => $employee->id,
+                "employeeName" => $employee->name,
+                "message" => $th->getMessage()
+            ]);
+        }
+
+        // * retrieve the incidents to delete them after
+        try {
+            $incidents = null;
+            if(!isset($request['endDay'])){
+                if ($justify->type_justify_id == 27) { // Justificacion de entrada por error en el sistema
+                    $incidents = Incident::where('employee_id', $employee->id)
+                        ->where('date', $request['initialDay'])
+                        ->where(function ($query) {
+                        $query->where('incident_type_id', 2) // Retardo
+                            ->orWhere('incident_type_id', 3) // Retardo Mayor
+                            ->orWhere('incident_type_id', 4) // Omision de entrada
+                            ->orWhere('incident_type_id', 6) // Retardo Entrada (comida)
+                            ->orWhere('incident_type_id', 7); // Omision de entrada (comida)
+                        })
+                        ->get();
+                } elseif ($justify->type_justify_id == 28) { // Justificacion de salida por error en el sistema
+                    $incidents = Incident::where('employee_id', $employee->id)
+                        ->where('date', $request['initialDay'])
+                        ->where(function ($query) {
+                        $query->where('incident_type_id', 5) // Omision de salida
+                            ->orWhere('incident_type_id', 8) // Omision de salida (comida)
+                            ->orWhere('incident_type_id', 10); // Falta (comida)
+                        })
+                        ->get();
+                } else {
+                    $incidents = Incident::where('employee_id', $employee->id)
+                        ->where('date', $request['initialDay'])
+                        ->get();
+                }
+            }
+            else {
+                $incidents = Incident::where('employee_id', $employee->id)
+                    ->where('date', '>=', $request['initialDay'])
+                    ->where('date', '<=', $request['endDay'])
+                    ->get();
+            }
+
+            // * attempt to delete the incidents
+            if (count($incidents) > 0) {
+                $flag = 0;
+                foreach ($incidents as $inc) {
+                    $inc->delete();
+                    $flag ++;
+                }
+                Log::notice( "Se eliminó la incidencia (Total: {flag}) {message} del empleado {employeeName} por el usuario {username} ", [
+                    "flag" => $flag,
+                    "message" => $message,
+                    "employeeName" => $employee->name,
+                    "userName" => Auth::user()->name
+                ]);
+            }
+
+        }catch(\Throwable $th){
+            DB::rollback();
+            Log::error("Fail to remove the incidents of the employee {employeeId} : {message}", [
+                "employeeId" => $employee->id,
+                "message" => $th->getMessage()
+            ]);
+            return false;
+        }
+
+        DB::commit();
+    }
+    #endregion
 
 }

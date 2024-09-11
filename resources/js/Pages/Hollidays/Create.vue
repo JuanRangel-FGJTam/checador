@@ -37,7 +37,8 @@ const form = useForm({
     type_id: undefined,
     file: undefined,
     general_direction: props.generalDirection != null ?props.generalDirection.id :undefined,
-    employees: []
+    employees: [],
+    comments: undefined
 });
 
 const loading = ref(false);
@@ -195,6 +196,7 @@ function handleListItemTodosChanged(e){
                                     <label :for="`cb_${employee.id}`">{{ employee.name }}</label>
                                 </li>
                             </ul>
+                            <InputError :message="form.errors.employees" />
                         </div>
 
                         <div v-else>
@@ -209,14 +211,11 @@ function handleListItemTodosChanged(e){
                         <InputError :message="form.errors.comments" />
                     </div>
 
-                    <div class="w-full text-center p-2 text-blue-700">
-                        ¿Esta seguro que desea continuar con la Justificación del día 12/08/2024 al 13/08/2024?
-                    </div>
-
                     <div class="flex flex-wrap gap-4 p-4 justify-between">
                         <DangerButton class="mx-2 px-4" type="button">Cancelar</DangerButton>
                         <SuccessButton class="mx-2 px-2" type="submit">Justificar</SuccessButton>
                     </div>
+
                 </form>
             </template>
         </Card>
