@@ -6,7 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 use Exception;
@@ -31,6 +33,9 @@ use App\ViewModels\{
 use App\Http\Requests\{
     UpdateEmployeeRequest
 };
+use App\Helpers\EmployeeKardexRecords;
+use App\Helpers\EmployeeKardexExcel;
+
 
 class EmployeeController extends Controller
 {
@@ -381,6 +386,68 @@ class EmployeeController extends Controller
         return response()->json($events, 200);
     }
 
+    public function kardexEmployee(Request $request, string $employee_number){
+        // * retrive the employee
+        $employee = null;
+        try {
+            $employeeVM = $this->employeeService->getEmployee($employee_number);
+            $employee = Employee::with(['workingHours', 'workingDays', 'generalDirection'])->findOrFail($employeeVM->id);
+        } catch (ModelNotFoundException $nf) {
+            Log::warning("Employee with employee number '$employee_number' not found");
+
+            // * redirect back
+            return redirect()->back()->withErrors([
+                "employee_number" => "Empleado no encontrado",
+                "message" => "Empleado no encontrado"
+            ])->withInput();
+        }
+
+        $workingHours = $employee->workingHours;
+        $year = $request->input('year');
+        $today = new \DateTime();
+
+
+        // * attempt to get the cache kardex record from the mongodb
+        $recordMongo = \App\Models\KardexRecord::where('employee_id', $employee->id)
+            ->where('report_date', '=', $today->format('Y-m-d'))
+            ->where('year', '=', $year)
+            ->first();
+
+        if ($recordMongo) {
+            $dataUser = $recordMongo->data;
+        } else {
+            if ($workingHours) {
+                if (!$workingHours->checkin || $workingHours->checkin == '') {
+                    throw new \Exception("The employee has no working schedule assigned.");
+                }
+            }
+
+            // * make the records of the employee kardex
+            $employeeKardexRecords = new EmployeeKardexRecords($employee);
+            $dataUser = $employeeKardexRecords->makeRecords($year);
+        }
+
+        // * make the excel file
+        $employeeKardexExcel = new EmployeeKardexExcel($dataUser, $employee->generalDirection->name);
+        $documentContent = $employeeKardexExcel->create();
+        if( $documentContent === false){
+            // TODO: Log fail
+            throw new \Exception("Fail to make the report document");
+        }
+
+        // * store the file
+        $fileName = sprintf("%s.xlsx", (string) Str::uuid() );
+        $filePath = sprintf("tmp/kardex/$fileName");
+        if( Storage::disk('local')->put( $filePath, $documentContent ) ){
+            Log::info('User ' . Auth::user()->name . ' generate daily report for year ' . $request->input('year'));
+        }else {
+            Log::warning('Fail at stored the report of the employee kardex by User ' . Auth::user()->name);
+        }
+
+        // * download the file
+        $name = "kardex-empleado.xlsx";
+        return Storage::disk('local')->download($filePath, $name);
+    }
 
     #region Incidents
     public function incidentCreate(Request $request, string $employee_number) {
