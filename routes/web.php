@@ -18,6 +18,7 @@ use App\Http\Controllers\{
     ReportController,
     StaffController
 };
+use App\Models\Employee;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -105,6 +106,9 @@ Route::middleware(['auth'])->group(function () {
             Route::get('', [EmployeeScheduleController::class, 'edit'])->name('edit');
             Route::patch('', [EmployeeScheduleController::class, 'update'])->name('update');
         });
+
+        Route::get('{employee_number}/kardex', [EmployeeController::class, 'kardexEmployee'])->name('kardex');
+
     });
 
     Route::prefix('incidents')->name("incidents.")->group(function(){
@@ -138,6 +142,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('staff')->name('staff.')->group(function(){
         Route::get('', [StaffController::class, 'index'])->name('index');
         Route::get('{employee_number}', [StaffController::class, 'show'])->name('show');
+        Route::get('{employee_number}/kardex', [EmployeeController::class, 'kardexEmployee'])->name('kardex');
     });
 
     Route::prefix('incidents')->name('incidents.')->group(function(){

@@ -128,39 +128,15 @@ function incidencesClick(){
  * @param {number} form.year - year selected.
  */
 function downLoadkardexClick(form){
-    toast.info(`download kardex ${form.year} click!!`);
-}
-
-function makeIncidenceClick(){
-    router.visit(route('employees.incidents.create', props.employeeNumber));
-}
-
-function showJustificationsClick(){
-
-    // * get the range date
-    var dateRange = getCurrentDateRange();
-
-    // * redirect view
-    router.visit( route('employees.justifications.index', {
-        "employee_number": props.employeeNumber,
-        "from": dateRange.from,
-        "to": dateRange.to
-    }));
-}
-
-function justifyDayClick(){
-
-    var day = calendarDaySelected.value.day;
-
-    const formattedDate = day.getFullYear() + '-' +
-                      String(day.getMonth() + 1).padStart(2, '0') + '-' +
-                      String(day.getDate()).padStart(2, '0');
-
-    router.visit(route('employees.justifications.justify-day', {
-        "employee_number": props.employeeNumber,
-        "day" : formattedDate
-    }));
-
+    var a = document.createElement('a');
+    a.href = route('staff.kardex', {
+        employee_number: props.employeeNumber,
+        year: form.year
+    });
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.click();
+    document.body.removeChild(a);
 }
 
 /**

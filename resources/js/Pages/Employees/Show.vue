@@ -129,7 +129,15 @@ function incidencesClick(){
  * @param {number} form.year - year selected.
  */
 function downLoadkardexClick(form){
-    toast.info(`download kardex ${form.year} click!!`);
+    var a = document.createElement('a');
+    a.href = route('employees.kardex', {
+        employee_number: props.employeeNumber,
+        year: form.year
+    });
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.click();
+    document.body.removeChild(a);
 }
 
 function makeIncidenceClick(){
