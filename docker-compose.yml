@@ -31,5 +31,22 @@ services:
     ports:
       - 5173:5173
 
+  app-worker:
+    build:
+      args:
+        user: dgtit
+        uid: 1000
+      context: .
+      dockerfile: ./Dockerfile.worker
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+      - ./php.ini:/usr/local/etc/php/conf.d/php.ini
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - netchecador
+
 networks:
   netchecador:
