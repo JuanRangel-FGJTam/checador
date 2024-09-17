@@ -94,14 +94,16 @@ class IncidentService
     private function storeIncident($typeId) : Incident
     {
         // * attempt to get the records of the day
-        $record = Record::whereDate('check', $this->date)->where('employee_id', $this->employee_id)->first();
+        $record = Record::whereDate('check', $this->date)
+            ->where('employee_id', $this->employee_id)
+            ->first();
         
         $incident = new Incident();
         $incident->employee_id = $this->employee_id;
         $incident->incident_type_id = $typeId;
         $incident->incident_state_id = self::STATE_PENDIENTE_ID;
         $incident->date = $this->date;
-        $incident->record_id = $record->id;
+        $incident->record_id = isset($record) ?$record->id :null;
         $incident->save();
 
         return $incident;

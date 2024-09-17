@@ -16,7 +16,7 @@ class CreateIncidentsTable extends Migration
         Schema::create('incidents', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('employee_id')->constrained();
-            $table->integer('record_id')->constrained();
+            $table->integer('record_id')->nullable()->constrained();
             $table->integer('incident_type_id')->constrained();
             $table->integer('incident_state_id')->constrained();
             $table->date('date')->nullable();
