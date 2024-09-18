@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue';
+import { useToast } from 'vue-toastification';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 
@@ -35,6 +36,8 @@ const props = defineProps({
     }
 });
 
+const toast = useToast();
+
 const emit = defineEmits(['update:selected_options']);
 
 const form = useForm({
@@ -64,7 +67,11 @@ function submitForm(){
         replace: true,
         onError:(res)=>{
             const { message } = res;
-            alert( message ?? "Error no controlado al almacenar la evaluacion.");
+            if( message){
+                toast.error(message);
+            }else{
+                toast.warning("Revise los campos e intente de nuevo.");
+            }
         }
     });
 }
@@ -74,7 +81,11 @@ function submitFormPassword(){
         replace: true,
         onError:(res)=>{
             const { message } = res;
-            alert( message ?? "Error no controlado al almacenar la evaluacion.");
+            if( message){
+                toast.error(message);
+            }else{
+                toast.warning("Revise los campos e intente de nuevo.");
+            }
         }
     });
 }
