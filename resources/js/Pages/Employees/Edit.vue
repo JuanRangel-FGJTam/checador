@@ -126,7 +126,7 @@ function submitForm(){
                             <InputError :message="form.errors.department_id" />
                         </div>
 
-                        <div role="form-group">
+                        <div v-if="$page.props.auth.user.level_id == 1" role="form-group">
                             <InputLabel for="status_id">Estado del empleado</InputLabel>
                             <InputSelect id="status_id" v-model="form.status_id">
                                 <option value="" class="text-gray-600" >Seleccione un elemento</option>
