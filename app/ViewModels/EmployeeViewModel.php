@@ -52,13 +52,15 @@ class EmployeeViewModel
             substr($employee->plantilla_id, 1),
             $employee->name
         );
+
         $model->checa = $employee->status_id;
         $model->photo = $employee->photo;
+
         if(isset($employee->active)){
-            if(is_bool($employee->active)){
+            if(is_bool($employee->active)) {
                 $model->active = $employee->active;
             }else{
-                $model->active = $employee->active === 1;
+                $model->active = $employee->active == 1;
             }
         }
 
@@ -81,12 +83,6 @@ class EmployeeViewModel
             }
         }
 
-        if($employee->workingDays)  {
-            if ($employee->workingHours->checkin) {
-                $model->horario = $employee->workingHours->checkin . ' a ' . $employee->workingHours->checkout;
-            }
-        }
-        
         if ($employee->workingDays) {
             $allWeek = 0;
             if ($employee->workingDays->week == 1) {

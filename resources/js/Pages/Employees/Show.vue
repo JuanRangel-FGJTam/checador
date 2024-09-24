@@ -258,7 +258,7 @@ function calendarDayClick(info){
 
             </div>
 
-            <div class="mt-4 mb-4 mx-2 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500 select-none ">
+            <div class="mt-4 bg-white shadow border rounded-lg dark:bg-gray-800 dark:border-gray-500 select-none ">
                 <AnimateSpin v-if="calendarLoading" class="w-4 h-4 mx-1 "/>
                 <IncidenciasPanel v-else :incidences="currentIncidences" />
             </div>
