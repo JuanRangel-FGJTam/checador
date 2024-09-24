@@ -258,7 +258,7 @@ class EmployeeService {
      */
     public function updateEmployeeSchedule(string $employeeNumber, $scheduleRequest ){
         // * get the employee
-        $employee = Employee::where('plantilla_id', '9' . $employeeNumber)->first();
+        $employee = Employee::where('plantilla_id', '1' . $employeeNumber)->first();
         if( $employee == null){
             throw new ModelNotFoundException("Employee not fount");
         }

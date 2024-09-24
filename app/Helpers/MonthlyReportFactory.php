@@ -69,10 +69,10 @@ class MonthlyReportFactory {
     private function makeEmployeeRow($employee){
         
         $checaComida = false;
-            
-        // Get working hours
-        $workingHours = $employee->workingHours;
-        if ($workingHours) {
+
+        // * manually get the working hours
+        $workingHours = WorkingHours::where('employee_id', $employee->id)->first();
+        if ($workingHours != null) {
             if ($workingHours->toeat && $workingHours->toarrive) {
                 $checaComida = true;
             }
@@ -157,7 +157,7 @@ class MonthlyReportFactory {
             }
         }
 
-        return  array(
+        return array(
             'name' => $employee->name,
             'checadas' => $checadas
         );

@@ -25,7 +25,7 @@ class EmployeeRHService {
         // $employeeRh = EmployeeRh::select('NUMEMP', 'NOMBRE', 'APELLIDO', 'RFC')->where('NUMEMP', $employee_number)->first();
 
         try {
-            $_employee = Employee::where('plantilla_id', '9'.$employee_number)->firstOrFail();
+            $_employee = Employee::where('plantilla_id', '1'.$employee_number)->firstOrFail();
             $employee = new stdClass();
             $employee->NUMEMP = (int) $employee_number;
             $employee->NOMBRE = $_employee->name;

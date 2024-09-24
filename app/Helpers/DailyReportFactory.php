@@ -87,13 +87,14 @@ class DailyReportFactory {
         //     $name = Str::title( $employee_info->APELLIDO.' '.$employee_info->NOMBRE );
         // }
 
+        // * manually get the working hours
+        $workingHours = WorkingHours::where('employee_id', $employee['id'])->first();
+
         // * validate if the employee has working hours assigned
-        if( empty($employee['working_hours']) ) {
+        if( $workingHours == null ) {
             return $responseData;
         }
 
-        $workingHours = (object) $employee['working_hours'];
-        
         // * validate if the employee has a check record on the day
         if ( !$workingHours->checkin && !$workingHours->checkout){
             return $responseData;

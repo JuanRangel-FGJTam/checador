@@ -3,6 +3,7 @@
 namespace App\ViewModels;
 
 use App\Models\Employee;
+use App\Models\WorkingHours;
 
 class EmployeeViewModel
 {
@@ -64,7 +65,10 @@ class EmployeeViewModel
             }
         }
 
-        $employee->load(['generalDirection', 'direction', 'workingHours', 'workingDays', 'subdirectorate', 'department']);
+        $employee->load(['generalDirection', 'direction', 'workingDays', 'subdirectorate', 'department']);
+
+        // * manually get the working hours
+        $workingHours = WorkingHours::where('employee_id', $employee->id)->first();
 
         if( isset($employee->generalDirection) ){
             $model->abbreviation = $employee->generalDirection->abbreviation;
@@ -77,9 +81,9 @@ class EmployeeViewModel
             $model->directionId = $employee->direction->id;
         }
 
-        if($employee->workingHours)  {
-            if ($employee->workingHours->checkin) {
-                $model->horario = $employee->workingHours->checkin . ' a ' . $employee->workingHours->checkout;
+        if($workingHours != null) {
+            if ($workingHours->checkin) {
+                $model->horario = $workingHours->checkin . ' a ' . $workingHours->checkout;
             }
         }
 
