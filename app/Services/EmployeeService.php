@@ -157,7 +157,7 @@ class EmployeeService {
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
     public function getEmployee(string $employeeNumber) {
-        $employee = Employee::where('plantilla_id', '9' . $employeeNumber)->first();
+        $employee = Employee::where('plantilla_id', '1' . $employeeNumber)->first();
         if( $employee == null){
             throw new ModelNotFoundException("Employee not fount");
         }
@@ -177,7 +177,7 @@ class EmployeeService {
     public function updateEmployee(string $employeeNumber, array $data )
     {
         // * get the employee
-        $employee = Employee::where('plantilla_id', '9' . $employeeNumber)->first();
+        $employee = Employee::where('plantilla_id', '1' . $employeeNumber)->first();
         if( $employee == null){
             throw new ModelNotFoundException("Employee not fount");
         }

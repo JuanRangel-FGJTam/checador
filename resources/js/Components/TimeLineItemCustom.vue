@@ -4,7 +4,7 @@
 
 <template>
 	<li class="mb-3 ml-6 p-1">
-		<span class="absolute flex items-center justify-center bg-blue-100 rounded-full -left-3 ring-8 ring-white dark:ring-gray-900 dark:bg-blue-900" >
+		<span class="absolute flex items-center justify-center bg-blue-100 rounded-full -left-2 ring-8 ring-white dark:ring-gray-900 dark:bg-blue-900" >
 			<slot name="icon"></slot>
 		</span>
 		

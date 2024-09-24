@@ -329,19 +329,21 @@ class EmployeeController extends Controller
         $employee = $this->employeeService->getEmployee($employee_number);
 
         // * get the records
+
         $records = Record::where('employee_id', $employee->id)
-            ->whereBetween('check', [ $from->format('Y-m-d'), $to->format('Y-m-d') ])
+            ->whereDate('check', '>=', $from->format('Y-m-d'))
+            ->whereDate('check', '<=', $to->format('Y-m-d'))
             ->get();
 
         // * get the incidents
         $incidents = Incident::with(['type', 'state'])
             ->where('employee_id', $employee->id)
-            ->whereBetween('date', [ $from->format('Y-m-d'), $to->format('Y-m-d') ])
+            ->whereDate('date', '>=', $from->format('Y-m-d'))
+            ->whereDate('date', '<=', $to->format('Y-m-d'))
             ->get();
 
         // * get the justifications
         $justifications = $this->justificationService->getJustificationsEmployee( $employee, $from->format('Y-m-d'), $to->format('Y-m-d') );
-
 
         // * parse events
         $events = array();
