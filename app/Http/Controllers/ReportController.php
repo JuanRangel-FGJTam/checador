@@ -424,10 +424,10 @@ class ReportController extends Controller
         foreach ($employees as $employee) {
             $checaComida = false;
             // Get working hours
-            $workingHours = $employee->workingHours;
+            //$workingHours = $employee->workingHours;
+            $workingHours = WorkingHours::where('employee_id', $employee->id)->first();
 
-            if ($workingHours)
-            {
+            if($workingHours) {
                 if ($workingHours->toeat && $workingHours->toarrive) {
                     $checaComida = true;
                 }
