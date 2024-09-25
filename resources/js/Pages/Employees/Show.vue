@@ -51,7 +51,7 @@ const calendarOptions = {
         dayGridPlugin, timeGridPlugin, multiMonthPlugin, interactionPlugin
     ],
     locales: [esLocale],
-    height: 650,
+    height: "100%",
     locale: 'es',
     initialView: 'dayGridMonth',
     headerToolbar: {
@@ -209,56 +209,51 @@ function calendarDayClick(info){
             <Breadcrumb :breadcrumbs="breadcrumbs" />
         </template>
 
-        <div class="grid justify-center w-screen max-w-screen-2xl mx-auto" style="grid-template-columns: 1fr 16rem; grid-template-rows: 1fr;">
+        <div class="grid p-1 gap-1 justify-center w-screen max-w-screen-2xl h-full mx-auto" style="grid-template-columns: 1fr 1fr 16rem; grid-template-rows: auto 3rem 1fr">
             
-            <div class="grid grid-cols-12 mt-2 p-2 gap-2 w-full">
-
-                <div class="col-span-7 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500">
-                    <EmployeeGeneralData
-                        :employee="employee"
-                        :status="status"
-                        :checa="checa"
-                        :workingHours="workingHours"
-                    />
-                </div>
-
-                <div class="col-span-5 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500">
-                    <EmployeeDataPanel
-                        :employee="employee"
-                        v-on:editCalendar="editCalendarClick"
-                        v-on:editEmployee="editEmployeeClick"
-                        v-on:incidencesClick="incidencesClick"
-                        v-on:downloadKardex="downLoadkardexClick"
-                    />
-                </div>
-
-                <div class="col-span-12 bg-white shadow border rounded-lg px-4 py-2 dark:bg-gray-800 dark:border-gray-500">
-                    <div class="flex gap-4 justify-center">
-
-                        <WarningButton v-on:click="makeIncidenceClick">
-                            Generar Incidencias
-                        </WarningButton>
-
-                        <WhiteButton v-on:click="showJustificationsClick" class=" outline outline-1">
-                            Ver justificaciones
-                        </WhiteButton>
-
-                        <WhiteButton v-if="calendarDaySelected.day" v-on:click="justifyDayClick" class=" outline outline-1">
-                            Justificar ({{ formatDate(calendarDaySelected.day) }} )
-                        </WhiteButton>
-                        <DisabledButton v-else>
-                            Justificar (seleccione un dia)
-                        </DisabledButton>
-                    </div>
-                </div>
-
-                <div class="col-span-12 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500 select-none">
-                    <FullCalendar ref="fullCalenarObj" :options="calendarOptions" />
-                </div>
-
+            <div class="bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500" style="grid-area: 1/1/2/2;">
+                <EmployeeGeneralData
+                    :employee="employee"
+                    :status="status"
+                    :checa="checa"
+                    :workingHours="workingHours"
+                />
             </div>
 
-            <div class="mt-4 bg-white shadow border rounded-lg dark:bg-gray-800 dark:border-gray-500 select-none ">
+            <div class="bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500" style="grid-area: 1/2/2/3;">
+                <EmployeeDataPanel
+                    :employee="employee"
+                    v-on:editCalendar="editCalendarClick"
+                    v-on:editEmployee="editEmployeeClick"
+                    v-on:incidencesClick="incidencesClick"
+                    v-on:downloadKardex="downLoadkardexClick"
+                />
+            </div>
+
+            <div class="bg-white shadow border rounded-lg px-4 py-2 dark:bg-gray-800 dark:border-gray-500" style="grid-area: 2/1/3/3;">
+                <div class="flex gap-4 justify-center">
+                    <WarningButton v-on:click="makeIncidenceClick">
+                        Generar Incidencias
+                    </WarningButton>
+
+                    <WhiteButton v-on:click="showJustificationsClick" class=" outline outline-1">
+                        Ver justificaciones
+                    </WhiteButton>
+
+                    <WhiteButton v-if="calendarDaySelected.day" v-on:click="justifyDayClick" class=" outline outline-1">
+                        Justificar ({{ formatDate(calendarDaySelected.day) }} )
+                    </WhiteButton>
+                    <DisabledButton v-else>
+                        Justificar (seleccione un dia)
+                    </DisabledButton>
+                </div>
+            </div>
+
+            <div class="bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500 select-none" style="grid-area:3/1/4/3;">
+                <FullCalendar ref="fullCalenarObj" :options="calendarOptions" />
+            </div>
+
+            <div class="bg-white h-100 shadow border rounded-lg overflow-y-hidden dark:bg-gray-800 dark:border-gray-500 select-none" style="grid-area:1/3/4/4;">
                 <AnimateSpin v-if="calendarLoading" class="w-4 h-4 mx-1 "/>
                 <IncidenciasPanel v-else :incidences="currentIncidences" />
             </div>

@@ -50,7 +50,7 @@ const calendarOptions = {
         dayGridPlugin, timeGridPlugin, multiMonthPlugin, interactionPlugin
     ],
     locales: [esLocale],
-    height: 650,
+    height: "100%",
     locale: 'es',
     initialView: 'dayGridMonth',
     headerToolbar: {
@@ -169,38 +169,34 @@ function calendarDayClick(info){
             <Breadcrumb :breadcrumbs="breadcrumbs" />
         </template>
 
-        <div class="grid justify-center w-screen max-w-screen-2xl mx-auto" style="grid-template-columns: 1fr 16rem; grid-template-rows: 1fr;">
+        <div class="grid gap-1 p-1 justify-center w-screen max-w-screen-2xl mx-auto h-full" style="grid-template-columns: 1fr 1fr 16rem; grid-template-rows: auto 1fr">
             
-            <div class="grid grid-cols-12 mt-2 p-2 gap-2 w-full">
-
-                <div class="col-span-7 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500">
-                    <EmployeeGeneralData
-                        :employee="employee"
-                        :status="status"
-                        :checa="checa"
-                        :showStatus="false"
-                        :workingHours="workingHours"
-                    />
-                </div>
-
-                <div class="col-span-5 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500">
-                    <EmployeeDataPanel
-                        :employee="employee"
-                        :showButtons="false"
-                        v-on:editCalendar="editCalendarClick"
-                        v-on:editEmployee="editEmployeeClick"
-                        v-on:incidencesClick="incidencesClick"
-                        v-on:downloadKardex="downLoadkardexClick"
-                    />
-                </div>
-                
-                <div class="col-span-12 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500 select-none">
-                    <FullCalendar ref="fullCalenarObj" :options="calendarOptions" />
-                </div>
-
+            <div class="col-span-7 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500" style="grid-area: 1/1/2/2;">
+                <EmployeeGeneralData
+                    :employee="employee"
+                    :status="status"
+                    :checa="checa"
+                    :showStatus="false"
+                    :workingHours="workingHours"
+                />
             </div>
 
-            <div class="mt-4 mb-4 mx-2 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500 select-none ">
+            <div class="col-span-5 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500" style="grid-area: 1/2/1/3;">
+                <EmployeeDataPanel
+                    :employee="employee"
+                    :showButtons="false"
+                    v-on:editCalendar="editCalendarClick"
+                    v-on:editEmployee="editEmployeeClick"
+                    v-on:incidencesClick="incidencesClick"
+                    v-on:downloadKardex="downLoadkardexClick"
+                />
+            </div>
+
+            <div class="col-span-12 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500 select-none" style="grid-area: 2/1/3/3;">
+                <FullCalendar ref="fullCalenarObj" :options="calendarOptions" />
+            </div>
+
+            <div class="bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500 select-none" style="grid-area: 1/3/3/4;">
                 <AnimateSpin v-if="calendarLoading" class="w-4 h-4 mx-1 "/>
                 <IncidenciasPanel v-else :incidences="currentIncidences" />
             </div>
