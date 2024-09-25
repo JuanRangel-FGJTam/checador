@@ -59,6 +59,12 @@ const calendarOptions = {
         center: 'title',
         end: 'today prev,next'
     },
+    eventTimeFormat: {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        meridiem: false
+    },
     loading: (isLoading) => calendarLoading.value = isLoading,
     dateClick: (info)=> calendarDayClick(info),
     events: function(info, successCallback, failureCallback) {
