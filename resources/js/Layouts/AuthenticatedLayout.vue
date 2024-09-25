@@ -178,7 +178,7 @@ const showingNavigationDropdown = ref(false);
             </header>
     
             <!-- Page Content -->
-            <main>
+            <main class="h-full">
                 <slot />
             </main>
         </div>
