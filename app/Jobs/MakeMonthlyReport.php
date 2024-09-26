@@ -23,6 +23,7 @@ class MakeMonthlyReport implements ShouldQueue
     protected MonthlyRecord $monthlyRecord;
     protected array $employees;
     protected GeneralDirection $generalDirection;
+    protected Process $process;
 
     /**
      * Create a new job instance.
@@ -32,6 +33,11 @@ class MakeMonthlyReport implements ShouldQueue
         $this->monthlyRecord = $monthlyRecord;
         $this->employees = $employees;
         $this->generalDirection = GeneralDirection::find($this->monthlyRecord->general_direction_id);
+
+        $this->process = new Process();
+        $this->process->status = 'pending';
+        $this->process->save();
+        $this->monthlyRecord->process()->save($this->process);
     }
 
     /**
@@ -40,12 +46,11 @@ class MakeMonthlyReport implements ShouldQueue
     public function handle(): void
     {
         // * create the process record and attach to the monthReportRecord
-        $process = new Process();
-        $process->status = 'processing';
-        $process->output = null;
-        $process->started_at = Carbon::now();
-        $process->ended_at = null;
-        $this->monthlyRecord->process()->save($process);
+        $this->process->status = 'processing';
+        $this->process->output = null;
+        $this->process->started_at = Carbon::now();
+        $this->process->ended_at = null;
+        $this->process->save();
 
         try {
 
@@ -77,17 +82,24 @@ class MakeMonthlyReport implements ShouldQueue
             $this->monthlyRecord->save();
 
             // * set the process as finish
-            $process->status = 'success';
-            $process->output = null;
-            $process->ended_at = Carbon::now();
-            $process->save();
+            $this->process->status = 'success';
+            $this->process->output = null;
+            $this->process->ended_at = Carbon::now();
+            $this->process->save();
 
         } catch(\Throwable $exception) {
-            $process->status = 'error';
-            $process->output = $exception->getMessage();
-            $process->ended_at = Carbon::now();
-            $process->save();
+            $this->process->status = 'error';
+            $this->process->output = $exception->getMessage();
+            $this->process->ended_at = Carbon::now();
+            $this->process->save();
         }
 
+    }
+
+    public function failed($exception) {
+        $this->process->status = 'error';
+        $this->process->output = $exception->getMessage();
+        $this->process->ended_at = Carbon::now();
+        $this->process->save();
     }
 }
