@@ -168,52 +168,50 @@ function changePage(pageNumber){
             </div>
 
             <!-- paginator -->
-            <Pagination v-if="showPaginator"
+            <!-- <Pagination v-if="showPaginator"
                 :paginator="paginator"
                 :currentPage="form.page"
                 v-on:changePage="changePage"
-            />
+            /> -->
 
             <!-- data table -->
-            <table class="table-fixed w-full shadow text-sm text-left border rtl:text-right text-gray-500 dark:text-gray-400 dark:border-gray-500">
+            <table class="table-fixed w-full shadow text-sm text-left mt-2 border rtl:text-right text-gray-500 dark:text-gray-400 dark:border-gray-500">
                 <thead class="sticky top-0 z-20 text-xs uppercase text-gray-700 border bg-gradient-to-b from-gray-50 to-slate-100 dark:from-gray-800 dark:to-gray-700 dark:text-gray-200 dark:border-gray-500">
                     <AnimateSpin v-if="loading" class="w-4 h-4 mx-2 absolute top-2.5" />
                     <tr>
-                        <th scope="col" class="w-2/8 text-center px-6 py-3">
+                        <th scope="col" class="text-center px-6 py-3">
                             Nombre
                         </th>
-                        <th scope="col" class="w-1/8 text-center px-6 py-3">
+                        <!-- <th scope="col" class="text-center px-6 py-3">
                             Numero Empleado
-                        </th>
-                        <th scope="col" class="w-2/8 text-center px-6 py-3">
+                        </th> -->
+                        <th scope="col" class="text-center px-6 py-3">
                             Unidad
                         </th>
-                        <th scope="col" class="w-1/8 text-center px-6 py-3">
+                        <th scope="col" class="text-center px-6 py-3">
                             Estatus
                         </th>
-                        <th scope="col" class="w-1/8 text-center px-6 py-3">
+                        <th scope="col" class="text-center px-6 py-3">
                             Horario
                         </th>
-                        <th scope="col" class="w-1/8 text-center px-6 py-3">
+                        <th scope="col" class="text-center px-6 py-3">
                             Acciones
                         </th>
                     </tr>
                 </thead>
                 <tbody id="table-body" class="bg-white dark:bg-gray-800 dark:border-gray-500">
                     <template v-if="employees && employees.length > 0">
-                        <tr v-for="employee in employees" :key="employee.id" class="border-b">
+                        <tr v-for="employee in employees" :key="employee.id" class="border-b hover:bg-gray-100">
                             <td class="p-2 text-center">
-                                <div class="flex gap-2">
-                                    <img :src="employee.photo" class="h-8" alt="user"/>
+                                <div class="flex gap-2 items-center">
+                                    <img :src="employee.photo" class="h-10 w-10 rounded-md object-cover" alt="user"/>
+
                                     <div class="flex flex-col items-start">
-                                        <div class="text-sm truncate">{{ employee.name}}</div>
-                                        <div class="text-xs">{{ employee.curp}}</div>
+                                        <p class="text-base truncate">{{ employee.name }}</p>
+                                        <p>{{ employee.employeeNumber}}</p>
+                                        <p class="text-xs">{{ employee.curp}}</p>
                                     </div>
                                 </div>
-                            </td>
-
-                            <td class="p-2 text-center">
-                                {{ employee.employeeNumber}}
                             </td>
 
                             <td class="p-2 text-center">

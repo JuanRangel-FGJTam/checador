@@ -80,12 +80,10 @@ class EmployeeController extends Controller
             }
         }
 
-
         // * get catalogs
         $generalDirections = GeneralDirection::select('id', 'name')->get();
         $directions = Direction::select('id', 'name', 'general_direction_id')->get();
         $subdirectorate = Subdirectorate::select('id', 'name', 'direction_id')->get();
-
 
         // * prepare the filters
         $filters = array();
@@ -104,7 +102,6 @@ class EmployeeController extends Controller
             $filters['search'] = $request->query("se");
         }
 
-
         // * get employees
         $totalEmployees = 0;
         $data = $this->employeeService->getEmployees(
@@ -114,10 +111,8 @@ class EmployeeController extends Controller
             total:$totalEmployees
         );
 
-
         // * verify if display paginator
         $showPaginator = $elementsToTake < $totalEmployees;
-
 
         // * make paginator
         $paginator = [
@@ -126,7 +121,6 @@ class EmployeeController extends Controller
             "total" => $totalEmployees,
             "pages" =>  range(1, ceil( $totalEmployees / $elementsToTake))
         ];
-
 
         // * return the viewe
         return Inertia::render('Employees/Index', [
@@ -167,7 +161,6 @@ class EmployeeController extends Controller
      */
     public function show(Request $request, string $employee_number)
     {
-
         // * attempt to get the employee
         try {
             $employee = $this->employeeService->getEmployee($employee_number);
@@ -186,8 +179,7 @@ class EmployeeController extends Controller
                 "message" => $th->getMessage(),
             ]);
 
-            //TODO: Redirect to error page
-            throw new Exception("Not implemented");
+            abort(500);
         }
 
         // calculate status
@@ -226,17 +218,27 @@ class EmployeeController extends Controller
             }
         }
 
-
         // * calculate the breadcrumns based on where the request come from
         $breadcrumbs = array(
             ["name"=> "Inicio", "href"=> "/dashboard"],
             ["name"=> "Vista Empleados", "href"=> route('employees.index') ],
             ["name"=> "Empleado: $employee->employeeNumber", "href"=> route('employees.show', $employee->employeeNumber)],
         );
+
         if( parse_url( $request->headers->get('referer'), PHP_URL_PATH ) == '/inactive' ){
             $breadcrumbs[1] = [
                 "name"=> "Inactivos", "href"=> $request->headers->get('referer'),
             ];
+        }
+
+        // Validate if photo employee exists $employee->photo in public folder
+        $employeePhoto = '/images/unknown.png';
+        // validate if photo exists in directory
+        if($employee->photo != null) {
+            $employeePhoto = public_path($employee->photo);
+            if (file_exists($employeePhoto)) {
+                $employeePhoto = asset($employee->photo);
+            }
         }
 
         // * return the view
@@ -246,7 +248,8 @@ class EmployeeController extends Controller
             "status" => (object) $status,
             "checa" => (object) $checa,
             "workingHours" => $hours,
-            "breadcrumbs" => $breadcrumbs
+            "breadcrumbs" => $breadcrumbs,
+            "employeePhoto" => $employeePhoto,
         ]);
     }
 

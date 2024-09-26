@@ -4,6 +4,7 @@ namespace App\ViewModels;
 
 use App\Models\Employee;
 use App\Models\WorkingHours;
+use App\Services\EmployeeRHService;
 
 class EmployeeViewModel
 {
@@ -45,8 +46,8 @@ class EmployeeViewModel
      * @param  Employee $employee
      * @return EmployeeViewModel
      */
-    public static function fromEmployeeModel( Employee $employee) : EmployeeViewModel {
-
+    public static function fromEmployeeModel( Employee $employee) : EmployeeViewModel 
+    {
         // create the view model
         $model = new EmployeeViewModel(
             $employee->id,
@@ -54,8 +55,23 @@ class EmployeeViewModel
             $employee->name
         );
 
+        // validate if photo exists in directory
+        if($employee->photo != null) {
+            $photo = public_path($employee->photo);
+            if (file_exists($photo)) {
+                $model->photo = $employee->photo;
+            } else {
+                $photo = EmployeeRHService::duplicatePhotoEmployee($employee->id, $employee->plantilla_id);
+                if ($photo) {
+                    $model->photo = $photo;
+                } else {
+                    $model->photo = '/images/unknown.png';
+                }
+            }
+        }
+
         $model->checa = $employee->status_id;
-        $model->photo = $employee->photo;
+        // $model->photo = $employee->photo;
 
         if(isset($employee->active)){
             if(is_bool($employee->active)) {

@@ -9,7 +9,7 @@ class EmployeeRh extends Model
 {
     use HasFactory;
 
-    protected $connection = 'sqlsrvRh';
+    protected $connection = 'sqlsrvRH';
     protected $table = 'EMPLEADO';
     protected $primaryKey = 'IDEMPLEADO';
 

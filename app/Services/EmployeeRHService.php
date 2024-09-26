@@ -5,11 +5,9 @@ namespace App\Services;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
-use App\Models\{
-    Employee
-};
+use App\Models\Employee;
 use App\Models\EmployeeRh;
-use \stdClass;
+use stdClass;
 
 class EmployeeRHService {
 
@@ -29,7 +27,7 @@ class EmployeeRHService {
             $employee = new stdClass();
             $employee->NUMEMP = (int) $employee_number;
             $employee->NOMBRE = $_employee->name;
-            $employee->APELLIDO = "Apellidos Prueba";
+            $employee->APELLIDO = "";
             $employee->RFC = "RAAJ931217";
             $employee->CURP = "RAAJ931217HGTNLN03";
             return $employee;
@@ -42,5 +40,36 @@ class EmployeeRHService {
             return null;
         }
     }
-    
+
+    public static function duplicatePhotoEmployee($employee_id, $plantilla_id)
+    {
+        $employee_number = (int)substr($plantilla_id, 1);
+        $rowRh = EmployeeRh::select('FOTO', 'RFC')->where('NUMEMP', '=', $employee_number)->first();
+
+        if ($rowRh) {
+            $path = null;
+
+            if ($rowRh->FOTO) {
+                $path = 'photos/'.$rowRh->RFC.'.jpg';
+
+                try {
+                    // file_put_contents('/var/www/html/public/'.$path, $rowRh->FOTO);
+                    file_put_contents(public_path($path), $rowRh->FOTO);
+                } catch (\Throwable $th) {
+                    Log::error('Error saving photo '.$path.': '.$th->getMessage());
+                }
+            }
+
+            if ($path) {
+                $employee = Employee::find($employee_id);
+                if ($employee) {
+                    $employee->photo = $path;
+                    $employee->save();
+                    return $path;
+                }
+            }
+        }
+
+        return null;
+    }
 }

@@ -1,60 +1,62 @@
 <script setup>
-
-import Card from '@/Components/Card.vue';
 import CardText from '@/Components/CardText.vue';
 import CardTitle from '@/Components/CardTitle.vue';
-
 
 const props = defineProps({
     employee: Object,
     status: Object,
     checa: Object,
     workingHours: Array,
+    employeePhoto: String,
     showStatus: {
         type: Boolean,
         default: true
     }
 });
 
+console.log('Photo URL:', props.employeePhoto);
 </script>
 
 <template>
-    <div class="grid grid-cols-3">
-        <div class="flex items-center justify-start">
-            <img class="mr-1 w-48 h-48 aspect-auto rounded-lg border bg-slate-400 text-center" alt="Foto empleado" :src="employee.photo"/>
-        </div>
+    <div class="grid grid-cols-3 items-center">
+        <img 
+            class="mr-1 w-48 h-48 aspect-auto rounded-lg border bg-slate-400 object-cover" 
+            alt="Foto empleado" 
+            :src="employeePhoto"
+        />
 
-        <div class=" col-span-2 flex flex-col items-start gap-1">
+        <div class="col-span-2 flex flex-col items-start gap-1">
 
-            <h1 class="font-bold text-lg uppercase">{{ employee.name }}</h1>
-            
-            <div v-if="showStatus" class="flex gap-2">
-                <div class="border rounded-lg px-2" :class="status.class">
-                    {{status.name}}
-                </div>
-                <div class="border rounded-lg px-2" :class="checa.class">
-                    {{checa.name}}
-                </div>
-            </div>
-            
-            <div class="flex gap-2 justify-end">
-                <CardTitle class="pt-0.5">Numero de empleado: </CardTitle>
+            <h1 class="font-bold text-lg text-gray-800 uppercase">{{ employee.name }}</h1>
+
+            <div>
+                <CardTitle>Número de empleado</CardTitle>
                 <CardText> {{ employee.employeeNumber }}</CardText>
             </div>
 
-            <div class="flex gap-2 justify-end">
-                <CardTitle class="pt-0.5">Curp: </CardTitle>
+            <div>
+                <CardTitle>CURP</CardTitle>
                 <CardText> {{ employee.curp }}</CardText>
             </div>
 
-            <div class="flex gap-2 justify-end">
-                <CardTitle class="pt-0.5">Horario: </CardTitle>
-                <CardText v-for="item in workingHours">{{ item }}</CardText>
+            <div class="flex items-center gap-2 justify-between w-full border-t">
+                <div>
+                    <CardTitle>Horario</CardTitle>
+                    <CardText v-for="item in workingHours">{{ item }}</CardText>
+                </div>
+                <div>
+                    <CardTitle>Dias laborales</CardTitle>
+                    <CardText> {{ employee.days }}</CardText>
+                </div>
             </div>
 
-            <div class="flex gap-2 justify-end">
-                <CardTitle class="pt-0.5">Dias laborales: </CardTitle>
-                <CardText> {{ employee.days }}</CardText>
+            <div v-if="showStatus" class="flex gap-2">
+                <div class="border rounded-lg px-2 text-sm" :class="status.class">
+                    {{status.name}}
+                </div>
+                <div class="border rounded-lg px-2 text-sm" :class="checa.class">
+                    {{checa.name}}
+                </div>
             </div>
 
         </div>

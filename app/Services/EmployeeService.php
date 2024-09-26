@@ -26,8 +26,8 @@ class EmployeeService {
      * @param  int $total out of total
      * @return Array<EmployeeViewModel>
      */
-    public function getEmployees(int $take = 0, int $skip = 0, array $filters = [], &$total){
-
+    public function getEmployees(int $take = 0, int $skip = 0, array $filters = [], &$total)
+    {
         $employees = array();
         $query = Employee::query();
 
@@ -56,7 +56,6 @@ class EmployeeService {
                 if( isset($filters['active'])){
                     $query->where('active', $filters['active']);
                 }
-
             }
         }else{
             $__authUser = Auth::user();
@@ -102,13 +101,13 @@ class EmployeeService {
         // * set the total people
         $total = $query->count();
 
-        
         // * get the local employees
         if($take > 0){
-            $query->skip($skip)->take($take);
+            $query->orderBy('name', 'ASC')->skip($skip)->take($take);
         }
+
         $employeesRaw = $query->get();
-        
+
         /**
          * @var Employee $employeeData
          */
@@ -161,6 +160,7 @@ class EmployeeService {
         if( $employee == null){
             throw new ModelNotFoundException("Employee not fount");
         }
+
         return EmployeeViewModel::fromEmployeeModel($employee);
     }
 
