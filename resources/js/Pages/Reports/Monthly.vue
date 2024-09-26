@@ -39,15 +39,14 @@ const props = defineProps({
 const toast = useToast();
 
 onMounted(()=>{
-
-    setTimeout(() => {
-        router.reload({
-            only: ['report'],
-            onSuccess:()=>{
-                toast.success("Reporte generado");
-            }
-        })
-    }, 1000);
+    // setTimeout(() => {
+    //     router.reload({
+    //         only: ['report'],
+    //         onSuccess:()=>{
+    //             toast.success("Reporte generado");
+    //         }
+    //     })
+    // }, 1000);
 });
 
 function handleDownloadReport() {

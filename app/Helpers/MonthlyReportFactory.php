@@ -80,7 +80,7 @@ class MonthlyReportFactory {
 
         $checadas = array();
         
-        $date = new Date($this->year, $this->month - 1, 1); // Months are 0-based in JavaScript
+        $date = new \DateTime("$this->year-$this->month-01");
 
         for ($i=1; $i < 32; $i++) {
             if ($i == $date->format('d')) {
@@ -162,6 +162,18 @@ class MonthlyReportFactory {
             'checadas' => $checadas
         );
 
+    }
+
+    private function translateDayName($name) {
+        $days['Mon'] = 'Lun';
+        $days['Tue'] = 'Mar';
+        $days['Wed'] = 'Mie';
+        $days['Thu'] = 'Jue';
+        $days['Fri'] = 'Vie';
+        $days['Sat'] = 'Sab';
+        $days['Sun'] = 'Dom';
+
+        return $days[$name];
     }
 
     private function months($month) {

@@ -14,7 +14,8 @@ use App\Models\{
     Employee,
     Record,
     WorkingDays,
-    WorkingHours
+    WorkingHours,
+    MonthlyRecord
 };
 use App\Helpers\DailyReportFactory;
 use App\Helpers\DailyReportPdfFactory;
@@ -127,12 +128,16 @@ class ReportController extends Controller
             $generalDirection = GeneralDirection::where('id', $AUTH_USER->general_direction_id)->first();
         }
 
+        // * make the report
+        $this->makeMonthlyReportV2($AUTH_USER, $dateReport, $generalDirection, $includeAllEmployees);
+
 
         // * retornar vista
         return Inertia::render("Reports/Monthly", [
             "title" => "Generando reporte mensual de " . $dateReport->format("M Y"),
             "breadcrumbs" => $breadcrumbs,
-            "report" => Inertia::lazy( fn() => $this->makeMonthlyReport($AUTH_USER, $dateReport, $generalDirection, $includeAllEmployees) ),
+            "report" => null
+            // "report" => Inertia::lazy( fn() => $this->makeMonthlyReport($AUTH_USER, $dateReport, $generalDirection, $includeAllEmployees) ),
         ]);
 
     }
@@ -363,6 +368,46 @@ class ReportController extends Controller
 
     }
 
+    private function makeMonthlyReportV2($AUTH_USER, $dateReport, $generalDirection, $includeAllEmployees ){
+
+        // * create a mongo monthy report record
+        $reportData = new MonthlyRecord([
+            'general_direction_id'=> $generalDirection->id,
+            'year' => $dateReport->year,
+            'month' => $dateReport->month,
+            'all_employees' => $includeAllEmployees
+        ]);
+        if($AUTH_USER->level_id > 2){
+            $reportData->general_direction_id = $AUTH_USER->direction_id;
+        }
+        if($AUTH_USER->level_id > 3){
+            $reportData->subdirectorate_id = $AUTH_USER->subdirectorate_id;
+        }
+        if($AUTH_USER->level_id > 4){
+            $reportData->department_id = $AUTH_USER->department_id;
+        }
+        $reportData->save();
+
+
+        // * dispatch the job
+        $employees = $this->getEmployees( $generalDirection->id, [
+            'directionId' => ($AUTH_USER->level_id > 2) ?$AUTH_USER->direction_id :null,
+            'subdirectorateId' => ($AUTH_USER->level_id > 3) ?$AUTH_USER->subdirectorate_id :null,
+            'departmentId' => ($AUTH_USER->level_id > 4) ?$AUTH_USER->department_id :null,
+        ]);
+
+        Log::notice("Dispatch the report");
+        \App\Jobs\MakeMonthlyReport::dispatch($reportData, $employees );
+        Log::notice("Dispatched the report");
+
+    }
+
+
+    /**
+     * @param  mixed $generalDirectionId
+     * @param  mixed $options
+     * @return array
+     */
     private function getEmployees( $generalDirectionId, $options ){
 
         // * get employees of the current general-direction
@@ -384,7 +429,7 @@ class ReportController extends Controller
             $employeesQuery = $employeesQuery->where('department_id', $options['departmentId']);
         }
 
-        return $employeesQuery->orderBy('name', 'ASC')->get();
+        return $employeesQuery->orderBy('name', 'ASC')->get()->all();
     }
 
     /**
@@ -418,150 +463,7 @@ class ReportController extends Controller
         // retrive the data
         return $mongoRecordQuery->first();
     }
-    
-    private function makeMonthlyRecords($employees, $generalDirectionId, $year, $month, $all_employees)
-    {
-        foreach ($employees as $employee) {
-            $checaComida = false;
-            // Get working hours
-            //$workingHours = $employee->workingHours;
-            $workingHours = WorkingHours::where('employee_id', $employee->id)->first();
 
-            if($workingHours) {
-                if ($workingHours->toeat && $workingHours->toarrive) {
-                    $checaComida = true;
-                }
-            }
-
-            $checadas = array();
-            $date = new \DateTime("$year-$month-01");
-
-            for ($i=1; $i < 32; $i++) {
-                if ($i == $date->format('d')) {
-                    $checkin = '';
-                    $checkout = '';
-                    $eat = '';
-                    $arrive = '';
-                    // Get checkin
-                    $records = Record::select('check')
-                    ->where('employee_id', $employee->id)
-                    ->whereDate('check', $date->format('Y-m-d'))
-                    ->get();
-
-                    if ($workingHours)
-                    {
-                        // Horario corrido
-                        $hour1 = strtotime($workingHours->checkin);
-                        $hour2 = strtotime($workingHours->checkout);
-                        // horario quebrado
-                        $hour3 = strtotime($workingHours->toeat);
-                        $hour4 = strtotime($workingHours->toarrive);
-
-                        $recordsArray = [];
-                        foreach ($records as $record) {
-                            $dateRecord = new \DateTime($record->check);
-                            $timeRecord = $dateRecord->format('H:i');
-
-                            if (!in_array($timeRecord, $recordsArray))
-                            {
-                                $recordsArray[] = $timeRecord;
-                            }
-                        } // End foreach
-
-                        foreach ($recordsArray as $timeRecord) {
-                            $diffCheckin = round(abs(strtotime($timeRecord) - $hour1) / 3600, 2);
-                            $diffCheckout = round(abs(strtotime($timeRecord) - $hour2) / 3600, 2);
-
-                            $diffToEat = round(abs(strtotime($timeRecord) - $hour3) / 3600, 2);
-                            $diffToArrive = round(abs(strtotime($timeRecord) - $hour4) / 3600, 2);
-
-                            if (!$checaComida) {
-                                if ($diffCheckin < $diffCheckout && !$checkin) {
-                                    $checkin = $timeRecord;
-                                } else {
-                                    $checkout = $timeRecord;
-                                }
-                            } else {
-                                if ($diffCheckin < $diffToEat && $checkin == '') {
-                                    $checkin = $timeRecord;
-                                } elseif ($diffToEat < $diffToArrive) {
-                                    $eat = $timeRecord;
-                                } elseif ($diffToArrive < $diffCheckout) {
-                                    $arrive = $timeRecord;
-                                } else {
-                                    $checkout = $timeRecord;
-                                }
-                            }
-                        }
-                    } else {
-                        $checkin = 'S/H';
-                        $checkout = 'S/H';
-                    }
-                    // Array
-                    $checadas[] = array(
-                        'diaNombre' => $this->translateDayName($date->format('D')),
-                        'dia' => $date->format('d'),
-                        'entrada' => $checkin,
-                        'comidaS' => $eat,
-                        'comidaE' => $arrive,
-                        'salida' => $checkout,
-                    );
-                    $date->modify('+1 day');
-                }
-            }
-
-            $users[] = array(
-                'name' => $employee->name,
-                'checadas' => $checadas
-            );
-        }
-
-        $data = array(
-            'year' => $year,
-            'month' => $this->months($month),
-            'users' => $users
-        );
-
-        // * store the report-data only if the report year-month is not same as the current year-month
-        try {
-            $today = new \DateTime();
-            if ($today->format('Yn') != $year.$month) {
-                $recordMongo = new \App\Models\MonthlyRecord();
-                $recordMongo->general_direction_id = $generalDirectionId;
-                if (Auth::user()->level_id != 1) {
-                    $recordMongo->direction_id = Auth::user()->direction_id;
-                    $recordMongo->subdirectorate_id = Auth::user()->subdirectorate_id;
-                    $recordMongo->department_id = Auth::user()->department_id;
-                }
-                $recordMongo->year = $year;
-                $recordMongo->month = $month;
-                $recordMongo->all_employees = $all_employees;
-                $recordMongo->data = $data;
-                $recordMongo->save();
-            }
-        } catch (\Throwable $th) {
-            Log::error($th->getMessage());
-        }
-
-        return $data;
-    }
-
-    private function translateDayName($name) {
-        $days['Mon'] = 'Lun';
-        $days['Tue'] = 'Mar';
-        $days['Wed'] = 'Mie';
-        $days['Thu'] = 'Jue';
-        $days['Fri'] = 'Vie';
-        $days['Sat'] = 'Sab';
-        $days['Sun'] = 'Dom';
-
-        return $days[$name];
-    }
-
-    private function months($month) {
-        $names = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-        return $names[$month - 1];
-    }
     #endregion
 
 }
