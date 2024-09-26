@@ -117,7 +117,7 @@ function checkReportStatus(){
                             <AnimateSpin class="inline-block w-4 h-4 mx-1" />
                         </BadgeYellow>
 
-                        <div v-else-if="report && report.error" class="flex gap-2 items-center p-2 text-xs uppercase rounded-xl bg-red-200 text-red-600 mx-auto dark:bg-red-500 dark:text-red-100 hover:bg-red-400 border-2 border-white outline outline-0 hover:outline-2 cursor-pointer">
+                        <div v-else-if="report && report.error" class="flex gap-2 items-center p-2 text-xs uppercase rounded-xl bg-red-200 text-red-600 mx-auto dark:bg-red-500 dark:text-red-100 border-2 border-white outline outline-0 hover:outline-2 cursor-pointer">
 
                             <CloudFailIcon class="text-red-400 h-24 mx-4" />
 
