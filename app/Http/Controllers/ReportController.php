@@ -21,6 +21,7 @@ use App\Helpers\DailyReportFactory;
 use App\Helpers\DailyReportPdfFactory;
 use Inertia\Inertia;
 use Date;
+use Illuminate\Http\JsonResponse;
 
 class ReportController extends Controller
 {
@@ -129,15 +130,13 @@ class ReportController extends Controller
         }
 
         // * make the report
-        $this->makeMonthlyReportV2($AUTH_USER, $dateReport, $generalDirection, $includeAllEmployees);
-
+        $reportData = $this->makeMonthlyReport($AUTH_USER, $dateReport, $generalDirection, $includeAllEmployees);
 
         // * retornar vista
         return Inertia::render("Reports/Monthly", [
             "title" => "Generando reporte mensual de " . $dateReport->format("M Y"),
             "breadcrumbs" => $breadcrumbs,
-            "report" => null
-            // "report" => Inertia::lazy( fn() => $this->makeMonthlyReport($AUTH_USER, $dateReport, $generalDirection, $includeAllEmployees) ),
+            "reportId" => $reportData->id
         ]);
 
     }
@@ -175,6 +174,56 @@ class ReportController extends Controller
         return Storage::disk('local')->download($filePath, $name);
 
     }
+
+    public function verifyMonthlyReporte(Request $request, string $reportId): JsonResponse{
+
+        // * attempt to get the report
+        $reportData = MonthlyRecord::find($reportId);
+        if($reportData == null){
+            return response()->json( [
+                "message" => "El reporte seleccionado no esta disponible."
+            ], 409);
+        }
+
+        // * attempt to process info attached to the report record
+        $reportProcess = $reportData->process;
+        if($reportProcess == null){
+            return response()->json( [
+                "message" => "El process reporte seleccionado no esta disponible."
+            ], 409);
+        }
+
+
+        // * verify process status
+        if( $reportProcess->status == "success"){
+
+            // * return the data related to the report created
+            $filePath = $reportData->filePath;
+
+            $size = Storage::disk('local')->size($filePath);
+            $sizeInKB = number_format($size / 1024, 2);
+
+            return response()->json( [
+                "status" => $reportProcess->status,
+                "message" => $reportProcess->output,
+                "reportData" => [
+                    "fileName" => basename($filePath),
+                    "date" => Carbon::now()->format("Y-m-d H:i:s"),
+                    "userName" => Auth::user()->name,
+                    "size" => $sizeInKB . " KB"
+                ],
+                "finish" => Carbon::parse($reportProcess->updated_at)->format("H:i:s"),
+            ], 200);
+        }
+
+        return response()->json( [
+            "status" => $reportProcess->status,
+            "message" => $reportProcess->output,
+            "finish" => Carbon::parse($reportProcess->updated_at)->format("H:i:s"),
+        ], 200);
+
+    }
+
 
     #region private functions
     /**
@@ -284,98 +333,23 @@ class ReportController extends Controller
     }
 
     /**
-     * make monthly report
+     * makeMonthlyReportV2
      *
-     * @return array|null
+     * @param  mixed $AUTH_USER
+     * @param  mixed $dateReport
+     * @param  GeneralDirection $generalDirection
+     * @param  bool $includeAllEmployees
+     * @return MonthlyRecord
      */
     private function makeMonthlyReport($AUTH_USER, $dateReport, $generalDirection, $includeAllEmployees ){
-        $today = new \DateTime();
-        $dataMongo = array();
-
-        // * attempt to retrive the report data only if the yaer-month of the report is not the same as today year-month
-        if( $today->format('Ym') != $dateReport->format('Ym') ) {
-            $dataMongoQuery = \App\Models\MonthlyRecord::where([
-                ['general_direction_id','=', $generalDirection->id],
-                ['year','=', $dateReport->year],
-                ['month','=', $dateReport->month],
-                ['all_employees','=', $includeAllEmployees]
-            ]);
-            if($AUTH_USER->level_id > 2){
-                $dataMongoQuery->where('direction_id', $AUTH_USER->direction_id);
-            }
-            if($AUTH_USER->level_id > 3){
-                $dataMongoQuery->where('subdirectorate_id', $AUTH_USER->subdirectorate_id);
-            }
-            if($AUTH_USER->level_id > 4){
-                $dataMongoQuery->where('department_id', $AUTH_USER->department_id);
-            }
-            $dataMongo = $dataMongoQuery->first();
-        }
-
-        // * make mongo record if is nothing alredy stored
-        if (!$dataMongo) {
-
-            // * get the employees associated to the user department
-            $employees = $this->getEmployees( $generalDirection->id, [
-                'directionId' => ($AUTH_USER->level_id > 2) ?$AUTH_USER->direction_id :null,
-                'subdirectorateId' => ($AUTH_USER->level_id > 3) ?$AUTH_USER->subdirectorate_id :null,
-                'departmentId' => ($AUTH_USER->level_id > 4) ?$AUTH_USER->department_id :null,
-            ]);
-
-
-            // * make monthly report
-            $data = $this->makeMonthlyRecords(
-                $employees,
-                $generalDirection->id,
-                $dateReport->year,
-                $dateReport->month,
-                $includeAllEmployees
-            );
-
-        } else {
-            $data = $dataMongo->data;
-        }
-
-
-        // * make the excel document
-        $monthlyReportMaker = new \App\Helpers\MonthlyReportExcel($data, $generalDirection->name);
-        $documentContent = $monthlyReportMaker->make();
-        if( $documentContent === false){
-            // TODO: Log fail
-            throw new \Exception("Fail to make the report document");
-        }
-
-
-        // * store the file
-        $fileName = sprintf("%s.xlsx", (string) Str::uuid() );
-        $filePath = sprintf("tmp/monthlyreports/$fileName");
-        if( Storage::disk('local')->put( $filePath, $documentContent ) ){
-            Log::info('User ' . $AUTH_USER->name . ' generate daily report for date ' . $dateReport->format('Y-m-d'));
-        }else {
-            Log::warning('Fail at stored the pdf of the daily report by User ' . $AUTH_USER->name . ' for date ' . $dateReport->format('Y-m-d'));
-        }
-
-
-        // * return the data related to the pdf created
-        $size = Storage::disk('local')->size($filePath);
-        $sizeInKB = number_format($size / 1024, 2);
-        return [
-            "fileName" => $fileName,
-            "date" => Carbon::now()->format("Y-m-d H:i:s"),
-            "userName" => $AUTH_USER->name,
-            "size" => $sizeInKB . " KB"
-        ];
-
-    }
-
-    private function makeMonthlyReportV2($AUTH_USER, $dateReport, $generalDirection, $includeAllEmployees ){
 
         // * create a mongo monthy report record
         $reportData = new MonthlyRecord([
             'general_direction_id'=> $generalDirection->id,
             'year' => $dateReport->year,
             'month' => $dateReport->month,
-            'all_employees' => $includeAllEmployees
+            'all_employees' => $includeAllEmployees,
+            'filePath' => null
         ]);
         if($AUTH_USER->level_id > 2){
             $reportData->general_direction_id = $AUTH_USER->direction_id;
@@ -389,19 +363,19 @@ class ReportController extends Controller
         $reportData->save();
 
 
-        // * dispatch the job
+        // * get the employees for the report
         $employees = $this->getEmployees( $generalDirection->id, [
             'directionId' => ($AUTH_USER->level_id > 2) ?$AUTH_USER->direction_id :null,
             'subdirectorateId' => ($AUTH_USER->level_id > 3) ?$AUTH_USER->subdirectorate_id :null,
             'departmentId' => ($AUTH_USER->level_id > 4) ?$AUTH_USER->department_id :null,
         ]);
 
-        Log::notice("Dispatch the report");
+
+        Log::debug("Dispatching the report queue");
         \App\Jobs\MakeMonthlyReport::dispatch($reportData, $employees );
-        Log::notice("Dispatched the report");
 
+        return $reportData;
     }
-
 
     /**
      * @param  mixed $generalDirectionId

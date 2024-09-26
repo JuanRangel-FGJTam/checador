@@ -7,9 +7,13 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Models\MonthlyRecord;
 use App\Models\Process;
+use App\Models\GeneralDirection;
 use App\Helpers\MonthlyReportFactory;
 
 class MakeMonthlyReport implements ShouldQueue
@@ -17,8 +21,8 @@ class MakeMonthlyReport implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected MonthlyRecord $monthlyRecord;
-    
     protected array $employees;
+    protected GeneralDirection $generalDirection;
 
     /**
      * Create a new job instance.
@@ -27,6 +31,7 @@ class MakeMonthlyReport implements ShouldQueue
     {
         $this->monthlyRecord = $monthlyRecord;
         $this->employees = $employees;
+        $this->generalDirection = GeneralDirection::find($this->monthlyRecord->general_direction_id);
     }
 
     /**
@@ -53,7 +58,23 @@ class MakeMonthlyReport implements ShouldQueue
             $this->monthlyRecord->data = $monthlyReportFactory->makeReportData();
             $this->monthlyRecord->save();
 
-            // TODO: with the data make the excel document
+
+            // * make the excel document
+            $monthlyReportMaker = new \App\Helpers\MonthlyReportExcel( $this->monthlyRecord->data, $this->generalDirection->name);
+            $documentContent = $monthlyReportMaker->make();
+            if( $documentContent === false){
+                throw new \Exception("Fail to make the report document");
+            }
+
+            // * store the file
+            $fileName = sprintf("%s.xlsx", (string) Str::uuid() );
+            $filePath = sprintf("tmp/monthlyreports/$fileName");
+            Storage::disk('local')->put( $filePath, $documentContent );
+
+
+            // * save the file path on the record data
+            $this->monthlyRecord->filePath = $filePath;
+            $this->monthlyRecord->save();
 
             // * set the process as finish
             $process->status = 'success';

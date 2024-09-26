@@ -130,6 +130,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('monthly', [ReportController::class, 'createMonthlyReport'])->name('monthly.create');
         Route::get('monthly/{report_name}/download', [ReportController::class, 'downloadMonthlyReporte'])->name('monthly.download');
+        Route::get('monthly/verify/{reportID}', [ReportController::class, 'verifyMonthlyReporte'])->name('monthly.verify');
     });
 
     Route::prefix("new-employees")->name('newEmployees.')->group(function(){

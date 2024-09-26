@@ -17,7 +17,8 @@ class MonthlyRecord extends Model
         'year',
         'month',
         'all_employees',
-        'data'
+        'data',
+        'filePath'
     ];
 
     public function process(){
