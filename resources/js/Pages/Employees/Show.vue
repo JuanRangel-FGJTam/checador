@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, useForm, router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { useToast } from 'vue-toastification';
 import { formatDate } from '@/utils/date.js';
 import axios from 'axios';
@@ -13,7 +13,6 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import multiMonthPlugin from '@fullcalendar/multimonth'
 
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import SuccessButton from '@/Components/SuccessButton.vue';
 import WarningButton from '@/Components/WarningButton.vue';
 import WhiteButton from '@/Components/WhiteButton.vue';
 import DisabledButton from '@/Components/DisabledButton.vue';
@@ -29,11 +28,11 @@ const props = defineProps({
     status: Object,
     checa: Object,
     workingHours: Array,
-    breadcrumbs: Object
+    breadcrumbs: Object,
+    employeePhoto: String,
 });
 
 const toast = useToast();
-
 
 const calendarDaySelected = ref({
     element: undefined,
@@ -202,7 +201,7 @@ function calendarDayClick(info){
 
 <template>
 
-    <Head title="Empleado - Mostrar" />
+    <Head title="Empleado" />
 
     <AuthenticatedLayout>
         <template #header>
@@ -214,6 +213,7 @@ function calendarDayClick(info){
             <div class="bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500" style="grid-area: 1/1/2/2;">
                 <EmployeeGeneralData
                     :employee="employee"
+                    :employeePhoto="employeePhoto"
                     :status="status"
                     :checa="checa"
                     :workingHours="workingHours"
@@ -236,7 +236,7 @@ function calendarDayClick(info){
                         Generar Incidencias
                     </WarningButton>
 
-                    <WhiteButton v-on:click="showJustificationsClick" class=" outline outline-1">
+                    <WhiteButton v-on:click="showJustificationsClick" class="outline outline-1">
                         Ver justificaciones
                     </WhiteButton>
 

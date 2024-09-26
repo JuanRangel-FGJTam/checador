@@ -1,6 +1,5 @@
 <script setup>
 import { ref } from 'vue';
-import Card from '@/Components/Card.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import WhiteButton from '@/Components/WhiteButton.vue';
 import WarningButton from '@/Components/WarningButton.vue';
@@ -39,8 +38,6 @@ function incidencesClick(){
 function downloadKardexClick(){
     emit('downloadKardex', kardexForm.value);
 }
-
-
 </script>
 
 <template>
@@ -62,7 +59,7 @@ function downloadKardexClick(){
             {{ employee.department}}
         </p>
         -->
-        
+
         <div v-if="showButtons" class="w-full flex justify-around mt-2">
             <WhiteButton class="border-1 border-blue-400" v-on:click="editCalendarClick">
                 <CalendarEditIcon class="w-4 h-4 mx-1" />
@@ -77,7 +74,6 @@ function downloadKardexClick(){
                 <span>Incidencias</span>
             </WarningButton>
         </div>
-
 
         <div class="w-full flex justify-end gap-2 pt-1.5 border-t dark:border-gray-500">
             <select class="w-32 border rounded" v-model="kardexForm.year">

@@ -109,6 +109,21 @@ return [
             'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'true'),
         ],
 
+        'sqlsrvRH' => [
+            'driver' => 'sqlsrv',
+            'url' => env('DB_URL_RH'),
+            'host' => env('DB_HOST_RH', 'localhost'),
+            'port' => env('DB_PORT_RH'),
+            'database' => env('DB_DATABASE_RH', 'laravel'),
+            'username' => env('DB_USERNAME_RH', 'root'),
+            'password' => env('DB_PASSWORD_RH', ''),
+            'charset' => env('DB_CHARSET_RH', 'utf8'),
+            // 'prefix' => '',
+            // 'prefix_indexes' => true,
+            'encrypt' => env('DB_ENCRYPT_RH', 'yes'),
+            'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE_RH', 'true'),
+        ],
+
         'mongodb' => [
             'driver' => 'mongodb',
             'host' => env('DB_MONGO_HOST', 'localhost'),
