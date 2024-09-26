@@ -24,15 +24,16 @@ class EmployeeKardexRecords {
     protected Employee $employee;
     protected bool $checaComida = false;
     protected $toCheckout;
-    protected  WorkingHours $workingHours;
+    protected WorkingHours $workingHours;
 
     function __construct(Employee $employee)
     {
         $this->employee = $employee;
         $this->employee->load('workingHours');
 
-        // * Check if the employee has double schedule
-        $this->workingHours = $this->employee->workingHours;
+        // * manually get the working hours
+        $this->workingHours = WorkingHours::where('employee_id', $employee['id'])->first();
+
         if ($this->workingHours->toeat && $this->workingHours->toarrive) {
             $this->checaComida = true;
         }
