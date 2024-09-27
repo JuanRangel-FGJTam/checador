@@ -65,11 +65,23 @@ const calendarOptions = {
         hour12: false,
         meridiem: false
     },
+    lazyFetching: false,
     loading: (isLoading) => calendarLoading.value = isLoading,
     dateClick: (info)=> calendarDayClick(info),
     events: function(info, successCallback, failureCallback) {
         var from = info.start.toISOString().split("T")[0];
         var to = info.end.toISOString().split("T")[0];
+
+        // * get number of days for determining if the view is monthly
+        const diffDays = getdiffDays(info.start, info.end);
+        if(diffDays == 42 )/* is a monthly view */{
+            // get the current month
+            var date = getFirstDayOrNextMonth(info.start, info.end);
+            from = new Date(date.getFullYear(), date.getMonth(), 1).toISOString().split("T")[0];
+            to = new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString().split("T")[0];
+        }
+
+        // * get the events
         axios.get(route('employees.raw-events', {
             "employee_number": props.employeeNumber,
             "from": from,
@@ -163,6 +175,33 @@ function calendarDayClick(info){
     calendarDaySelected.value.day = info.date;
 
     // TODO: validate if the day selected exist a incident
+}
+
+function getdiffDays(startDate, endDate){
+    // * get number of days
+    const diffTime = Math.abs(startDate - endDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+}
+
+function getFirstDayOrNextMonth(startDate, endDate) {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  // If the end date is before the start date, return null or handle accordingly
+  if (end < start) {
+    return null; // Or throw an error, depending on your use case
+  }
+
+  // Check if the start date is the first day of the month
+  if (start.getDate() === 1) {
+    return start; // Return the start date if it's already the first day of the month
+  }
+
+  // Otherwise, return the first day of the next month
+  const firstDayNextMonth = new Date(start.getFullYear(), start.getMonth() + 1, 1);
+
+  return firstDayNextMonth;
 }
 
 </script>
