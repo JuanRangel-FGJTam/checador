@@ -46,10 +46,10 @@ class IncidentController extends Controller
     function index(Request $request){
 
         // * attempt to retrive the query params
-        $generalDirecctionId = $request->filled('gdi') ? $request->input("gdi") :null;
+        $generalDirecctionId = $request->filled('gdi') ? $request->input("gdi") :intval( Auth::user()->general_direction_id );
         $repType = $request->filled('t') ? $request->input("t") : 'monthly';
         $year = $request->filled('y') ? $request->input("y") : Carbon::now()->year;
-        $period = $request->filled('p') ? $request->input("p") : null;
+        $period = $request->filled('p') ? $request->input("p") : Carbon::now()->month;
 
         // * get the incidents
         $employees = array();
@@ -72,7 +72,6 @@ class IncidentController extends Controller
             }
 
             $employees = $this->getEmployeesWithIncidentsByDirection($generalDirecctionId, $startOfMonth, $endOfMonth);
-
         }
 
 
@@ -350,12 +349,10 @@ class IncidentController extends Controller
             'period' => 'required',
             'report_type' => 'required|in:monthly,fortnight'
         ]);
-        if ($validator->fails()) {
-            return redirect(status:422)->back()->withErrors([
-                "error" => $validator->errors()
-            ])->withInput();
-        }
 
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors( $validator->errors()->messages() )->withInput();
+        }
 
         // * prepare the inputs
         $__generalDirection = $request->input('general_direction_id');
