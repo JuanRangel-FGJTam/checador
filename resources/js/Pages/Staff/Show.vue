@@ -24,6 +24,7 @@ const props = defineProps({
     status: Object,
     checa: Object,
     workingHours: Array,
+    employeePhoto: String,
 });
 
 const toast = useToast();
@@ -184,6 +185,7 @@ function calendarDayClick(info){
                     :checa="checa"
                     :showStatus="false"
                     :workingHours="workingHours"
+                    :employeePhoto="employeePhoto"
                 />
             </div>
 

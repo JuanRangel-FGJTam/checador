@@ -175,16 +175,16 @@ function changePage(pageNumber){
             /> -->
 
             <!-- data table -->
-            <table class="table-fixed w-full shadow text-sm text-left mt-2 border rtl:text-right text-gray-500 dark:text-gray-400 dark:border-gray-500">
+            <table class="table w-full shadow text-sm text-left mt-2 border rtl:text-right text-gray-500 dark:text-gray-400 dark:border-gray-500">
                 <thead class="sticky top-0 z-20 text-xs uppercase text-gray-700 border bg-gradient-to-b from-gray-50 to-slate-100 dark:from-gray-800 dark:to-gray-700 dark:text-gray-200 dark:border-gray-500">
                     <AnimateSpin v-if="loading" class="w-4 h-4 mx-2 absolute top-2.5" />
                     <tr>
                         <th scope="col" class="text-center px-6 py-3">
                             Nombre
                         </th>
-                        <!-- <th scope="col" class="text-center px-6 py-3">
+                        <th scope="col" class="text-center px-6 py-3">
                             Numero Empleado
-                        </th> -->
+                        </th>
                         <th scope="col" class="text-center px-6 py-3">
                             Unidad
                         </th>
@@ -208,10 +208,13 @@ function changePage(pageNumber){
 
                                     <div class="flex flex-col items-start">
                                         <p class="text-base truncate">{{ employee.name }}</p>
-                                        <p>{{ employee.employeeNumber}}</p>
                                         <p class="text-xs">{{ employee.curp}}</p>
                                     </div>
                                 </div>
+                            </td>
+
+                            <td class="p-2 text-center">
+                                {{ employee.employeeNumber}}
                             </td>
 
                             <td class="p-2 text-center">

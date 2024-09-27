@@ -160,6 +160,14 @@ class StaffController extends Controller
             }
         }
 
+        // Validate if photo employee exists $employee->photo in public folder
+        $employeePhoto = '/images/unknown.png';
+        if($employee->photo != null) {
+            $employeePhoto = public_path($employee->photo);
+            if (file_exists($employeePhoto)) {
+                $employeePhoto = asset($employee->photo);
+            }
+        }
 
         // * return the view
         return Inertia::render('Staff/Show', [
@@ -167,7 +175,8 @@ class StaffController extends Controller
             "employee" => isset($employee) ?$employee :null,
             "status" => (object) $status,
             "checa" => (object) $checa,
-            "workingHours" => $hours
+            "workingHours" => $hours,
+            "employeePhoto" => $employeePhoto,
         ]);
     }
 
