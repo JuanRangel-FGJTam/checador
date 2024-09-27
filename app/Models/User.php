@@ -25,8 +25,8 @@ class User extends Authenticatable
         'password',
         'general_direction_id',
         'direction_id',
-        'subdirectorates_id',
-        'departments_id',
+        'subdirectorate_id',
+        'department_id',
         'level_id'
     ];
 
