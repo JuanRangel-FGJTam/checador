@@ -34,7 +34,7 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'authorized.menu'])->group(function () {
 
     Route::prefix('admin')->name('admin.')->group(function(){
         Route::get('', [ AdminController::class, "index"])->name('index');

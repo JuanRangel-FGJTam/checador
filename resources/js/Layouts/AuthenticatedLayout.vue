@@ -30,43 +30,10 @@ const showingNavigationDropdown = ref(false);
 
                         <!-- Navigation Links -->
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                            
-                            <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
-                                Dashboard
+                            <NavLink :href="route('dashboard')" :active="route().current('dashboard')"> Dashboard </NavLink>
+                            <NavLink v-for="(menu,index) in $page.props.auth.menus" :href="route(menu.route)" :active="route().current(menu.route)">
+                                {{ menu.name }}
                             </NavLink>
-
-                            <NavLink :href="route('admin.index')" :active="route().current('admin.index')">
-                                Admin
-                            </NavLink>
-
-                            <NavLink :href="route('employees.index')" :active="route().current('employees.index')">
-                                Empleados
-                            </NavLink>
-
-                            <NavLink :href="route('reports.index')" :active="route().current('reports.index')">
-                                Reportes
-                            </NavLink>
-
-                            <NavLink :href="route('newEmployees.index')" :active="route().current('newEmployees.index')">
-                                Nuevos registros
-                            </NavLink>
-
-                            <NavLink :href="route('staff.index')" :active="route().current('staff.index')">
-                                Consulta
-                            </NavLink>
-
-                            <NavLink :href="route('incidents.index')" :active="route().current('incidents.index')">
-                                Incidencias
-                            </NavLink>
-                            
-                            <NavLink :href="route('hollidays.create')" :active="route().current('hollidays.create')">
-                                Días inhábiles
-                            </NavLink>
-
-                            <NavLink :href="route('inactive.index')" :active="route().current('inactive.index')">
-                                Bajas
-                            </NavLink>
-
                         </div>
                     </div>
 
