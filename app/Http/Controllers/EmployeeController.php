@@ -352,7 +352,7 @@ class EmployeeController extends Controller
         $events = array();
 
         foreach($records as $record) {
-            $event = new CalendarEvent("Registro", $record->check, $record->check);
+            $event = new CalendarEvent("🕒", $record->check, $record->check);
             $event->color = "#27ae60";
             $event->type = "RECORD";
             array_push( $events, $event);

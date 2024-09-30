@@ -82,7 +82,7 @@ const calendarOptions = {
         }
 
         // * get the events
-        axios.get(route('employees.raw-events', {
+        axios.get(route('staff.raw-events', {
             "employee_number": props.employeeNumber,
             "from": from,
             "to": to,

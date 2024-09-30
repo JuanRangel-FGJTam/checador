@@ -17,11 +17,9 @@ class AuthorizedMenu
     public function handle(Request $request, Closure $next): Response
     {
         $path = explode("/", $request->path())[0];
-
-        if ($path == 'dashboard') {
+        if ($path == 'dashboard' || $path == 'logout' || $path == 'login') {
             return $next($request);
         }
-
         if( Gate::allows('validate-user-menu', $path)) {
             return $next($request);
         }

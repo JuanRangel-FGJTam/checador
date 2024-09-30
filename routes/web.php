@@ -144,6 +144,7 @@ Route::middleware(['auth', 'authorized.menu'])->group(function () {
         Route::get('', [StaffController::class, 'index'])->name('index');
         Route::get('{employee_number}', [StaffController::class, 'show'])->name('show');
         Route::get('{employee_number}/kardex', [EmployeeController::class, 'kardexEmployee'])->name('kardex');
+        Route::get('{employee_number}/raw-events', [EmployeeController::class, 'eventsJson'])->name('raw-events');
     });
 
     Route::prefix('incidents')->name('incidents.')->group(function(){
