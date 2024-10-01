@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Gate;
 use App\Interfaces\EmployeeIncidentInterface;
 use App\Services\EmployeeIncidentService;
 use App\Data\CatalogMenu;
-use App\Models\Menu;
 use App\Models\User;
 
 class AppServiceProvider extends ServiceProvider

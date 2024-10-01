@@ -9,8 +9,3 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::command('app:remove-temporary-files')->everySixHours();
 
 Schedule::command('app:incident-create')->daily()->timezone('America/Monterrey')->at('01:00');
-
-Artisan::command('working', function () {
-    $file = storage_path('logs/worker');
-    touch($file);
-})->purpose('Touch a file to indicate that the worker is running')->everyMinute();

@@ -153,4 +153,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+Route::get('/', function () {
+    return redirect()->route('employees.index');
+})->name('home');
+
 require __DIR__.'/auth.php';
