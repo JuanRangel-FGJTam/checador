@@ -31,7 +31,25 @@ services:
     ports:
       - 5173:5173
 
-  app-worker:
+  worker-schedule:
+    build:
+      args:
+        user: dgtit
+        uid: 1000
+      context: .
+      dockerfile: ./Dockerfile.worker
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+      - ./php.ini:/usr/local/etc/php/conf.d/php.ini
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    command: php /var/www/html/artisan schedule:work
+    networks:
+      - netchecador
+
+  worker-queue:
     build:
       args:
         user: dgtit

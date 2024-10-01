@@ -131,7 +131,7 @@ function changePage(pageNumber){
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Vista Empleados</h2>
+            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Empleados</h2>
         </template>
 
         <div class="px-4 py-4 rounded-lg min-h-screen max-w-screen-2xl mx-auto">
@@ -141,7 +141,12 @@ function changePage(pageNumber){
 
                 <div role="form-group" class="flex flex-col">
                     <InputLabel value="Direccion General" for="gd" />
-                    <InputSelect id="gd" v-model="form.gd" v-on:change="handleGeneralDirectionSelect" :disabled="$page.props.auth.user.level_id > 1" >
+                    <InputSelect 
+                        id="gd" 
+                        v-model="form.gd" 
+                        v-on:change="handleGeneralDirectionSelect" 
+                        :disabled="$page.props.auth.user.level_id > 1" 
+                    >
                         <option selected value="0">Todos</option>
                         <option v-for="item in general_direction" :key="item.id" :value="item.id" > {{item.name }}</option>
                     </InputSelect>
