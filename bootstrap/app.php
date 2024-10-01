@@ -14,7 +14,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
             \App\Http\Middleware\HandleInertiaRequests::class,
-            \App\Http\Middleware\AuthorizedMenu::class
         ]);
 
         $middleware->alias([

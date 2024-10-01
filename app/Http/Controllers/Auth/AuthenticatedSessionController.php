@@ -13,6 +13,10 @@ use Inertia\Response;
 
 class AuthenticatedSessionController extends Controller
 {
+    protected function authenticated(Request $request, $user): RedirectResponse
+    {
+        return redirect()->intended(route('employees.index', absolute: false));
+    }
     /**
      * Display the login view.
      */
@@ -47,6 +51,6 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect('/login');
     }
 }
