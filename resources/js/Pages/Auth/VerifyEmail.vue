@@ -24,12 +24,11 @@ const verificationLinkSent = computed(() => props.status === 'verification-link-
         <Head title="Email Verification" />
 
         <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-            Thanks for signing up! Before getting started, could you verify your email address by clicking on the link
-            we just emailed to you? If you didn't receive the email, we will gladly send you another.
+            Gracias por registrarte. Antes de comenzar, ¿podrías verificar tu dirección de correo electrónico haciendo clic en el enlace que acabamos de enviarte? Si no recibiste el correo electrónico, con gusto te enviaremos otro.
         </div>
 
         <div class="mb-4 font-medium text-sm text-green-600 dark:text-green-400" v-if="verificationLinkSent">
-            A new verification link has been sent to the email address you provided during registration.
+            Se ha enviado un nuevo enlace de verificación a la dirección de correo electrónico que proporcionaste durante el registro.
         </div>
 
         <form @submit.prevent="submit">
@@ -43,8 +42,9 @@ const verificationLinkSent = computed(() => props.status === 'verification-link-
                     method="post"
                     as="button"
                     class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
-                    >Log Out</Link
                 >
+                    Salir
+                </Link>
             </div>
         </form>
     </GuestLayout>
