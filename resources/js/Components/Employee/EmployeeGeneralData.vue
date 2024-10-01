@@ -14,14 +14,13 @@ const props = defineProps({
     }
 });
 
-console.log('Photo URL:', props.employeePhoto);
 </script>
 
 <template>
     <div class="grid grid-cols-3 items-center">
-        <img 
+        <img
             class="mr-1 w-48 h-48 aspect-auto rounded-lg border bg-slate-400 object-cover" 
-            alt="Foto empleado" 
+            alt="Foto empleado"
             :src="employeePhoto"
         />
 

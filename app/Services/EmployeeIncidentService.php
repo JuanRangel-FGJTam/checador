@@ -27,7 +27,7 @@ class EmployeeIncidentService implements EmployeeIncidentInterface {
         $to = Carbon::parse($date_to);
 
         // * get the employee
-        $employee = Employee::where("plantilla_id", "9".$employee_number)->first();
+        $employee = Employee::where("plantilla_id", "1".$employee_number)->first();
         if( $employee == null){
             throw new ModelNotFoundException("The employee wast not found on the database");
         }

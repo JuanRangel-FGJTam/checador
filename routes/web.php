@@ -17,7 +17,7 @@ use App\Http\Controllers\{
     StaffController
 };
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'authorized.menu'])->group(function () {
 
     Route::prefix('admin')->name('admin.')->group(function(){
         Route::get('', [ AdminController::class, "index"])->name('index');
@@ -113,6 +113,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('monthly', [ReportController::class, 'createMonthlyReport'])->name('monthly.create');
         Route::get('monthly/{report_name}/download', [ReportController::class, 'downloadMonthlyReporte'])->name('monthly.download');
+        Route::get('monthly/verify/{reportID}', [ReportController::class, 'verifyMonthlyReporte'])->name('monthly.verify');
     });
 
     Route::prefix("new-employees")->name('newEmployees.')->group(function(){
@@ -126,6 +127,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('', [StaffController::class, 'index'])->name('index');
         Route::get('{employee_number}', [StaffController::class, 'show'])->name('show');
         Route::get('{employee_number}/kardex', [EmployeeController::class, 'kardexEmployee'])->name('kardex');
+        Route::get('{employee_number}/raw-events', [EmployeeController::class, 'eventsJson'])->name('raw-events');
     });
 
     Route::prefix('incidents')->name('incidents.')->group(function(){

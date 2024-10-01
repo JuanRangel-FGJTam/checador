@@ -88,8 +88,8 @@ class UserController extends Controller
                 'password' => $request->password,
                 'general_direction_id' => $request->generalDirection_id,
                 'direction_id' => $request->direction_id,
-                'subdirectorates_id' => $request->subdirectorate_id,
-                'departments_id' => $request->departments_id,
+                'subdirectorate_id' => $request->subdirectorate_id,
+                'department_id' => $request->departments_id,
                 'level_id' => $request->level_id
             ]);
     
@@ -182,8 +182,8 @@ class UserController extends Controller
             $user->email = $request->email;
             $user->general_direction_id = $request->generalDirection_id;
             $user->direction_id = $request->direction_id;
-            $user->subdirectorates_id = $request->subdirectorate_id;
-            $user->departments_id = $request->departments_id;
+            $user->subdirectorate_id = $request->subdirectorate_id;
+            $user->department_id = $request->departments_id;
             $user->level_id = $request->level_id;
             
             // * update the menu elements

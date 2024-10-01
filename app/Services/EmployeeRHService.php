@@ -19,26 +19,34 @@ class EmployeeRHService {
      */
     public static function getEmployeeData($employee_number)
     {
-        // TODO: retrive the data using EmployeeRh model, temporally return a random data
-        // $employeeRh = EmployeeRh::select('NUMEMP', 'NOMBRE', 'APELLIDO', 'RFC')->where('NUMEMP', $employee_number)->first();
-
         try {
-            $_employee = Employee::where('plantilla_id', '1'.$employee_number)->firstOrFail();
-            $employee = new stdClass();
-            $employee->NUMEMP = (int) $employee_number;
-            $employee->NOMBRE = $_employee->name;
-            $employee->APELLIDO = "";
-            $employee->RFC = "RAAJ931217";
-            $employee->CURP = "RAAJ931217HGTNLN03";
-            return $employee;
-
-        }catch(\Throwable $th) {
-            Log::error("Fail to get the employee '{employee_number}' data from the RH service: {message} ", [
-                "employee_number" => $employee_number,
+            return EmployeeRh::select('NUMEMP', 'NOMBRE', 'APELLIDO', 'RFC', 'CURP')->where('NUMEMP', $employee_number)->first();
+        } catch (\Throwable $th) {
+            Log::error("Fail to get the employee of the RH: {message}", [
                 "message" => $th->getMessage(),
+                "employeeNumber" => $employee_number
             ]);
             return null;
         }
+
+
+        // try {
+        //     $_employee = Employee::where('plantilla_id', '1'.$employee_number)->firstOrFail();
+        //     $employee = new stdClass();
+        //     $employee->NUMEMP = (int) $employee_number;
+        //     $employee->NOMBRE = $_employee->name;
+        //     $employee->APELLIDO = "";
+        //     $employee->RFC = "*******";
+        //     $employee->CURP = "*******";
+        //     return $employee;
+
+        // }catch(\Throwable $th) {
+        //     Log::error("Fail to get the employee '{employee_number}' data from the RH service: {message} ", [
+        //         "employee_number" => $employee_number,
+        //         "message" => $th->getMessage(),
+        //     ]);
+        //     return null;
+        // }
     }
 
     public static function duplicatePhotoEmployee($employee_id, $plantilla_id)
@@ -53,6 +61,7 @@ class EmployeeRHService {
                 $path = 'photos/'.$rowRh->RFC.'.jpg';
 
                 try {
+
                     // file_put_contents('/var/www/html/public/'.$path, $rowRh->FOTO);
                     file_put_contents(public_path($path), $rowRh->FOTO);
                 } catch (\Throwable $th) {

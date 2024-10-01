@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use MongoDB\Laravel\Eloquent\Model;
+use MongoDB\Laravel\Relations\MorphOne;
 
 class MonthlyRecord extends Model
 {
@@ -16,7 +17,12 @@ class MonthlyRecord extends Model
         'year',
         'month',
         'all_employees',
-        'data'
+        'data',
+        'filePath'
     ];
+
+    public function process(){
+        return $this->morphOne(Process::class, 'processable');
+    }
 
 }

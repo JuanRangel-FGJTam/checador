@@ -19,7 +19,7 @@ class EmployeeViewModel
     public string $direction;
     public int $directionId;
     public int $checa;
-    public ?string $photo;
+    public ?string $photo = '/images/unknown.png';
     public string $horario;
     public string $days;
     public bool $active = true;
