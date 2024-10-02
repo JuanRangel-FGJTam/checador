@@ -19,26 +19,22 @@ use App\Models\{
     Menu
 };
 use App\Services\UserService;
-use PhpParser\Node\Stmt\Catch_;
 
 class UserController extends Controller
 {
-   
     private UserService $userService;
 
     public function __construct(UserService $userService){
         $this->userService = $userService;
     }
-    
+
     /**
      * Display a listing of the resource.
      */
     public function index( Request $request)
     {
-
         $title = "Usuarios Activos";
         $users = array();
-
 
         // * get the users data
         if($request->query->has('inactives')){
@@ -47,7 +43,6 @@ class UserController extends Controller
         }else {
             $users = $this->userService->getUsers();
         }
-
 
         // * return the view
         return Inertia::render('Admin/UserIndex', [
@@ -61,7 +56,6 @@ class UserController extends Controller
      */
     public function create()
     {
-
         $generalDirections = GeneralDirection::select('id','name')->get();
         $directions = Direction::select('id','name')->get();
         $subdirectorates = Subdirectorate::select('id','name')->get();
@@ -73,7 +67,6 @@ class UserController extends Controller
             "subdirectorates" => $subdirectorates,
             "departments" => $departments
         ]);
-
     }
 
     /**
@@ -92,7 +85,7 @@ class UserController extends Controller
                 'department_id' => $request->departments_id,
                 'level_id' => $request->level_id
             ]);
-    
+
             Log::info("New user id:'{userid}' email:'{email}' created.", [
                 "userid" => $newUser->id,
                 "email" => $newUser->email
@@ -106,7 +99,6 @@ class UserController extends Controller
                 "message" => $th->getMessage()
             ]);
         }
-
     }
 
     /**
@@ -120,11 +112,13 @@ class UserController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $userid)
+    public function edit(Request $request, string $userid)
     {
-        
-        // * Get the user
         $user = array();
+        $directions = [];
+        $subdirectorates = [];
+        $departments = [];
+
         try {
             $user = $this->userService->getUser($userid);
         } catch (ModelNotFoundException $mnf) {
@@ -134,15 +128,32 @@ class UserController extends Controller
             ])->withInput();
         }
 
-        // * get the menus assigned to the user
         $user->load('menus');
         $selectedOptions = $user->menus->pluck('id');
-        
+
         // * Get the catalogs
         $generalDirections = GeneralDirection::select('id','name')->get();
-        $directions = Direction::select('id','name')->get();
-        $subdirectorates = Subdirectorate::select('id','name')->get();
-        $departments = Department::select('id','name')->get();
+
+        if ($request->has('generalDirection_id')) {
+            $directions = Direction::where('general_direction_id', $request->generalDirection_id)->select('id','name')->get();
+        } else {
+            if ($user->general_direction_id) {
+                $directions = Direction::where('general_direction_id', $user->general_direction_id)->select('id','name')->get();
+            }
+        }
+
+        if ($request->has('direction_id')) {
+            $subdirectorates = Subdirectorate::where('direction_id', $request->direction_id)->select('id','name')->get();
+        } else {
+            if ($user->direction_id) {
+                $subdirectorates = Subdirectorate::where('direction_id', $user->direction_id)->select('id','name')->get();
+            }
+        }
+
+        if ($user->subdirectorate_id) {
+            $departments = Department::where('subdirectorate_id', $user->subdirectorate_id)->select('id','name')->get();
+        }
+
         $menuOptions = Menu::select('id','name', 'url')->get();
 
         // * Return the views
@@ -163,8 +174,6 @@ class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, string $userid)
     {
-
-        // * retrive the user
         $user = null;
         try {
             $user = $this->userService->getUser($userid);
@@ -176,7 +185,6 @@ class UserController extends Controller
         }
 
         try {
-
             // * update the general data
             $user->name = $request->name;
             $user->email = $request->email;
