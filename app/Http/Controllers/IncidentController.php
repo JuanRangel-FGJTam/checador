@@ -151,7 +151,8 @@ class IncidentController extends Controller
         }
 
         // * retrive the query params
-        if( $request->filled('year') && $request->filled('month') ){            $options = [
+        if( $request->filled('year') && $request->filled('month') ){
+            $options = [
                 'year' => $request->input('year'),
                 'month' => $request->input('month'),
             ];
@@ -161,13 +162,13 @@ class IncidentController extends Controller
         $previous_path = parse_url( url()->previous(), PHP_URL_PATH);
         if( $previous_path == '/incidents' ){
             $breadcrumbs = array(
-                ["name"=> "Inicio", "href"=> "/dashboard"],
+                ["name"=> "Inicio", "href"=> "/"],
                 ["name"=> "Incidencias", "href"=> url()->previous()],
                 ["name"=> "Incidencias del empleado", "href"=>""],
             );
         }else{
             $breadcrumbs = array(
-                ["name"=> "Inicio", "href"=> "/dashboard"],
+                ["name"=> "Inicio", "href"=> "/"],
                 ["name"=> "Vista Empleados", "href"=> route('employees.index') ],
                 ["name"=> "Empleado: $employee->employeeNumber", "href"=> route('employees.show', $employee->employeeNumber)],
                 ["name"=> "Incidencias", "href"=>""],
@@ -214,6 +215,16 @@ class IncidentController extends Controller
         // * catalog incident status
         $incidentStatuses = IncidentState::where("id", ">", 1)->select('id', 'name')->get()->toArray();
 
+        // Validate if photo employee exists $employee->photo in public folder
+        $employeePhoto = '/images/unknown.png';
+        // validate if photo exists in directory
+        if($employee->photo != null) {
+            $employeePhoto = public_path($employee->photo);
+            if (file_exists($employeePhoto)) {
+                $employeePhoto = asset($employee->photo);
+            }
+        }
+
         // * return the view
         return Inertia::render('Incidents/Employee', [
             "employeeNumber" => $employee->employeeNumber,
@@ -223,7 +234,8 @@ class IncidentController extends Controller
             "checa" => (object) $checa,
             "workingHours" => $hours,
             "incidentStatuses" => array_values($incidentStatuses),
-            "options" => isset($options) ?$options :null
+            "options" => isset($options) ?$options :null,
+            "employeePhoto" => $employeePhoto
         ]);
     }
 
@@ -585,14 +597,18 @@ class IncidentController extends Controller
             $employeesQuery->whereIn('id', $employeesOfUser->pluck('id')->all() );
         }
 
-        $employees = $employeesQuery->get()->toArray();
+        // * get the employees and process them into the view model
+        $employeesRaw = $employeesQuery->get()->all();
+        $employees = array_map(function($employeeData){
+            return EmployeeViewModel::fromEmployeeModel($employeeData);
+        }, $employeesRaw);
 
         // * append the total of incidences on the period
         foreach($employees as &$empl){
             try {
-                $empl["totalIncidents"] = count( $groupedByEmployee[$empl['id']] );
+                $empl->totalIncidents = count( $groupedByEmployee[$empl->id] );
             } catch (\Throwable $th) {
-                $empl["totalIncidents"] = 0;
+                $empl->totalIncidents = 0;
             }
         }
 

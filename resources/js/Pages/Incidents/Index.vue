@@ -146,7 +146,7 @@ function makeReportClick(){
 
 function visitIncidenceEmployee(employee){
     router.visit( route('incidents.employee.index', {
-        "employee_number": employee.plantilla_id.toString().substring(1),
+        "employee_number": employee.employeeNumber,
         "year": form.year,
         "month": form.period.split("-")[0]
     }));
@@ -238,7 +238,7 @@ function visitIncidenceEmployee(employee){
 
                             <td class="px-6 py-4 text-center">
                                 <div class="text-sm text-gray-600">
-                                    {{ employee.general_direction.abbreviation }}
+                                    {{ employee.abbreviation }}
                                 </div>
                                 <div class="text-sm text-gray-900">
                                     {{ employee.direction.name }}

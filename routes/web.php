@@ -98,6 +98,9 @@ Route::middleware(['auth', 'authorized.menu'])->group(function () {
         Route::get('/employee/{employee_number}', [IncidentController::class, 'getIncidentsByEmployee'])->name('employee.index');
         Route::get('/employee/{employee_number}/raw-incidents', [IncidentController::class, 'employeeIncidentsJson'])->name('employee.raw');
         Route::patch('{incident_id}/state', [IncidentController::class, 'updateIncidentState'])->name('state.update');
+        Route::get('', [IncidentController::class, 'index'])->name('index');
+        Route::get('report', [IncidentController::class, 'makeReport'])->name('report.make');
+
     });
 
     Route::prefix("justifications")->name('justifications.')->group(function(){
@@ -122,17 +125,11 @@ Route::middleware(['auth', 'authorized.menu'])->group(function () {
         Route::patch('{employee_number}', [NewEmployeeController::class, 'update'])->name('update');
     });
 
-
     Route::prefix('staff')->name('staff.')->group(function(){
         Route::get('', [StaffController::class, 'index'])->name('index');
         Route::get('{employee_number}', [StaffController::class, 'show'])->name('show');
         Route::get('{employee_number}/kardex', [EmployeeController::class, 'kardexEmployee'])->name('kardex');
         Route::get('{employee_number}/raw-events', [EmployeeController::class, 'eventsJson'])->name('raw-events');
-    });
-
-    Route::prefix('incidents')->name('incidents.')->group(function(){
-        Route::get('', [IncidentController::class, 'index'])->name('index');
-        Route::get('report', [IncidentController::class, 'makeReport'])->name('report.make');
     });
 
     Route::prefix('hollidays')->name('hollidays.')->group(function(){

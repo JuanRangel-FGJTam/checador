@@ -57,7 +57,8 @@ const props = defineProps({
         ]
     },
     incidentStatuses: Array,
-    options: Object
+    options: Object,
+    employeePhoto: String
 });
 
 const toast = useToast();
@@ -176,7 +177,7 @@ function updateIncident(){
                     <div class="flex gap-4">
 
                         <div class="flex items-center justify-start">
-                            <img :src="employee.photo" class="mx-auto w-48 aspect-auto rounded-lg border bg-slate-400 text-center dark:border-gray-500" alt="Foto empleado"/>
+                            <img :src="employeePhoto" class="mx-auto w-48 aspect-auto rounded-lg border bg-slate-400 text-center dark:border-gray-500" alt="Foto empleado"/>
                         </div>
 
                         <div class="flex gap-4 w-full">
