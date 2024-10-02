@@ -64,7 +64,7 @@ async function fetchData(url) {
             preserveState: true,
         });
     } catch (error) {
-        toast.error(`Failed to fetch ${updateField} data.`);
+        toast.error(`Error al cargar datos de ${updateField}.`);
         console.error(error);
     }
 }
@@ -80,16 +80,16 @@ watch(() => form.generalDirection_id, (newVal) => {
 watch(() => form.direction_id, (newVal) => {
     form.subdirectorate_id = '';
     form.departments_id = '';
-    fetchData(`/admin/users/${props.user.id}/edit?direction_id=${newVal}`);
+    fetchData(`/admin/users/${props.user.id}/edit?generalDirection_id=${form.generalDirection_id}&direction_id=${newVal}`);
 });
 
 watch(() => form.subdirectorate_id, (newVal) => {
     form.departments_id = '';
-    fetchData(`/admin/users/${props.user.id}/edit?subdirectorate_id=${newVal}`);
+    fetchData(`/admin/users/${props.user.id}/edit?generalDirection_id=${form.generalDirection_id}&direction_id=${form.direction_id}&subdirectorate_id=${newVal}`);
 });
 
 function redirectBack(){
-    router.visit( route('admin.index'), {
+    router.visit( route('admin.users.index'), {
         replace: true
     } );
 }
@@ -219,13 +219,15 @@ function handleCheckboxUpdated(e) {
                     <div class="flex flex-col gap-2">
                         <ul class="flex flex-col gap-2 bg-gray-50 p-4 border-2 border-gray-100 rounded">
                             <li v-for="option in menuOptions" :key="option.id" class="flex items-center gap-x-1">
-                                <input type="checkbox"
-                                    :id="option.id" 
-                                    :checked="( form.options.includes( option.id) )"
-                                    v-on:change="handleCheckboxUpdated"
-                                    class="rounded"
-                                />
-                                <CardText>{{ option.name }} - <span class="text-xs">{{ option.url }}</span></CardText>
+                                <label>
+                                    <input type="checkbox"
+                                        :id="option.id" 
+                                        :checked="( form.options.includes( option.id) )"
+                                        v-on:change="handleCheckboxUpdated"
+                                        class="rounded"
+                                    />
+                                    {{ option.name }} - <span class="text-xs">{{ option.url }}</span>
+                                </label>
                             </li>
                         </ul>
                     </div>
