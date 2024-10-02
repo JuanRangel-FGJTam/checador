@@ -59,9 +59,11 @@ class EmployeeController extends Controller
         $generalDirectionId = null;
         $directionId = null;
         $subdirectionId = null;
-        if(Auth::user()->level_id > 1){
-            $generalDirectionId = Auth::user()->general_direction_id;
 
+        // * set by defaul the user general direction asigneds
+        $generalDirectionId = Auth::user()->general_direction_id;
+
+        if(Auth::user()->level_id > 1){
             if( Auth::user()->level_id > 2){
                 $directionId = Auth::user()->direction_id;
             }else{
