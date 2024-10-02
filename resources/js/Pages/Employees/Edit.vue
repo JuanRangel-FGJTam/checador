@@ -13,6 +13,8 @@ import InputSelect from '@/Components/InputSelect.vue';
 import InputDate from '@/Components/InputDate.vue';
 import InputError from '@/Components/InputError.vue';
 import Breadcrumb from '@/Components/Breadcrumb.vue';
+import AnimateSpin from '@/Components/Icons/AnimateSpin.vue';
+import WhiteButton from '@/Components/WhiteButton.vue';
 
 const props = defineProps({
     employeeNumber: String,
@@ -45,6 +47,8 @@ const form = useForm({
     status_id:undefined
 });
 
+const loading = ref(false);
+
 onMounted(()=>{
     if(props.employee){
         form.general_direction_id = props.employee.generalDirectionId;
@@ -72,6 +76,47 @@ function submitForm(){
     });
 }
 
+function reloadCatalogs(queryParamsString){
+    loading.value = true;
+    router.visit('?' + queryParamsString, {
+        only: ['generalDirections','directions', 'subdirectorates', 'deparments'],
+        preserveState: true,
+        onFinish: (()=>{
+            loading.value = false;
+        })
+    });
+}
+
+function handleSelectChanged(e){
+    var doomElementId = e.target.id;
+    var queryParams = [];
+
+    if(doomElementId == "general_direction_id"){
+        queryParams.push(`gd=${form.general_direction_id}`);
+        form.direction_id=undefined;
+        form.subdirectorate_id=undefined;
+        form.department_id=undefined;
+        reloadCatalogs( queryParams.join('&') );
+    }
+
+    if(doomElementId == "direction_id"){
+        queryParams.push(`gd=${form.general_direction_id}`);
+        queryParams.push(`di=${form.direction_id}`);
+        form.subdirectorate_id=undefined;
+        form.department_id=undefined;
+        reloadCatalogs( queryParams.join('&') );
+    }
+
+    if(doomElementId == "subdirectorate_id"){
+        queryParams.push(`gd=${form.general_direction_id}`);
+        queryParams.push(`di=${form.direction_id}`);
+        queryParams.push(`sd=${form.subdirectorate_id}`);
+        form.department_id=undefined;
+        reloadCatalogs( queryParams.join('&') );
+    }
+
+}
+
 </script>
 
 <template>
@@ -92,7 +137,7 @@ function submitForm(){
 
                         <div role="form-group">
                             <InputLabel for="general_direction_id">Nivel 1 (Fiscalía, Dirección General, ...)</InputLabel>
-                            <InputSelect id="general_direction_id" v-model="form.general_direction_id">
+                            <InputSelect id="general_direction_id" v-model="form.general_direction_id" v-on:change="handleSelectChanged">
                                 <option value="" class="text-gray-600" >Seleccione un elemento</option>
                                 <option v-for="item in generalDirections" :value="item.id" :key="item.id"> {{item.name}}</option>
                             </InputSelect>
@@ -101,7 +146,7 @@ function submitForm(){
 
                         <div role="form-group">
                             <InputLabel for="direction_id">Nivel 2 (Dirección, Vicefiscalía, ...)</InputLabel>
-                            <InputSelect id="direction_id" v-model="form.direction_id">
+                            <InputSelect id="direction_id" v-model="form.direction_id" v-on:change="handleSelectChanged">
                                 <option value="" class="text-gray-600" >Seleccione un elemento</option>
                                 <option v-for="item in directions" :value="item.id" :key="item.id"> {{item.name}}</option>
                             </InputSelect>
@@ -110,7 +155,7 @@ function submitForm(){
 
                         <div role="form-group">
                             <InputLabel for="subdirectorate_id">Nivel 3 (Subdirección, Agencia, ...)</InputLabel>
-                            <InputSelect id="subdirectorate_id" v-model="form.subdirectorate_id">
+                            <InputSelect id="subdirectorate_id" v-model="form.subdirectorate_id" v-on:change="handleSelectChanged">
                                 <option value="" class="text-gray-600" >Seleccione un elemento</option>
                                 <option v-for="item in subdirectorates" :value="item.id" :key="item.id"> {{item.name}}</option>
                             </InputSelect>
@@ -119,7 +164,7 @@ function submitForm(){
 
                         <div role="form-group">
                             <InputLabel for="department_id">Nivel 4 (Departamento...) </InputLabel>
-                            <InputSelect id="subdirectorate_id" v-model="form.department_id">
+                            <InputSelect id="department_id" v-model="form.department_id" v-on:change="handleSelectChanged">
                                 <option value="" class="text-gray-600" >Seleccione un elemento</option>
                                 <option v-for="item in deparments" :value="item.id" :key="item.id"> {{item.name}}</option>
                             </InputSelect>
@@ -155,7 +200,14 @@ function submitForm(){
 
                     <div class="flex flex-wrap gap-4 p-4 justify-between">
                         <DangerButton type="button" v-on:click="redirectBack">Cancelar</DangerButton>
-                        <SuccessButton type="submit">Actualizar</SuccessButton>
+
+                        <SuccessButton v-if="!loading" type="submit">
+                            Actualizar
+                        </SuccessButton>
+                        <WhiteButton v-else type="button">
+                            <AnimateSpin class='w-4 h-4' />
+                        </WhiteButton>
+
                     </div>
                 </form>
             </template>
