@@ -26,6 +26,11 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::define('validate-user-menu', function (User $user, string $routeName) {
 
+            // * Convert to camel case if '-' or '_' is found
+            if (preg_match('/[-_]/', $routeName)) {
+                $routeName = lcfirst(str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $routeName))));
+            }
+
             // * get the original route name
             $originalRouteName = false;
             foreach(CatalogMenu::$menus as $key=>$value){
