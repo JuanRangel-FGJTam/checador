@@ -59,9 +59,11 @@ class EmployeeController extends Controller
         $generalDirectionId = null;
         $directionId = null;
         $subdirectionId = null;
-        if(Auth::user()->level_id > 1){
-            $generalDirectionId = Auth::user()->general_direction_id;
 
+        // * set by defaul the user general direction asigneds
+        $generalDirectionId = Auth::user()->general_direction_id;
+
+        if(Auth::user()->level_id > 1){
             if( Auth::user()->level_id > 2){
                 $directionId = Auth::user()->direction_id;
             }else{
@@ -259,32 +261,52 @@ class EmployeeController extends Controller
      * @param  string $employee_number
      * @return void
      */
-    public function edit(string $employee_number)
+    public function edit(Request $request, string $employee_number)
     {
-        // TODO: retrive the query params to filter the catalogs
-
         // * retrive the employee
         $employee = $this->findEmployee($employee_number);
         if($employee instanceof \Illuminate\Http\RedirectResponse){
             return $employee;
         }
 
-        // * retrive the catalogs
-        $generalDirections = GeneralDirection::select('id','name')->get()->toArray();
-        $directions = Direction::select('id','name', 'general_direction_id')->get()->toArray();
-        $subdirectorates = Subdirectorate::select('id', 'name', 'direction_id')->get()->toArray();
-        $deparments = Department::select('id', 'name', 'subdirectorate_id')->get()->toArray();
+        // * retrieve the query parameters to filter the catalogs if is necessary
+        $_gd = $employee->generalDirectionId;
+        $_di = $employee->directionId;
+        $_sd = $employee->subDirectionId;
 
+        if($request->filled('gd')){
+            $_gd = $request->query('gd');
+            $_di = $request->query('di');
+            $_sd = $request->query('sd');
+        }
+
+        // * retrive the catalogs
+        $generalDirections = GeneralDirection::select('id','name')->get()->sortBy('name')->all();
+
+        $directions = Direction::select('id','name', 'general_direction_id')
+            ->where('general_direction_id', $_gd)
+            ->orWhere('general_direction_id', 1) // include "1|DESCONOCIDO"
+            ->get()->sortBy('name')->all();
+
+            $subdirectorates = Subdirectorate::select('id', 'name', 'direction_id')
+            ->where('direction_id', $_di)
+            ->orWhere('direction_id', 1) // include "1|DESCONOCIDO"
+            ->get()->sortBy('name')->all();
+
+            $deparments = Department::select('id', 'name', 'subdirectorate_id')
+            ->where('subdirectorate_id', $_sd)
+            ->orWhere('subdirectorate_id', 1) // include "1|DESCONOCIDO"
+            ->get()->sortBy('name')->all();
 
         // * return the view
         return Inertia::render('Employees/Edit', [
             "employeeNumber" => $employee->employeeNumber,
             "employee" => $employee,
-            "generalDirections" => $generalDirections,
-            "directions" => $directions,
-            "subdirectorates" => $subdirectorates,
-            "deparments" => $deparments,
-            "defaultValues" =>  (object) array(),
+            "generalDirections" => array_values($generalDirections),
+            "directions" => array_values($directions),
+            "subdirectorates" => array_values($subdirectorates),
+            "deparments" => array_values($deparments),
+            "defaultValues" => (object) array(),
         ]);
     }
 
@@ -486,7 +508,6 @@ class EmployeeController extends Controller
         try {
             return $this->employeeService->getEmployee($employee_number);
         } catch (ModelNotFoundException $nf) {
-
             Log::warning("Employee with employee number '$employee_number' not found");
 
             //TODO: redirect to not found page

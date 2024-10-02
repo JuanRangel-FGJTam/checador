@@ -185,9 +185,12 @@ class EmployeeService {
         // * attempt to update the employee
         try {
             $employee->general_direction_id = $data['general_direction_id'];
-            $employee->direction_id = $data['direction_id'];
-            $employee->subdirectorate_id = $data['subdirectorate_id'];
-            $employee->department_id = $data['department_id'];
+
+            $employee->direction_id = isset($data['direction_id']) ?$data['direction_id'] :null;
+
+            $employee->subdirectorate_id = isset($data['subdirectorate_id']) ?$data['subdirectorate_id'] :null;
+
+            $employee->department_id = isset($data['subdirectorate_id']) ?$data['subdirectorate_id'] :null;
 
             if( isset($data['name'])){
                 $employee->name = $data['name'];
@@ -202,11 +205,12 @@ class EmployeeService {
             }
 
             $employee->save();
+
             Log::notice("Employee '$employeeNumber:$employee->name' was updated.");
 
         } catch (\Throwable $th) {
             Log::error("Fail to update the employee '{employeeNumber}': {message}", [
-                "employeeNumber" => $employee->employeeNumber,
+                "employeeNumber" => $employeeNumber,
                 "message" => $th->getMessage(),
                 "request" => $data,
             ]);
