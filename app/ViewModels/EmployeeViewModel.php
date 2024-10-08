@@ -19,7 +19,7 @@ class EmployeeViewModel
     public string $direction;
     public int $directionId;
     public int $checa;
-    public ?string $photo = '/images/unknown.png';
+    public ?string $photo;
     public string $horario;
     public string $days;
     public bool $active = true;
@@ -55,18 +55,21 @@ class EmployeeViewModel
             $employee->name
         );
 
-        // validate if photo exists in directory
+        // * validate if photo exists in directory
         if($employee->photo != null) {
             $photo = public_path($employee->photo);
             if (file_exists($photo)) {
                 $model->photo = $employee->photo;
+            }
+        }
+
+        // * attempt to updat the photo from the RH
+        if( !isset($model->photo)){
+            $photo = EmployeeRHService::duplicatePhotoEmployee($employee->id, $employee->plantilla_id);
+            if ($photo) {
+                $model->photo = $photo;
             } else {
-                $photo = EmployeeRHService::duplicatePhotoEmployee($employee->id, $employee->plantilla_id);
-                if ($photo) {
-                    $model->photo = $photo;
-                } else {
-                    $model->photo = '/images/unknown.png';
-                }
+                $model->photo = '/images/unknown.png';
             }
         }
 

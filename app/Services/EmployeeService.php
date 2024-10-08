@@ -35,14 +35,15 @@ class EmployeeService {
         if( Auth::user()->level_id == 1) /* Admin */{
             // * apply some filters
             if( !empty($filters) ){
-                if(isset($filters['general_direction_id'])){
+                if(isset($filters['general_direction_id']) && $filters['general_direction_id'] > 0 ){
                     $query->where('general_direction_id', $filters['general_direction_id'] );
                 }
 
-                if(isset($filters['subdirectorate_id'])){
+                if(isset($filters['subdirectorate_id']) && $filters['subdirectorate_id'] > 0 ){
                     $query->where('subdirectorate_id', $filters['subdirectorate_id'] );
                 }
-                if(isset($filters['direction_id'])){
+
+                if(isset($filters['direction_id']) && $filters['direction_id'] > 0 ){
                     $query->where('direction_id', $filters['direction_id'] );
                 }
 
