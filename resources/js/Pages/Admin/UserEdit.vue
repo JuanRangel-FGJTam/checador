@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useToast } from 'vue-toastification';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
@@ -37,16 +37,16 @@ const props = defineProps({
 });
 
 const toast = useToast();
-
-const emit = defineEmits(['update:selected_options']);
+// const directions = ref(props.directions);
+// const emit = defineEmits(['update:selected_options']);
 
 const form = useForm({
     generalDirection_id: props.user.general_direction_id ?? 1,
-    direction_id: props.user.direction_id ?? 1,
-    subdirectorate_id: props.user.subdirectorates_id ?? 1,
-    departments_id: props.user.departments_id ?? 1,
-    name: props.user.name ?? "",
-    email: props.user.email ?? "",
+    direction_id: props.user.direction_id ?? '',
+    subdirectorate_id: props.user.subdirectorates_id ?? '',
+    departments_id: props.user.departments_id ?? '',
+    name: props.user.name ?? '',
+    email: props.user.email ?? '',
     options: props.selectedOptions ?? [],
     level_id: props.user.level_id,
 });
@@ -56,8 +56,40 @@ const formPassword = useForm({
     password_confirmation: ""
 });
 
+async function fetchData(url) {
+    try {
+        router.visit(url, {
+            method: 'get',
+            only: ['directions', 'subdirectorates', 'departments'],
+            preserveState: true,
+        });
+    } catch (error) {
+        toast.error(`Error al cargar datos de ${updateField}.`);
+        console.error(error);
+    }
+}
+
+watch(() => form.generalDirection_id, (newVal) => {
+    form.direction_id = '';
+    form.subdirectorate_id = '';
+    form.departments_id = '';
+
+    fetchData(`/admin/users/${props.user.id}/edit?generalDirection_id=${newVal}`);
+});
+
+watch(() => form.direction_id, (newVal) => {
+    form.subdirectorate_id = '';
+    form.departments_id = '';
+    fetchData(`/admin/users/${props.user.id}/edit?generalDirection_id=${form.generalDirection_id}&direction_id=${newVal}`);
+});
+
+watch(() => form.subdirectorate_id, (newVal) => {
+    form.departments_id = '';
+    fetchData(`/admin/users/${props.user.id}/edit?generalDirection_id=${form.generalDirection_id}&direction_id=${form.direction_id}&subdirectorate_id=${newVal}`);
+});
+
 function redirectBack(){
-    router.visit( route('admin.index'), {
+    router.visit( route('admin.users.index'), {
         replace: true
     } );
 }
@@ -109,7 +141,6 @@ function handleCheckboxUpdated(e) {
 </script>
 
 <template>
-
     <Head title="Administrador" />
 
     <AuthenticatedLayout>
@@ -121,12 +152,14 @@ function handleCheckboxUpdated(e) {
             <template #header>
                 <PageTitle>Actualizar Usuario</PageTitle>
             </template>
+
             <template #content>
                 <form class="flex flex-col gap-2" @submit.prevent="submitForm">
                     <div class="flex flex-col gap-2">
                         <div role="form-group">
                             <InputLabel for="level_id">Nivel de Acceso</InputLabel>
                             <InputSelect id="level_id" v-model="form.level_id">
+                                <option value="">Selecciona un nivel</option>
                                 <option v-for="level in  accessLevel" :key="level.value" :value="level.value">{{level.label}}</option>
                             </InputSelect>
                             <InputError :message="form.errors.level_id" />
@@ -135,6 +168,7 @@ function handleCheckboxUpdated(e) {
                         <div role="form-group">
                             <InputLabel for="generalDirection_id">Nivel 1 (Fiscalía, Dirección General, ...)</InputLabel>
                             <InputSelect id="generalDirection_id" v-model="form.generalDirection_id">
+                                <option value="">Selecciona una dirección</option>
                                 <option v-for="item in generalDirections" :value="item.id">{{item.name}}</option>
                             </InputSelect>
                             <InputError :message="form.errors.generalDirection_id" />
@@ -143,6 +177,7 @@ function handleCheckboxUpdated(e) {
                         <div role="form-group">
                             <InputLabel for="direction_id">Nivel 2 (Dirección, Vicefiscalía, ...)</InputLabel>
                             <InputSelect id="direction_id" v-model="form.direction_id">
+                                <option value="">Selecciona una dirección</option>
                                 <option v-for="item in directions" :value="item.id">{{item.name}}</option>
                             </InputSelect>
                             <InputError :message="form.errors.direction_id" />
@@ -151,6 +186,7 @@ function handleCheckboxUpdated(e) {
                         <div role="form-group">
                             <InputLabel for="subdirectorate_id">Nivel 3 (Subdirección, Agencia, ...)</InputLabel>
                             <InputSelect id="subdirectorate_id" v-model="form.subdirectorate_id">
+                                <option value="">Selecciona una subdirección</option>
                                 <option v-for="item in subdirectorates" :value="item.id">{{item.name}}</option>
                             </InputSelect>
                             <InputError :message="form.errors.subdirectorate_id" />
@@ -159,6 +195,7 @@ function handleCheckboxUpdated(e) {
                         <div role="form-group">
                             <InputLabel for="departments_id">Nivel 4 (Departamento...)</InputLabel>
                             <InputSelect id="departments_id" v-model="form.departments_id">
+                                <option value="">Selecciona un departamento</option>
                                 <option v-for="item in departments" :value="item.id">{{item.name}}</option>
                             </InputSelect>
                             <InputError :message="form.errors.departments_id" />
@@ -182,13 +219,15 @@ function handleCheckboxUpdated(e) {
                     <div class="flex flex-col gap-2">
                         <ul class="flex flex-col gap-2 bg-gray-50 p-4 border-2 border-gray-100 rounded">
                             <li v-for="option in menuOptions" :key="option.id" class="flex items-center gap-x-1">
-                                <input type="checkbox"
-                                    :id="option.id" 
-                                    :checked="( form.options.includes( option.id) )"
-                                    v-on:change="handleCheckboxUpdated"
-                                    class="rounded"
-                                />
-                                <CardText>{{ option.name }} - <span class="text-xs">{{ option.url }}</span></CardText>
+                                <label>
+                                    <input type="checkbox"
+                                        :id="option.id" 
+                                        :checked="( form.options.includes( option.id) )"
+                                        v-on:change="handleCheckboxUpdated"
+                                        class="rounded"
+                                    />
+                                    {{ option.name }} - <span class="text-xs">{{ option.url }}</span>
+                                </label>
                             </li>
                         </ul>
                     </div>
