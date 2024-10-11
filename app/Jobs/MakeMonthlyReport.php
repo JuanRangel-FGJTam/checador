@@ -15,10 +15,13 @@ use App\Models\MonthlyRecord;
 use App\Models\Process;
 use App\Models\GeneralDirection;
 use App\Helpers\MonthlyReportFactory;
+use Illuminate\Support\Facades\Log;
 
 class MakeMonthlyReport implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public $timeout = 900; // 15 minutes
 
     protected MonthlyRecord $monthlyRecord;
     protected array $employees;
@@ -45,6 +48,7 @@ class MakeMonthlyReport implements ShouldQueue
      */
     public function handle(): void
     {
+        Log::info("MakeMonthlyReport: Start the process to make the monthly report");
         // * create the process record and attach to the monthReportRecord
         $this->process->status = 'processing';
         $this->process->output = null;
@@ -52,8 +56,8 @@ class MakeMonthlyReport implements ShouldQueue
         $this->process->ended_at = null;
         $this->process->save();
 
-        try {
 
+        try {
             // * get the report data
             $monthlyReportFactory = new MonthlyReportFactory(
                 $this->employees,
@@ -62,7 +66,6 @@ class MakeMonthlyReport implements ShouldQueue
             );
             $this->monthlyRecord->data = $monthlyReportFactory->makeReportData();
             $this->monthlyRecord->save();
-
 
             // * make the excel document
             $monthlyReportMaker = new \App\Helpers\MonthlyReportExcel( $this->monthlyRecord->data, $this->generalDirection->name);
@@ -87,7 +90,12 @@ class MakeMonthlyReport implements ShouldQueue
             $this->process->ended_at = Carbon::now();
             $this->process->save();
 
+            Log::info("MakeMonthlyReport: The process to make the monthly report has finished");
+
         } catch(\Throwable $exception) {
+            Log::error("MakeMonthlyReport: Error on the process to make the monthly report");
+            Log::error($exception->getMessage());
+
             $this->process->status = 'error';
             $this->process->output = $exception->getMessage();
             $this->process->ended_at = Carbon::now();
@@ -97,6 +105,9 @@ class MakeMonthlyReport implements ShouldQueue
     }
 
     public function failed($exception) {
+        Log::error("MakeMonthlyReport: Error on the process to make the monthly report");
+        Log::error($exception->getMessage());
+
         $this->process->status = 'error';
         $this->process->output = $exception->getMessage();
         $this->process->ended_at = Carbon::now();
