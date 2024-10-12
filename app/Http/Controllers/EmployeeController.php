@@ -83,9 +83,15 @@ class EmployeeController extends Controller
         }
 
         // * get catalogs
-        $generalDirections = GeneralDirection::select('id', 'name')->get();
-        $directions = Direction::select('id', 'name', 'general_direction_id')->get();
-        $subdirectorate = Subdirectorate::select('id', 'name', 'direction_id')->get();
+        $generalDirections = GeneralDirection::select('id', 'name')
+            ->orderBy('name', 'asc')
+            ->get();
+        $directions = Direction::select('id', 'name', 'general_direction_id')
+            ->orderBy('name', 'asc')
+            ->get();
+        $subdirectorate = Subdirectorate::select('id', 'name', 'direction_id')
+            ->orderBy('name', 'asc')
+            ->get();
 
         // * prepare the filters
         $filters = array();
@@ -374,7 +380,7 @@ class EmployeeController extends Controller
         $events = array();
 
         foreach($records as $record) {
-            $event = new CalendarEvent("🕒", $record->check, $record->check);
+            $event = new CalendarEvent(" ", $record->check, $record->check);
             $event->color = "#27ae60";
             $event->type = "RECORD";
             array_push( $events, $event);
@@ -407,7 +413,6 @@ class EmployeeController extends Controller
                 $event->type = "JUSTIFY";
                 array_push( $events, $event);
             }
-
         }
 
         return response()->json($events, 200);
