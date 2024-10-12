@@ -86,9 +86,11 @@ class EmployeeController extends Controller
         $generalDirections = GeneralDirection::select('id', 'name')
             ->orderBy('name', 'asc')
             ->get();
+
         $directions = Direction::select('id', 'name', 'general_direction_id')
             ->orderBy('name', 'asc')
             ->get();
+
         $subdirectorate = Subdirectorate::select('id', 'name', 'direction_id')
             ->orderBy('name', 'asc')
             ->get();
@@ -175,12 +177,7 @@ class EmployeeController extends Controller
         } catch (ModelNotFoundException $nf) {
             Log::warning("Employee with employee number '$employee_number' not found");
 
-            // * redirect back
-            return redirect()->back()->withErrors([
-                "employee_number" => "Empleado no encontrado",
-                "message" => "Empleado no encontrado"
-            ])->withInput();
-
+           abort(404);
         } catch (\Throwable $th) {
             Log::error("Unhandle exception at attempting to get the employee at EmployeeController.show: {message}", [
                 "employee_number" => $employee_number,
@@ -193,24 +190,24 @@ class EmployeeController extends Controller
         // calculate status
         $status = array(
             'name' => 'BAJA',
-            'class' => 'border border-red-400 text-red-600'
+            'class' => 'text-xs p-1 rounded border border-red-500 text-red-600'
         );
         if ($employee->active) {
             $status = array(
                 'name' => 'ACTIVO',
-                'class' => 'border border-green-400 text-green-600'
+                'class' => 'text-xs p-1 rounded border border-green-500 text-green-600'
             );
         }
 
         // calculate status checa
         $checa = array(
             'name' => 'REGISTRA ASISTENCIA',
-            'class' => 'border border-green-400 text-green-600'
+            'class' => 'text-xs p-1 rounded border border-green-500 text-green-600'
         );
         if ($employee->checa != 1) {
             $checa = array(
                 'name' => 'NO REGISTRA ASISTENCIA',
-                'class' => 'border border-red-400 text-red-600'
+                'class' => 'text-xs p-1 rounded border border-red-500 text-red-600'
             );
         }
 
@@ -228,8 +225,7 @@ class EmployeeController extends Controller
 
         // * calculate the breadcrumns based on where the request come from
         $breadcrumbs = array(
-            ["name"=> "Inicio", "href"=> "/dashboard"],
-            ["name"=> "Vista Empleados", "href"=> route('employees.index') ],
+            ["name"=> "Inicio", "href"=> route('employees.index') ],
             ["name"=> "Empleado: $employee->employeeNumber", "href"=> route('employees.show', $employee->employeeNumber)],
         );
 
@@ -389,7 +385,7 @@ class EmployeeController extends Controller
         foreach($incidents as $incident){
             $title = $incident->type->name;
             $event = new CalendarEvent($title, $incident->date, $incident->date);
-            $event->color = "#dc7633";
+            $event->color = "#ef8b11";
             $event->type = "INCIDENT";
             array_push( $events, $event);
         }
@@ -402,14 +398,14 @@ class EmployeeController extends Controller
                 // Loop through each day from start to end date
                 for ($date = $_from; $date->lte($_to); $date->addDay()) {
                     $event = new CalendarEvent($justify_title, $date->format('Y-m-d'), $date->format('Y-m-d'));
-                    $event->color = "#5499c7";
+                    $event->color = "#3ea1e7";
                     $event->type = "JUSTIFY";
                     array_push( $events, $event);
                 }
             }
             else{
                 $event = new CalendarEvent($justify_title, $justify->date_start->format('Y-m-d'), $justify->date_start->format('Y-m-d'));
-                $event->color = "#5499c7";
+                $event->color = "#3ea1e7";
                 $event->type = "JUSTIFY";
                 array_push( $events, $event);
             }

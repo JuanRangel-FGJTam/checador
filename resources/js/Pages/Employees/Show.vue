@@ -1,9 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
-import { useToast } from 'vue-toastification';
 import { formatDate } from '@/utils/date.js';
-import axios from 'axios';
 
 import FullCalendar from '@fullcalendar/vue3';
 import esLocale from '@fullcalendar/core/locales/es';
@@ -30,9 +28,8 @@ const props = defineProps({
     workingHours: Array,
     breadcrumbs: Object,
     employeePhoto: String,
+    auth: Object
 });
-
-const toast = useToast();
 
 const calendarDaySelected = ref({
     element: undefined,
@@ -50,7 +47,7 @@ const calendarOptions = {
         dayGridPlugin, timeGridPlugin, multiMonthPlugin, interactionPlugin
     ],
     locales: [esLocale],
-    height: "100%",
+    height: "90%",
     locale: 'es',
     initialView: 'dayGridMonth',
     headerToolbar: {
@@ -95,7 +92,6 @@ const calendarOptions = {
 }
 
 const currentIncidences = computed(()=>{
-    
     // * get the range date
     if(calendarEvents.value && calendarEvents.value.length > 0){
         var dateRange = getCurrentDateRange();
@@ -108,7 +104,6 @@ const currentIncidences = computed(()=>{
     }else{
         return [];
     }
-
 });
 
 /**
@@ -169,7 +164,6 @@ function makeIncidenceClick(){
 }
 
 function showJustificationsClick(){
-
     // * get the range date
     var dateRange = getCurrentDateRange();
 
@@ -182,7 +176,6 @@ function showJustificationsClick(){
 }
 
 function justifyDayClick(){
-
     var day = calendarDaySelected.value.day;
 
     const formattedDate = day.getFullYear() + '-' +
@@ -193,7 +186,6 @@ function justifyDayClick(){
         "employee_number": props.employeeNumber,
         "day" : formattedDate
     }));
-
 }
 
 /**
@@ -241,12 +233,9 @@ function getFirstDayOrNextMonth(startDate, endDate) {
 
   return firstDayNextMonth;
 }
-
-
 </script>
 
 <template>
-
     <Head title="Empleado" />
 
     <AuthenticatedLayout>
@@ -254,9 +243,9 @@ function getFirstDayOrNextMonth(startDate, endDate) {
             <Breadcrumb :breadcrumbs="breadcrumbs" />
         </template>
 
-        <div class="grid p-1 gap-1 justify-center w-screen max-w-screen-2xl h-full mx-auto" style="grid-template-columns: 1fr 1fr 16rem; grid-template-rows: auto 3rem 1fr">
-            
-            <div class="bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500" style="grid-area: 1/1/2/2;">
+        <div class="mx-auto max-w-screen-2xl grid grid-employee">
+
+            <div class="bg-white rounded p-4">
                 <EmployeeGeneralData
                     :employee="employee"
                     :employeePhoto="employeePhoto"
@@ -264,9 +253,7 @@ function getFirstDayOrNextMonth(startDate, endDate) {
                     :checa="checa"
                     :workingHours="workingHours"
                 />
-            </div>
 
-            <div class="bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500" style="grid-area: 1/2/2/3;">
                 <EmployeeDataPanel
                     :employee="employee"
                     v-on:editCalendar="editCalendarClick"
@@ -274,37 +261,48 @@ function getFirstDayOrNextMonth(startDate, endDate) {
                     v-on:incidencesClick="incidencesClick"
                     v-on:downloadKardex="downLoadkardexClick"
                 />
-            </div>
 
-            <div class="bg-white shadow border rounded-lg px-4 py-2 dark:bg-gray-800 dark:border-gray-500" style="grid-area: 2/1/3/3;">
-                <div class="flex gap-4 justify-center">
-                    <WarningButton v-on:click="makeIncidenceClick">
-                        Generar Incidencias
-                    </WarningButton>
-
-                    <WhiteButton v-on:click="showJustificationsClick" class="outline outline-1">
-                        Ver justificaciones
-                    </WhiteButton>
-
-                    <WhiteButton v-if="calendarDaySelected.day" v-on:click="justifyDayClick" class=" outline outline-1">
-                        Justificar ({{ formatDate(calendarDaySelected.day) }} )
-                    </WhiteButton>
-                    <DisabledButton v-else>
-                        Justificar (seleccione un dia)
-                    </DisabledButton>
+                <div class="pb-4 overflow-y: auto; dark:bg-gray-800 h-80 mt-2">
+                    <AnimateSpin v-if="calendarLoading" class="w-4 h-4 mx-1 "/>
+                    <IncidenciasPanel v-else :incidences="currentIncidences" />
                 </div>
             </div>
 
-            <div class="bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500 select-none" style="grid-area:3/1/4/3;">
-                <FullCalendar ref="fullCalenarObj" :options="calendarOptions" />
-            </div>
+            <div class="select-none p-4 bg-white">
+                <div class="flex gap-4 justify-end border-b pb-2 mb-2">
+                    <WarningButton 
+                        v-on:click="makeIncidenceClick"
+                        v-if="auth.user.level_id == 1"
+                    >
+                        Generar Incidencias
+                    </WarningButton>
 
-            <div class="bg-white h-100 shadow border rounded-lg overflow-y-hidden dark:bg-gray-800 dark:border-gray-500 select-none" style="grid-area:1/3/4/4;">
-                <AnimateSpin v-if="calendarLoading" class="w-4 h-4 mx-1 "/>
-                <IncidenciasPanel v-else :incidences="currentIncidences" />
+                    <WhiteButton v-on:click="showJustificationsClick">
+                        Ver justificantes
+                    </WhiteButton>
+
+                    <WhiteButton v-if="calendarDaySelected.day" v-on:click="justifyDayClick">
+                        Justificar día {{ formatDate(calendarDaySelected.day) }}
+                    </WhiteButton>
+                    <DisabledButton v-else>
+                        Seleccione un día para justificar
+                    </DisabledButton>
+                </div>
+
+                <FullCalendar ref="fullCalenarObj" :options="calendarOptions" />
             </div>
 
         </div>
 
     </AuthenticatedLayout>
 </template>
+
+<style>
+.grid-employee {
+    grid-template-columns: 30rem 1fr;
+    grid-template-rows: calc(100vh - 9rem);
+    gap: 1rem;
+    padding: 0.5rem;
+    overflow-y: hidden;
+}
+</style>

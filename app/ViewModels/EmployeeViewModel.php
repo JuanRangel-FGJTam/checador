@@ -16,16 +16,16 @@ class EmployeeViewModel
     public string $abbreviation;  // general direction abbreviation
     public string $generalDirection;
     public int $generalDirectionId;
-    public string $direction;
+    public string $direction = "";
     public int $directionId;
     public int $checa;
     public ?string $photo;
     public string $horario;
     public string $days;
     public bool $active = true;
-    public ?string $subDirection = null;
+    public ?string $subDirection = "";
     public ?int $subDirectionId = null;
-    public ?string $department = null;
+    public ?string $department = "";
     public ?int $departmentId = null;
     
     public function __construct(int $id, string $employeeNumber, string $name) {
@@ -95,7 +95,7 @@ class EmployeeViewModel
             $model->generalDirectionId = $employee->generalDirection->id;
         }
 
-        if( isset($employee->direction) ){
+        if( isset($employee->direction) && $employee->direction->id != 1 ){
             $model->direction = $employee->direction->name;
             $model->directionId = $employee->direction->id;
         }
@@ -121,12 +121,12 @@ class EmployeeViewModel
             }
         }
 
-        if( isset($employee->subdirectorate) ){
+        if( isset($employee->subdirectorate) && $employee->subdirectorate->id != 1 ) {
             $model->subDirection = $employee->subdirectorate->name;
             $model->subDirectionId = $employee->subdirectorate->id;
         }
 
-        if( isset($employee->department) ){
+        if( isset($employee->department) && $employee->department->id != 1 ) {
             $model->department = $employee->department->name;
             $model->departmentId = $employee->department->id;
         }
