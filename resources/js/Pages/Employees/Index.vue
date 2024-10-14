@@ -93,10 +93,12 @@ function reloadData(){
             preserveState: true,
             onError:(err)=>{
                 toast.error("Error al obtener los datos");
+            },
+            onSuccess: ()=>{
+                loading.value = false;
             }
         });
         
-    loading.value = false;
     }, 500);
 }
 
@@ -134,10 +136,10 @@ function changePage(pageNumber){
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Empleados</h2>
         </template>
 
-        <div class="px-4 py-4 rounded-lg min-h-screen max-w-screen-2xl mx-auto">
+        <div class="px-4 py-4 rounded-lg min-h-screen max-w-screen-xl mx-auto">
             
             <!-- filter data area -->
-            <div class="grid grid-cols-3 gap-2 px-2 pt-2 pb-4 bg-white border-x border-t dark:bg-gray-700 dark:border-gray-500">
+            <div class="grid grid-cols-3 gap-2 p-4 bg-white dark:bg-gray-700 dark:border-gray-500">
 
                 <div role="form-group" class="flex flex-col">
                     <InputLabel value="Direccion General" for="gd" />
@@ -180,51 +182,47 @@ function changePage(pageNumber){
             /> -->
 
             <!-- data table -->
-            <table class="table w-full shadow text-sm text-left mt-2 border rtl:text-right text-gray-500 dark:text-gray-400 dark:border-gray-500">
-                <thead class="sticky top-0 z-20 text-xs uppercase text-gray-700 border bg-gradient-to-b from-gray-50 to-slate-100 dark:from-gray-800 dark:to-gray-700 dark:text-gray-200 dark:border-gray-500">
-                    <AnimateSpin v-if="loading" class="w-4 h-4 mx-2 absolute top-2.5" />
+            <table class="table w-full text-sm text-left mt-2 text-gray-500 dark:text-gray-400 dark:border-gray-500">
+                <thead class="sticky top-0 z-20 text-sm uppercase text-gray-700 border bg-gradient-to-b from-gray-50 to-slate-100 dark:from-gray-800 dark:to-gray-700 dark:text-gray-200 dark:border-gray-500">
+                    <AnimateSpin v-show="loading" class="w-6 h-6 text-blue-500 absolute top-3 right-2" />
                     <tr>
-                        <th scope="col" class="text-center px-6 py-3">
+                        <th>#</th>
+                        <th scope="col" class="px-6 py-3">
                             Nombre
                         </th>
-                        <th scope="col" class="text-center px-6 py-3">
-                            Numero Empleado
-                        </th>
-                        <th scope="col" class="text-center px-6 py-3">
+                        <th scope="col" class="px-6 py-3">
                             Unidad
                         </th>
-                        <th scope="col" class="text-center px-6 py-3">
+                        <th scope="col" class="px-6 py-3">
                             Estatus
                         </th>
-                        <th scope="col" class="text-center px-6 py-3">
+                        <th scope="col" class="px-6 py-3">
                             Horario
                         </th>
-                        <th scope="col" class="text-center px-6 py-3">
+                        <th scope="col" class="px-6 py-3 sr-only">
                             Acciones
                         </th>
                     </tr>
                 </thead>
                 <tbody id="table-body" class="bg-white dark:bg-gray-800 dark:border-gray-500">
                     <template v-if="employees && employees.length > 0">
-                        <tr v-for="employee in employees" :key="employee.id" class="border-b hover:bg-gray-100">
-                            <td class="p-2 text-center">
+                        <tr v-for="(employee, index) in employees" :key="employee.id" class="border-b hover:bg-gray-100">
+                            <td class="pl-2">{{ index + 1 }}</td>
+                            <td class="px-2 py-4">
                                 <div class="flex gap-2 items-center">
-                                    <img :src="employee.photo" class="h-10 w-10 rounded-md object-cover" alt="user"/>
+                                    <img :src="employee.photo" class="h-12 w-12 rounded-md object-cover" alt="user"/>
 
                                     <div class="flex flex-col items-start">
-                                        <p class="text-base truncate">{{ employee.name }}</p>
-                                        <p class="text-xs">{{ employee.curp}}</p>
+                                        <p class="text-base text-gray-600 truncate">{{ employee.name }}</p>
+                                        <p class="text-gray-500"># {{ employee.employeeNumber}}</p>
+                                        <p class="text-xs text-gray-500">{{ employee.curp}}</p>
                                     </div>
                                 </div>
                             </td>
 
-                            <td class="p-2 text-center">
-                                {{ employee.employeeNumber}}
-                            </td>
-
-                            <td class="p-2 text-center">
+                            <td class="p-2">
                                 <div class="text-sm text-gray-900">{{ employee.abbreviation }} </div>
-                            <div class="text-xs text-gray-400">{{ employee.direction }}</div>
+                            <div class="text-xs text-gray-500">{{ employee.direction }}</div>
                             </td>
 
                             <td class="p-2 text-center">
@@ -234,7 +232,7 @@ function changePage(pageNumber){
 
                             <td class="p-2 text-center">
                                 <div class="text-sm text-gray-900">{{ employee.days }} </div>
-                            <div class="text-sm text-gray-400">{{ employee.horario }}</div>
+                            <div class="text-sm text-gray-500">{{ employee.horario }}</div>
                             </td>
 
                             <td class="p-2 text-center">

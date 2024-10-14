@@ -42,15 +42,15 @@ function downloadKardexClick(){
 
 <template>
     <div class="flex flex-col items-start gap-2">
-        <p class="text-gray-700 dark:text-gray-300 uppercase font-semibold leading-none">
+        <p class="text-gray-800 dark:text-gray-300">
             {{ employee.generalDirection }}
         </p>
 
-        <p class="text-gray-700 dark:text-gray-300 uppercase font-semibold text-sm leading-none">
+        <p class="text-gray-500 dark:text-gray-300 text-sm">
             {{ employee.direction }}
         </p>
 
-        <p v-if="employee.subDirection" class="text-gray-600 dark:text-gray-300 uppercase font-semibold text-xs leading-none">
+        <p v-if="employee.subDirection" class="text-gray-500 dark:text-gray-300 text-sm">
             {{ employee.subDirection}}
         </p>
 
@@ -60,12 +60,12 @@ function downloadKardexClick(){
         </p>
         -->
 
-        <div v-if="showButtons" class="w-full flex justify-around mt-2">
-            <WhiteButton class="border-1 border-blue-400" v-on:click="editCalendarClick">
+        <div v-if="showButtons" class="w-full flex justify-between">
+            <WhiteButton v-on:click="editCalendarClick">
                 <CalendarEditIcon class="w-4 h-4 mx-1" />
                 <span>Horiario</span>
             </WhiteButton>
-            <WhiteButton class="border-1 border-blue-400" v-on:click="editEmployeeClick">
+            <WhiteButton v-on:click="editEmployeeClick">
                 <UserEditIcon class="w-4 -h4 mx-1" />
                 <span>Editar Empleado</span>
             </WhiteButton>
@@ -75,7 +75,7 @@ function downloadKardexClick(){
             </WarningButton>
         </div>
 
-        <div class="w-full flex justify-end gap-2 pt-1.5 border-t dark:border-gray-500">
+        <div class="w-full flex justify-starts gap-4 mt-2">
             <select class="w-32 border rounded" v-model="kardexForm.year">
                 <option v-for="y in props.years" :key="y" :value="y"> {{y}}</option>
             </select>

@@ -17,7 +17,10 @@ const props = defineProps({
 <template>
     <div class="flex flex-col h-full overflow-y-auto">
 
-        <h2 class="text-lg font-bold uppercase sticky top-0 backdrop-blur-md p-2 z-20">Incidencias</h2>
+        <h2 class="text-lg font-bold uppercase sticky top-0 backdrop-blur-md p-2 z-20">
+            <span class="mx-2 text-gray-400">{{ incidences.length }}</span>
+            Incidencias 
+        </h2>
 
         <div class="border-t mt-2 pb-2"/>
 
@@ -26,7 +29,7 @@ const props = defineProps({
             <VerticalTimeLine>
                 <timeLineItemCustom v-for="item in incidences">
                     <template #icon>
-                        <CalendarExclamationIcon class="w-4 h-4 text-amber-600" />
+                        <CalendarExclamationIcon class="w-4 h-4 text-orange-400" />
                     </template>
                     <template #content>
                         <div class="-translate-y-1 -translate-x-2 flex flex-col gap-2 text-gray-600 dark:text-gray-200">

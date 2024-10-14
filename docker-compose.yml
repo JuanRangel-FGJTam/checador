@@ -45,7 +45,6 @@ services:
       - ./php.ini:/usr/local/etc/php/conf.d/php.ini
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-    command: php /var/www/html/artisan schedule:work
     networks:
       - netchecador
 
@@ -63,7 +62,6 @@ services:
       - ./php.ini:/usr/local/etc/php/conf.d/php.ini
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-    command: php /var/www/html/artisan queue:work
     networks:
       - netchecador
 

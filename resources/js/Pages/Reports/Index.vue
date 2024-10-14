@@ -1,10 +1,9 @@
 <script setup>
-import { ref, onMounted} from 'vue';
+import { onMounted} from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from 'vue-toastification';
 
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import NavLink from '@/Components/NavLink.vue';
 import PageTitle from '@/Components/PageTitle.vue';
 import Card from '@/Components/Card.vue';
 import InputLabel from '@/Components/InputLabel.vue';
@@ -13,7 +12,6 @@ import InputSelect from "@/Components/InputSelect.vue";
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import Breadcrumb from '@/Components/Breadcrumb.vue';
-import AnimateSpin from '@/Components/Icons/AnimateSpin.vue';
 
 const props = defineProps({
     breadcrumbs: Object,
@@ -81,7 +79,9 @@ function handleReportDailyClick(){
         onError:((err)=>{
             const {message} = err;
             if(message){
-                toast.error(message);
+                toast.warning(message);
+            } else {
+                toast.error("Ocurrió un error al generar el reporte. Por favor, intente de nuevo en unos minutos.");
             }
         })
     });
@@ -97,16 +97,16 @@ function handleReportMonthlyClick(){
         onError:((err)=>{
             const {message} = err;
             if(message){
-                toast.error(message);
+                toast.warning(message);
+            } else {
+                toast.error("Ocurrió un error al generar el reporte. Por favor, intente de nuevo en unos minutos.");
             }
         })
     });
 }
-
 </script>
 
 <template>
-
     <Head title="Generar Reportes" />
 
     <AuthenticatedLayout>
@@ -120,7 +120,7 @@ function handleReportMonthlyClick(){
             <!-- employee data -->
             <Card class="outline outline-1 outline-gray-300 dark:outline-gray-500" :shadow="false">
                 <template #header>
-                    <PageTitle>Generar Reporte Diario</PageTitle>
+                    <PageTitle>Reporte Diario</PageTitle>
                 </template>
                 <template #content>
                     <form class="flex gap-4 items-center pb-2" @submit.prevent="handleReportDailyClick">
@@ -157,7 +157,7 @@ function handleReportMonthlyClick(){
             <!-- employee data -->
             <Card class="outline outline-1 outline-gray-300 dark:outline-gray-500" :shadow="false">
                 <template #header>
-                    <PageTitle>Generar Reporte Mensual</PageTitle>
+                    <PageTitle>Reporte Mensual</PageTitle>
                 </template>
                 <template #content>
                     <form class="flex gap-4 items-center pb-2" @submit.prevent="handleReportMonthlyClick">

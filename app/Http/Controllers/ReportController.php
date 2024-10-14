@@ -12,9 +12,6 @@ use App\Models\{
     GeneralDirection,
     DailyRecord,
     Employee,
-    Record,
-    WorkingDays,
-    WorkingHours,
     MonthlyRecord
 };
 use App\Helpers\DailyReportFactory;
@@ -35,7 +32,10 @@ class ReportController extends Controller
     public function index(){
 
         // * get catalogs
-        $generalDirections = GeneralDirection::select('id','name')->get()->all();
+        $generalDirections = GeneralDirection::select('id','name')
+            ->orderBy('name', 'ASC')
+            ->get()
+            ->all();
 
         $breadcrumbs = array(
             ["name"=> "Inicio", "href"=> "/dashboard"],
@@ -94,24 +94,21 @@ class ReportController extends Controller
 
     }
 
-    public function createMonthlyReport(Request $request) {
-
-        // * validate request
+    public function createMonthlyReport(Request $request) 
+    {
         if( !$request->has('gd') || !$request->has('y') || !$request->has('m') ){
             return redirect()->back()->withErrors([
-                "message" => "General Direction, Year and Month parameters are required."
+                "message" => "Selecciona un área, año y mes para generar el reporte."
             ])->withInput();
         }
-
 
         // * prepared variables
         $generalDirection = null;
         $year = $request->query('y', 0);
         $month = $request->query('m', 0);
-        $dateReport = Date::createFromFormat('Y-m-d', $year.'-'.$month.'-01');
+        $dateReport = Carbon::createFromFormat('Y-m-d', $year.'-'.$month.'-01');
         $includeAllEmployees = $request->query('a', 0) == 1;
         $AUTH_USER = Auth::user();
-
 
         // * generate breadcumbs for the view
         $breadcrumbs = array(
@@ -119,7 +116,6 @@ class ReportController extends Controller
             ["name"=> "Generar reportes", "href"=> route('reports.index') ],
             ["name"=> "Reporte mensual de " . $dateReport->format('M Y'), "href"=>""],
         );
-
 
         // * retrive the general_direction based on user level
         if( $AUTH_USER->level_id == 1 && $request->has('gd') )/*Admin*/{
@@ -138,7 +134,6 @@ class ReportController extends Controller
             "breadcrumbs" => $breadcrumbs,
             "reportId" => $reportData->id
         ]);
-
     }
 
     public function downloadDailyReporte(Request $request, $report_name){
@@ -172,7 +167,6 @@ class ReportController extends Controller
         // * download the file
         $name = "reporte-mensual.xlsx";
         return Storage::disk('local')->download($filePath, $name);
-
     }
 
     public function verifyMonthlyReporte(Request $request, string $reportId): JsonResponse{
@@ -362,7 +356,6 @@ class ReportController extends Controller
         }
         $reportData->save();
 
-
         // * get the employees for the report
         $employees = $this->getEmployees( $generalDirection->id, [
             'directionId' => ($AUTH_USER->level_id > 2) ?$AUTH_USER->direction_id :null,
@@ -370,9 +363,8 @@ class ReportController extends Controller
             'departmentId' => ($AUTH_USER->level_id > 4) ?$AUTH_USER->department_id :null,
         ]);
 
-
         Log::debug("Dispatching the report queue");
-        \App\Jobs\MakeMonthlyReport::dispatch($reportData, $employees );
+        \App\Jobs\MakeMonthlyReport::dispatch($reportData, $employees);
 
         return $reportData;
     }

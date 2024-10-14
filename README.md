@@ -1,8 +1,6 @@
 <p align="center" style="font-size:30px;">C H E C A D O R</p>
 <p align="center" style="font-size:10px; margin-top:-12px;">WEB APP</p>
 
-
-
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
