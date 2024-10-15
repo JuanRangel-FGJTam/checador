@@ -77,7 +77,7 @@ class IncidentController extends Controller
 
         // * catalog incident status
         $incidentStatuses = IncidentState::where("id", ">", 1)->select('id', 'name')->get()->toArray();
-        $generalDirections = GeneralDirection::select(['id', 'name'])->get()->all();
+        $generalDirections = GeneralDirection::select(['id', 'name'])->get()->sortBy('name')->all();
         $reportTypes = [
             "monthly" => "Mensual",
             "fortnight" => "Quincenal"
@@ -129,7 +129,7 @@ class IncidentController extends Controller
         // * return the view
         return Inertia::render('Incidents/Index', [
             "incidentStatuses" => array_values($incidentStatuses),
-            "generalDirections" => $generalDirections,
+            "generalDirections" => array_values($generalDirections),
             "employees" => $employees,
             "reportTypes" => $reportTypes,
             "periods" => $periods,
@@ -137,7 +137,8 @@ class IncidentController extends Controller
                 "generalDirecctionId" => $generalDirecctionId,
                 "year" => $year,
                 "period" => $period,
-                "type" => $repType
+                "type" => $repType,
+                "dateGeneration" => Carbon::now()->format("Y-m-d")
             ]
         ]);
     }
@@ -535,6 +536,18 @@ class IncidentController extends Controller
         }
         
         return redirect()->route('employees.show', $employee_number);
+
+    }
+
+
+    function createIncidentsJob(Request $request){
+
+        // * validate the date
+        $request->validate([
+            'date' => 'date|before_or_equal:today'
+        ]);
+
+        dd($request);
 
     }
 

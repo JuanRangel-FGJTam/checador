@@ -100,6 +100,7 @@ Route::middleware(['auth', 'authorized.menu'])->group(function () {
         Route::patch('{incident_id}/state', [IncidentController::class, 'updateIncidentState'])->name('state.update');
         Route::get('', [IncidentController::class, 'index'])->name('index');
         Route::get('report', [IncidentController::class, 'makeReport'])->name('report.make');
+        Route::post('create-job', [IncidentController::class, 'createIncidentsJob'])->name('job.make');
 
     });
 

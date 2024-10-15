@@ -11,11 +11,13 @@ import CardTitle from '@/Components/CardTitle.vue';
 import CardText from '@/Components/CardText.vue';
 import InputSelect from "@/Components/InputSelect.vue";
 import InputError from '@/Components/InputError.vue';
+import InputDate from '@/Components/InputDate.vue';
 import SuccessButton from '@/Components/SuccessButton.vue';
+import WarningButton from '@/Components/WarningButton.vue';
 import AnimateSpin from '@/Components/Icons/AnimateSpin.vue';
 import DownloadIcon from '@/Components/Icons/DownloadIcon.vue';
 import ChevronRightIcon from '@/Components/Icons/ChevronRightIcon.vue';
-
+import CheckSquareIcon from '@/Components/Icons/CheckSquareIcon.vue';
 
 const props = defineProps({
     years: {
@@ -33,7 +35,8 @@ const props = defineProps({
             generalDirecctionId: 0,
             year: 0,
             period: 0,
-            type: ''
+            type: '',
+            dateGeneration: ''
         }
     }
 });
@@ -45,6 +48,10 @@ const form = useForm({
     year: props.options.year,
     period: props.options.period,
     report_type: props.options.type,
+});
+
+const formJob = useForm({
+    date: props.options.dateGeneration
 });
 
 const loading = ref(false);
@@ -152,6 +159,17 @@ function visitIncidenceEmployee(employee){
     }));
 }
 
+function handleMakeIncidentsJob(){
+    formJob.post( route('incidents.job.make'), {
+        onError:((err)=>{
+            var keys = Object.keys(err);
+            keys.forEach(k => {
+                toast.warning(err[k]);
+            });
+        })
+    });
+}
+
 </script>
 
 <template>
@@ -161,10 +179,32 @@ function visitIncidenceEmployee(employee){
     <AuthenticatedLayout>
 
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Incidencias</h2>
+            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Consulta de Incidencias</h2>
         </template>
 
-        <div class="px-4 py-4 h-full rounded-lg max-w-screen-xl mx-auto grid grid-rows-[5rem_1fr] ">
+        <div class="px-4 py-4 h-full rounded-lg max-w-screen-xl mx-auto grid " :class="[ $page.props.auth.user.level_id == 1 ?'grid-rows-incidentsIndexAdmin' :'grid-rows-incidentsIndex' ]">
+
+            <Card v-if="$page.props.auth.user.level_id == 1" class="outline outline-1 outline-gray-300 bg-orange-200 dark:outline-gray-500" :shadow="false">
+                <template #content>
+                    <div class="grid grid-cols-[1fr_14rem_7rem] gap-1">
+
+                        <CardTitle class="my-auto">
+                            Generar incidencias para todo el personal
+                        </CardTitle>
+
+                        <div class="flex items-center">
+                            <label for="date" class="px-2">Fecha: </label>
+                            <InputDate v-model="formJob.date" id="date" />
+                        </div>
+
+                        <WarningButton type="Button" class="ml-auto" v-on:click="handleMakeIncidentsJob">
+                            <CheckSquareIcon class="w-5 h-5 mr-1" />
+                            <span>Generar</span>
+                        </WarningButton>
+
+                    </div>
+                </template>
+            </Card>
 
             <Card class="outline outline-1 outline-gray-300 dark:outline-gray-500" :shadow="false">
                 <template #content>
