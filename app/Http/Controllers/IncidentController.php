@@ -405,7 +405,7 @@ class IncidentController extends Controller
             $title = "Reporte de incidencias del " . $startDate->format('d M Y') . ' al ' . $endDate->format('d M Y') ;
         }
         $employees = $this->getEmployeesWithIncidentsByDirection( $__generalDirection, $startDate, $endDate );
-
+        $employees = array_map(fn( $item) => (array) $item, $employees);
 
         // * get the incident of each employee for the report
         $totales = array(
@@ -425,7 +425,7 @@ class IncidentController extends Controller
             $resumeIncidents = $this->getIncidentsOfEmployeeGrupedByType($employee['id'], $startDate, $endDate);
 
             // * append the properties ('noEmployee', 'nivel', 'puesto', 'delays', 'absents', 'acumulations', 'totalAbsentsd' )
-            $employee['noEmployee'] = (int)substr($employee['plantilla_id'], 1);
+            $employee['noEmployee'] = $employee['employeeNumber'];
             $employee['nivel'] = "*No disponible";
             $employee['puesto'] = "*No disponible";
             $employee['delays'] = $resumeIncidents['delays'];
@@ -547,8 +547,7 @@ class IncidentController extends Controller
             'date' => 'date|before_or_equal:today'
         ]);
 
-        dd($request);
-
+        \App\Jobs\CreateIncidentsDate::dispatch($request->input('date'));
     }
 
 
@@ -579,12 +578,10 @@ class IncidentController extends Controller
     }
 
     /**
-     * get incidents of direction by range date
-     *
      * @param  int|string $generalDirecctionId
      * @param  string|Date|Carbon $from
      * @param  string|Date|Carbon $to
-     * @return array
+     * @return array<EmployeeViewModel>
      */
     private function getEmployeesWithIncidentsByDirection(int $generalDirecctionId, $from, $to){
 

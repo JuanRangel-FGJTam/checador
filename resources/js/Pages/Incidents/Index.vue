@@ -161,6 +161,9 @@ function visitIncidenceEmployee(employee){
 
 function handleMakeIncidentsJob(){
     formJob.post( route('incidents.job.make'), {
+        onSuccess:((i)=>{
+            toast.success("Tarea generada con exito.");
+        }),
         onError:((err)=>{
             var keys = Object.keys(err);
             keys.forEach(k => {
