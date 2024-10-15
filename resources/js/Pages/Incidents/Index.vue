@@ -63,7 +63,7 @@ onMounted(()=>{
 function getIncidents(){
 
     // prevet call the data if the general direction and the period are not selected
-    if( form.general_direction_id == null || form.general_direction_id <= 0  || !form.period){
+    if( form.general_direction_id == null || form.general_direction_id <= 0 || !form.period){
         return;
     }
 
@@ -145,10 +145,25 @@ function makeReportClick(){
 }
 
 function visitIncidenceEmployee(employee){
+
+    var _year = form.year;
+    var _month = undefined;
+
+     if (typeof form.period === 'string') {
+        _month = form.period.split('-')[0];
+    } else if (typeof form.period === 'number') {
+        _month = form.period;
+    }
+
+    if(_month === undefined){
+        toast.warning('Periodo seleccionado no valido.');
+        return;
+    }
+
     router.visit( route('incidents.employee.index', {
         "employee_number": employee.employeeNumber,
-        "year": form.year,
-        "month": form.period.split("-")[0]
+        "year": _year,
+        "month": _month
     }));
 }
 

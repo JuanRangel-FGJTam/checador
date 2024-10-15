@@ -49,7 +49,12 @@ class IncidentController extends Controller
         $generalDirecctionId = $request->filled('gdi') ? $request->input("gdi") :intval( Auth::user()->general_direction_id );
         $repType = $request->filled('t') ? $request->input("t") : 'monthly';
         $year = $request->filled('y') ? $request->input("y") : Carbon::now()->year;
-        $period = $request->filled('p') ? $request->input("p") : Carbon::now()->month;
+        if($request->filled('p')){
+            $period = $request->query('p');
+        }else{
+            // if the period is no passed by parameter make it based on the report type, for type `fortnight` the format of the period is '{month}-{NumQuincena}'
+            $period = ($repType == 'monthly') ? Carbon::now()->month : Carbon::now()->month . "-1";
+        }
 
         // * get the incidents
         $employees = array();
