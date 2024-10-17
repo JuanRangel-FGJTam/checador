@@ -20,7 +20,9 @@ class EmployeeRHService {
     public static function getEmployeeData($employee_number)
     {
         try {
-            return EmployeeRh::select('NUMEMP', 'NOMBRE', 'APELLIDO', 'RFC', 'CURP')->where('NUMEMP', $employee_number)->first();
+            return EmployeeRh::select('NUMEMP', 'NOMBRE', 'APELLIDO', 'RFC', 'CURP')
+                ->where('NUMEMP', $employee_number)
+                ->first();
         } catch (\Throwable $th) {
             Log::error("Fail to get the employee of the RH: {message}", [
                 "message" => $th->getMessage(),
@@ -28,25 +30,24 @@ class EmployeeRHService {
             ]);
             return null;
         }
+    }
 
+    public static function getPlazaByEmployeeNumber($employee_number)
+    {
+        $employee = EmployeeRh::select('NUMEMP', 'IDPLAZA')
+            ->where('NUMEMP', $employee_number)
+            ->first();
 
-        // try {
-        //     $_employee = Employee::where('plantilla_id', '1'.$employee_number)->firstOrFail();
-        //     $employee = new stdClass();
-        //     $employee->NUMEMP = (int) $employee_number;
-        //     $employee->NOMBRE = $_employee->name;
-        //     $employee->APELLIDO = "";
-        //     $employee->RFC = "*******";
-        //     $employee->CURP = "*******";
-        //     return $employee;
+        if ($employee) {
+            if ($employee->plaza) {
+                $employee->plaza->nivel = $employee->plaza->nivel;
+                $employee->plaza->puesto = $employee->plaza->puesto;
 
-        // }catch(\Throwable $th) {
-        //     Log::error("Fail to get the employee '{employee_number}' data from the RH service: {message} ", [
-        //         "employee_number" => $employee_number,
-        //         "message" => $th->getMessage(),
-        //     ]);
-        //     return null;
-        // }
+                return $employee->plaza;
+            }
+        }
+
+        return null;
     }
 
     public static function duplicatePhotoEmployee($employee_id, $plantilla_id)
@@ -61,8 +62,6 @@ class EmployeeRHService {
                 $path = 'photos/'.$rowRh->RFC.'.jpg';
 
                 try {
-
-                    // file_put_contents('/var/www/html/public/'.$path, $rowRh->FOTO);
                     file_put_contents(public_path($path), $rowRh->FOTO);
                 } catch (\Throwable $th) {
                     Log::error('Error saving photo '.$path.': '.$th->getMessage());

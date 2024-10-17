@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use \Date;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -27,7 +26,7 @@ use App\Models\{
     WorkingDays,
     WorkingHours
 };
-use Exception;
+use Date;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\RedirectResponse;
 
@@ -423,16 +422,24 @@ class IncidentController extends Controller
 
         /**
          * @var array<string,mixed> $employee
+         * reference to the original array element rather than a copy
          */
         foreach ($employees as &$employee) {
+
+            $employee['nivel'] = "No disponible";
+            $employee['puesto'] = "No disponible";
 
             // * get the resume of incidents
             $resumeIncidents = $this->getIncidentsOfEmployeeGrupedByType($employee['id'], $startDate, $endDate);
 
             // * append the properties ('noEmployee', 'nivel', 'puesto', 'delays', 'absents', 'acumulations', 'totalAbsentsd' )
+            $plaza = \App\Services\EmployeeRHService::getPlazaByEmployeeNumber($employee['employeeNumber']);
+            if ($plaza) {
+                $employee['nivel'] = $plaza->nivel->NIVEL ?? "No disponible";
+                $employee['puesto'] = $plaza->puesto->PUESTO ?? "No disponible";
+            }
+
             $employee['noEmployee'] = $employee['employeeNumber'];
-            $employee['nivel'] = "*No disponible";
-            $employee['puesto'] = "*No disponible";
             $employee['delays'] = $resumeIncidents['delays'];
             $employee['absents'] = $resumeIncidents['absents'];
             $employee['acumulations'] = $resumeIncidents['acumulations'];
@@ -443,9 +450,7 @@ class IncidentController extends Controller
             $totales['absents'] = $totales['absents'] + $resumeIncidents['absents'];
             $totales['acumulations'] = $totales['acumulations'] + $resumeIncidents['acumulations'];
             $totales['total'] = $totales['total'] + $resumeIncidents['totalAbsents'];
-
         }
-
 
         // * make excel document
         $date = ["start" => $startDate, "end" => $endDate ];

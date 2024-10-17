@@ -85,7 +85,7 @@ class MakeMonthlyReport implements ShouldQueue
             $filePath = self::PATH . "/$fileName";
 
             if (!Storage::disk('local')->put( $filePath, $documentContent )) {
-                throw new \Exception("Fail to store the report document on" . $filePath);
+                throw new \Exception("Fail to store the report document on " . $filePath);
             }
             
             // * save the file path on the record data
