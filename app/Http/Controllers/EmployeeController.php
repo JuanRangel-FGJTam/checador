@@ -57,8 +57,8 @@ class EmployeeController extends Controller
         $currentPage = $request->query('p', 1);
         $elementsToTake = 50;
         $generalDirectionId = null;
-        $directionId = null;
-        $subdirectionId = null;
+        $directionId = 0;
+        $subdirectionId = 0;
 
         // * set by defaul the user general direction asigneds
         $generalDirectionId = Auth::user()->general_direction_id;
@@ -70,6 +70,8 @@ class EmployeeController extends Controller
                 $directionId = $request->filled('d') ?$request->query("d") :null;
             }
 
+            $subdirectionId = $request->query("sd");
+
         }else{
             if( $request->filled('gd')){
                 $generalDirectionId = $request->query("gd");
@@ -77,8 +79,8 @@ class EmployeeController extends Controller
             if( $request->filled('d')){
                 $directionId = $request->query("d");
             }
-            if( $request->filled('sb')){
-                $subdirectionId = $request->query("sb");
+            if( $request->filled('sd')){
+                $subdirectionId = $request->query("sd");
             }
         }
 
@@ -97,17 +99,20 @@ class EmployeeController extends Controller
 
         // * prepare the filters
         $filters = array();
-        if( $generalDirectionId != null){
+        if( isset($generalDirectionId)){
             $filters[ EmployeeFiltersEnum::GD ] = $generalDirectionId;
             $directions = $directions->where('general_direction_id', $generalDirectionId);
         }
-        if( $directionId != null){
+
+        if( isset($directionId)){
             $filters[ EmployeeFiltersEnum::D ] = $directionId;
-            $subdirectorate = $directions->where('direction_id', $directionId);
+            $subdirectorate = $subdirectorate->where('direction_id', $directionId);
         }
-        if( $subdirectionId != null){
+
+        if( isset($subdirectionId)){
             $filters[ EmployeeFiltersEnum::SD ] = $subdirectionId;
         }
+
         if( $request->filled("se")){
             $filters['search'] = $request->query("se");
         }
