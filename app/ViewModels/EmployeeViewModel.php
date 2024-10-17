@@ -72,8 +72,7 @@ class EmployeeViewModel
                 $model->photo = '/images/unknown.png';
             }
         }
-
-        $model->checa = $employee->status_id;
+        $model->checa = $employee->status_id ?? 0;
         // $model->photo = $employee->photo;
 
         if(isset($employee->active)){

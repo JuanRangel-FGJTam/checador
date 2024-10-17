@@ -272,9 +272,9 @@ class EmployeeController extends Controller
         }
 
         // * retrieve the query parameters to filter the catalogs if is necessary
-        $_gd = $employee->generalDirectionId;
-        $_di = $employee->directionId;
-        $_sd = $employee->subDirectionId;
+        $_gd = $employee->generalDirectionId ?? 1;
+        $_di = $employee->directionId ?? 1;
+        $_sd = $employee->subDirectionId ?? 1;
 
         if($request->filled('gd')){
             $_gd = $request->query('gd');
