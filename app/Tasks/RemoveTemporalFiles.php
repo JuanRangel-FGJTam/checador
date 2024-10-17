@@ -14,9 +14,8 @@ class RemoveTemporalFiles {
 
     protected function exec(){
         try{
-            Log::info("Start task of deleting temporal files");
             Storage::disk('local')->deleteDirectory('tmp');
-            Log::info("Finish task of deleting temporal files");
+            Log::info("Temporal files deleted successfully");
         }catch(\Throwable $th){
             Log::error("Failed to delete temporal files: " . $th->getMessage());
         }

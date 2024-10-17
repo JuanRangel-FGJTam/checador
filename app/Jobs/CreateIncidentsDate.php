@@ -13,6 +13,7 @@ use App\Models\Employee;
 use App\Models\WorkingDays;
 use App\Models\WorkingHours;
 use App\Services\IncidentService;
+use Exception;
 
 class CreateIncidentsDate implements ShouldQueue
 {
