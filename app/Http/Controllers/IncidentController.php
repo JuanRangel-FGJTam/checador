@@ -82,7 +82,7 @@ class IncidentController extends Controller
 
         // * catalog incident status
         $incidentStatuses = IncidentState::where("id", ">", 1)->select('id', 'name')->get()->toArray();
-        $generalDirections = GeneralDirection::select(['id', 'name'])->get()->all();
+        $generalDirections = GeneralDirection::select(['id', 'name'])->get()->sortBy('name')->all();
         $reportTypes = [
             "monthly" => "Mensual",
             "fortnight" => "Quincenal"
@@ -134,7 +134,7 @@ class IncidentController extends Controller
         // * return the view
         return Inertia::render('Incidents/Index', [
             "incidentStatuses" => array_values($incidentStatuses),
-            "generalDirections" => $generalDirections,
+            "generalDirections" => array_values($generalDirections),
             "employees" => $employees,
             "reportTypes" => $reportTypes,
             "periods" => $periods,
@@ -142,7 +142,8 @@ class IncidentController extends Controller
                 "generalDirecctionId" => $generalDirecctionId,
                 "year" => $year,
                 "period" => $period,
-                "type" => $repType
+                "type" => $repType,
+                "dateGeneration" => Carbon::now()->format("Y-m-d")
             ]
         ]);
     }
@@ -409,7 +410,7 @@ class IncidentController extends Controller
             $title = "Reporte de incidencias del " . $startDate->format('d M Y') . ' al ' . $endDate->format('d M Y') ;
         }
         $employees = $this->getEmployeesWithIncidentsByDirection( $__generalDirection, $startDate, $endDate );
-
+        $employees = array_map(fn( $item) => (array) $item, $employees);
 
         // * get the incident of each employee for the report
         $totales = array(
@@ -429,7 +430,7 @@ class IncidentController extends Controller
             $resumeIncidents = $this->getIncidentsOfEmployeeGrupedByType($employee['id'], $startDate, $endDate);
 
             // * append the properties ('noEmployee', 'nivel', 'puesto', 'delays', 'absents', 'acumulations', 'totalAbsentsd' )
-            $employee['noEmployee'] = (int)substr($employee['plantilla_id'], 1);
+            $employee['noEmployee'] = $employee['employeeNumber'];
             $employee['nivel'] = "*No disponible";
             $employee['puesto'] = "*No disponible";
             $employee['delays'] = $resumeIncidents['delays'];
@@ -544,6 +545,17 @@ class IncidentController extends Controller
     }
 
 
+    function createIncidentsJob(Request $request){
+
+        // * validate the date
+        $request->validate([
+            'date' => 'date|before_or_equal:today'
+        ]);
+
+        \App\Jobs\CreateIncidentsDate::dispatch($request->input('date'));
+    }
+
+
     #region private methods
     /**
      * find Employee
@@ -571,12 +583,10 @@ class IncidentController extends Controller
     }
 
     /**
-     * get incidents of direction by range date
-     *
      * @param  int|string $generalDirecctionId
      * @param  string|Date|Carbon $from
      * @param  string|Date|Carbon $to
-     * @return array
+     * @return array<EmployeeViewModel>
      */
     private function getEmployeesWithIncidentsByDirection(int $generalDirecctionId, $from, $to){
 

@@ -43,45 +43,73 @@ class CreateIncidentsCommand extends Command
         }
         
         // * get the active employees
-        $employees = Employee::with(['workingDays', 'workingHours'])->select('id', 'status_id', 'active')
+        $employees = Employee::with(['workingDays'])
+            ->select('id', 'status_id', 'active')
             ->where('active', 1)
             ->where('status_id', 1)
-            ->get();
+            ->get()
+            ->all();
 
-        foreach ($employees as $employee) {
-            if ($employee->workingHours) {
-                if ($employee->workingHours->checkin && $employee->workingHours->checkout) {
-                    $workDays = array('week');
-    
-                    if ($employee->workingDays) {
-                        if ($employee->workingDays->weekend == 1) {
-                            $workDays[] = 'weekend';
-                        }
-                        if ($employee->workingDays->week == 0) {
-                            $key = array_search('week', $workDays);
-                            array_splice($workDays, $key, 1);
-                        }
-                    }
-
-                    if (in_array($dayIs, $workDays)) {
-                        try {
-                            $incidentService = new IncidentService(
-                                $employee->id,
-                                $employee->workingHours,
-                                $now->format('Y-m-d')
-                            );
-    
-                            $incidentService->calculateAndStoreIncidents();
-                        } catch (Exception $e) {
-                            Log::error('Error creating incident '.$employee->id.': '.$e->getMessage());
-                        }
-                    }
-                }
-            }
+        foreach ($employees as $employee){
+            $this->handleEmployee($employee);
         }
 
         $this->info('Terminó el calculo de incidencias del día ' . $now->format('Y-m-d') . ' - incident:create Command.');
         Log::info('Terminó el calculo de incidencias del día ' . $now->format('Y-m-d') . ' - incident:create Command.');
 
+    }
+
+    private function handleEmployee($employee){
+
+        $now = new DateTime();
+        $now->modify('-1 day');
+
+        $workingHours = WorkingHours::where('employee_id', $employee->id)->first();
+        $workingDays = WorkingDays::where('employee_id', $employee->id)->first();
+
+        if ($workingHours) {
+            Log::debug("CreateIncidents: Employee id {employeeId} has not workingHours", [
+                "employeeId" => $employee->id,
+            ]);
+            return;
+        }
+
+        if ( !$employee->workingHours->checkin || !$employee->workingHours->checkout) {
+            Log::debug("CreateIncidents: Employee id {employeeId} has not workingHours", [
+                "employeeId" => $employee->id,
+            ]);
+            return;
+        }
+
+        // * get the working days of the employee
+        $workDays = array('week');
+        if ($workingDays) {
+            if ($workingDays->weekend == 1) {
+                $workDays[] = 'weekend';
+            }
+            if ($workingDays->week == 0) {
+                $key = array_search('week', $workDays);
+                array_splice($workDays, $key, 1);
+            }
+        }else{
+            Log::debug("CreateIncidents: Employee id {employeeId} has not workingDays", [
+                "employeeId" => $employee->id,
+            ]);
+        }
+
+        // * validate if the employee works on the target date
+        if (in_array($this->dayIs, $workDays)) {
+            try {
+                $incidentService = new IncidentService(
+                    $employee->id,
+                    $workingHours,
+                    $now->format('Y-m-d')
+                );
+
+                $incidentService->calculateAndStoreIncidents();
+            } catch (Exception $e) {
+                Log::error('CreateIncidents: Error creating incident '.$employee->id.': '.$e->getMessage());
+            }
+        }
     }
 }

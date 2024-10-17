@@ -15,6 +15,12 @@ export default {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
+
+            gridTemplateRows: {
+                'incidentsIndexAdmin': '5rem 5rem 1fr',
+                'incidentsIndex': '5rem 1fr',
+              }
+
         },
     },
 

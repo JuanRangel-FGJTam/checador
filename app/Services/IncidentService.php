@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use App\Models\{Incident, Justify, Record};
 
@@ -231,6 +232,8 @@ class IncidentService
         
         // Delete previous incidents if exists
         $this->deleteAllByDay();
+
+        Log::debug("Total records:" . count($records));
 
         if ($records->isEmpty()) {
             if (!$isDateJustified) {
