@@ -36,6 +36,9 @@ const submit = () => {
         <Head title="Reset Password" />
 
         <form @submit.prevent="submit">
+            <p class="text-center text-gray-600 mb-4">
+                Genere una nueva contraseña para su cuenta.
+            </p>
             <div>
                 <InputLabel for="email" value="Correo electrónico" />
 

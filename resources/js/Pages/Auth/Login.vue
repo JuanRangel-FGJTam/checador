@@ -144,6 +144,6 @@ input:focus {
 }
 
 .container-input:focus-within {
-    border-color: #161649;
+    border-color: #5d9de6;
 }
 </style>
