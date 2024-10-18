@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue';
 import Checkbox from '@/Components/Checkbox.vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import InputError from '@/Components/InputError.vue';
@@ -16,6 +17,8 @@ defineProps({
     },
 });
 
+const isPasswordVisible = ref(false);
+
 const form = useForm({
     email: '',
     password: '',
@@ -27,6 +30,11 @@ const submit = () => {
         onFinish: () => form.reset('password'),
     });
 };
+
+const togglePasswordVisibility = () => {
+    isPasswordVisible.value = !isPasswordVisible.value;
+};
+
 </script>
 
 <template>
@@ -51,19 +59,19 @@ const submit = () => {
             <div class="absolute -top-20 -right-20 w-80 h-80 border-4 rounded-full border-opacity-30 border-t-8"></div>
         </div>
         <div class="flex md:w-1/2 justify-center py-10 items-center bg-white">
-            <form @submit.prevent="submit">
+            <form @submit.prevent="submit" class="w-96">
                 <h1 class="text-gray-800 font-bold text-2xl mb-4">Inicia sesión</h1>
 
                 <InputError class="mt-2" :message="form.errors.email" />
-                <div class="flex items-center border-2 py-2 px-3 rounded-2xl mb-4">
+                <div class="flex items-center border-2 py-2 px-3 rounded-2xl mb-4 container-input">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none"
                         viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                     </svg>
                     <input 
-                        class="pl-2 outline-none border-none" 
-                        type="text" 
+                        class="w-full border-none bg-transparent py-2 px-4 ring-0 ml-2 focus:outline-none focus:border-none" 
+                        type="email" 
                         name="email" 
                         id="email" 
                         v-model="form.email"
@@ -75,7 +83,7 @@ const submit = () => {
                 </div>
 
                 <InputError class="mt-2" :message="form.errors.password" />
-                <div class="flex items-center border-2 py-2 px-3 rounded-2xl">
+                <div class="flex items-center border-2 py-2 px-3 rounded-2xl container-input">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20"
                         fill="currentColor">
                         <path fill-rule="evenodd"
@@ -83,18 +91,36 @@ const submit = () => {
                             clip-rule="evenodd" />
                     </svg>
                     <input 
-                        class="pl-2 outline-none border-none" 
-                        type="password" 
+                        class="w-full border-none bg-transparent py-2 px-4 ring-0 ml-2 focus:outline-none focus:border-none" 
+                        :type="isPasswordVisible ? 'text' : 'password'" 
                         name="password" 
                         id="password" 
                         v-model="form.password"
                         require 
                         placeholder="Contraseña" 
                     />
+                    <svg 
+                        class="h-5 text-gray-500 block hover:text-blue-700 cursor-pointer" 
+                        fill="none" 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        viewBox="0 0 576 512"
+                        @click="togglePasswordVisibility"
+                    >
+                    <path
+                        v-if="isPasswordVisible"
+                        fill="currentColor"
+                        d="M572.52 241.4C518.29 135.59 410.93 64 288 64S57.68 135.64 3.48 241.41a32.35 32.35 0 0 0 0 29.19C57.71 376.41 165.07 448 288 448s230.32-71.64 284.52-177.41a32.35 32.35 0 0 0 0-29.19zM288 400a144 144 0 1 1 144-144 143.93 143.93 0 0 1-144 144zm0-240a95.31 95.31 0 0 0-25.31 3.79 47.85 47.85 0 0 1-66.9 66.9A95.78 95.78 0 1 0 288 160z"
+                    ></path>
+                    <path
+                        v-else
+                        fill="currentColor"
+                        d="M288 32C410.93 32 518.29 103.59 572.52 209.41a32.35 32.35 0 0 1 0 29.19C518.29 376.41 410.93 448 288 448S57.68 376.41 3.48 270.59a32.35 32.35 0 0 1 0-29.19C57.68 103.59 165.07 32 288 32m0 48C194.73 80 117.94 143.42 69.31 240 117.94 336.58 194.73 400 288 400s170.06-63.42 218.69-160C458.06 143.42 381.27 80 288 80z"
+                    ></path>
+                    </svg>
                 </div>
                 <button 
                     type="submit" 
-                    class="block w-full bg-blue-600 mt-4 py-2 rounded-2xl text-white font-semibold mb-2 hover:bg-blue-700"
+                    class="block w-full bg-blue-600 mt-4 py-4 rounded-2xl text-white font-semibold mb-2 hover:bg-blue-700"
                     :class="{ 'opacity-25': form.processing }" 
                     :disabled="form.processing"
                 >
@@ -103,7 +129,7 @@ const submit = () => {
                 <Link
                     v-if="canResetPassword"
                     :href="route('password.request')"
-                    class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
+                    class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
                 >
                     ¿Olvidó su contraseña?
                 </Link>
@@ -111,3 +137,13 @@ const submit = () => {
         </div>
     </div>
 </template>
+
+<style>
+input:focus {
+    --tw-ring-color: transparent !important;
+}
+
+.container-input:focus-within {
+    border-color: #161649;
+}
+</style>
