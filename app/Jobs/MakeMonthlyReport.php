@@ -7,7 +7,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
@@ -27,6 +26,8 @@ class MakeMonthlyReport implements ShouldQueue
     protected array $employees;
     protected GeneralDirection $generalDirection;
     protected Process $process;
+
+    const PATH = 'tmp/monthlyreports';
 
     /**
      * Create a new job instance.
@@ -74,12 +75,19 @@ class MakeMonthlyReport implements ShouldQueue
                 throw new \Exception("Fail to make the report document");
             }
 
-            // * store the file
+            $directory = storage_path('app/' . self::PATH);
+            if (!is_dir($directory)) {
+                mkdir($directory, 0775, true);
+            }
+
             $fileName = sprintf("%s.xlsx", (string) Str::uuid() );
-            $filePath = sprintf("tmp/monthlyreports/$fileName");
-            Storage::disk('local')->put( $filePath, $documentContent );
+            // $filePath = sprintf("tmp/monthlyreports/$fileName");
+            $filePath = self::PATH . "/$fileName";
 
-
+            if (!Storage::disk('local')->put( $filePath, $documentContent )) {
+                throw new \Exception("Fail to store the report document on " . $filePath);
+            }
+            
             // * save the file path on the record data
             $this->monthlyRecord->filePath = $filePath;
             $this->monthlyRecord->save();
@@ -91,7 +99,6 @@ class MakeMonthlyReport implements ShouldQueue
             $this->process->save();
 
             Log::info("MakeMonthlyReport: The process to make the monthly report has finished");
-
         } catch(\Throwable $exception) {
             Log::error("MakeMonthlyReport: Error on the process to make the monthly report");
             Log::error($exception->getMessage());

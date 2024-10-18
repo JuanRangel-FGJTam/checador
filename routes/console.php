@@ -6,6 +6,6 @@ use Illuminate\Support\Facades\Schedule;
 
 # Artisan::command('inspire', fn()=> $this->comment(Inspiring::quote()) )->purpose('Display an inspiring quote')->hourly();
 
-Schedule::command('app:remove-temporary-files')->everySixHours();
+Schedule::command('app:remove-temporary-files')->daily();
 
-Schedule::command('app:incident-create')->daily()->timezone('America/Monterrey')->at('01:00');
+Schedule::command('app:incident-create')->daily()->timezone('America/Mexico_City')->at('01:00');

@@ -9,7 +9,7 @@ class PlazaRh extends Model
 {
     use HasFactory;
 
-    protected $connection = 'sqlsrvRh';
+    protected $connection = 'sqlsrvRH';
     protected $table = 'PLAZA';
     protected $primaryKey = 'IDPLAZA';
 

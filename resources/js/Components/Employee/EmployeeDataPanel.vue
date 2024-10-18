@@ -75,9 +75,9 @@ function downloadKardexClick(){
             </WarningButton>
         </div>
 
-        <div class="w-full flex justify-starts gap-4 mt-2">
-            <select class="w-32 border rounded" v-model="kardexForm.year">
-                <option v-for="y in props.years" :key="y" :value="y"> {{y}}</option>
+        <div class="w-full h-8 flex justify-starts gap-4 mt-1">
+            <select class="w-32 border px-2 py-1 rounded text-sm" v-model="kardexForm.year">
+                <option v-for="y in props.years" :key="y" :value="y">{{y}}</option>
             </select>
             <PrimaryButton v-on:click="downloadKardexClick">
                 Descargar Kardex

@@ -3,7 +3,6 @@ FROM php:8.2-fpm
 ARG user
 ARG uid
 
-
 # Install dependences, mongoDB requires libcurl4-openssl-dev pkg-config libssl-dev
 RUN apt-get update && apt-get install --no-install-recommends -y \
     git \
@@ -49,5 +48,10 @@ RUN useradd -l -G www-data,root -u $uid -d /home/$user $user && \
     mkdir -p /home/$user/.composer && chown -R $user:$user /home/$user
 
 WORKDIR /var/www/html
+
+# User permissions
+RUN chown -R $user:www-data /var/www/html
+
+USER $user
 
 CMD ["php", "/var/www/html/artisan", "queue:work", "--verbose", "--tries=3", "--timeout=900"]

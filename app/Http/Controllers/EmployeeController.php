@@ -99,6 +99,7 @@ class EmployeeController extends Controller
 
         // * prepare the filters
         $filters = array();
+
         if( isset($generalDirectionId)){
             $filters[ EmployeeFiltersEnum::GD ] = $generalDirectionId;
             $directions = $directions->where('general_direction_id', $generalDirectionId);
@@ -115,6 +116,11 @@ class EmployeeController extends Controller
 
         if( $request->filled("se")){
             $filters['search'] = $request->query("se");
+        }
+
+        // If user is not admin load active employees only
+        if(Auth::user()->level_id != 1) { 
+            $filters['active'] = 1;
         }
 
         // * get employees

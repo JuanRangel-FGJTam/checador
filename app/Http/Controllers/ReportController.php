@@ -22,8 +22,6 @@ use Illuminate\Http\JsonResponse;
 
 class ReportController extends Controller
 {
-
-
     /**
      * returned the main view for generating reports
      *
@@ -141,7 +139,7 @@ class ReportController extends Controller
         $filePath = sprintf("tmp/dailyreports/$report_name");
 
         // * validate if the report exist
-        if( !Storage::disk('local')->exists( $filePath)){
+        if( !Storage::disk('local')->exists( $filePath)) {
             return response()->json([
                 "message" => "El reporte que está tratando de acceder no se encuentra disponible."
             ], 404);
@@ -169,10 +167,10 @@ class ReportController extends Controller
         return Storage::disk('local')->download($filePath, $name);
     }
 
-    public function verifyMonthlyReporte(Request $request, string $reportId): JsonResponse{
-
+    public function verifyMonthlyReporte(Request $request, string $reportId): JsonResponse {
         // * attempt to get the report
         $reportData = MonthlyRecord::find($reportId);
+
         if($reportData == null){
             return response()->json( [
                 "message" => "El reporte seleccionado no esta disponible."
@@ -183,16 +181,22 @@ class ReportController extends Controller
         $reportProcess = $reportData->process;
         if($reportProcess == null){
             return response()->json( [
-                "message" => "El process reporte seleccionado no esta disponible."
+                "message" => "El reporte seleccionado no esta disponible."
             ], 409);
         }
 
 
         // * verify process status
-        if( $reportProcess->status == "success"){
-
+        if( $reportProcess->status == "success") {
             // * return the data related to the report created
             $filePath = $reportData->filePath;
+
+            if (Storage::disk('local')->exists($filePath) == false) {
+                return response()->json([
+                    "status" => $reportProcess->status,
+                    "message" => "El reporte que está tratando de acceder no se encuentra disponible."
+                ], 404);
+            }
 
             $size = Storage::disk('local')->size($filePath);
             $sizeInKB = number_format($size / 1024, 2);
@@ -292,6 +296,10 @@ class ReportController extends Controller
             $dailyReportFactory->makePdf();
             $pdfStringContent = $dailyReportFactory->Output('S');
 
+            $directory = storage_path('app/tmp/dailyreports/');
+            if (!is_dir($directory)) {
+                mkdir($directory, 0775, true);
+            }
 
             // * store pdf
             $fileName = sprintf("%s.pdf", (string) Str::uuid() );

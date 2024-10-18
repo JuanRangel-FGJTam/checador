@@ -22,6 +22,7 @@ import AnimateSpin from '@/Components/Icons/AnimateSpin.vue';
 import CalendarExclamationIcon from '@/Components/Icons/CalendarExclamationIcon.vue';
 
 const props = defineProps({
+    auth: Object,
     employeeNumber: String,
     employee: Object,
     status: Object,
@@ -183,42 +184,43 @@ function updateIncident(){
                         <div class="flex gap-4 w-full">
                             <div class="flex flex-col items-start gap-1 w-2/5">
 
-                                <div class="flex gap-2 justify-end">
-                                    <CardTitle class="pt-0.5">Numero de empleado: </CardTitle>
+                                <div class="flex flex-col">
+                                    <CardTitle>Número de empleado</CardTitle>
                                     <CardText> {{ employee.employeeNumber }}</CardText>
                                 </div>
 
-                                <div class="flex gap-2 justify-end">
-                                    <CardTitle class="pt-0.5">Curp: </CardTitle>
+                                <div class="flex flex-col">
+                                    <CardTitle>CURP</CardTitle>
                                     <CardText> {{ employee.curp }}</CardText>
                                 </div>
 
-                                <div class="flex gap-2 justify-end">
-                                    <CardTitle class="pt-0.5">Horario: </CardTitle>
-                                    <CardText v-for="item in workingHours">{{ item }}</CardText>
+                                <div class="flex items-center gap-6">
+                                    <div class="flex flex-col">
+                                        <CardTitle>Horario</CardTitle>
+                                        <CardText v-for="item in workingHours">{{ item }}</CardText>
+                                    </div>
+    
+                                    <div class="flex flex-col">
+                                        <CardTitle>Dias laborales</CardTitle>
+                                        <CardText> {{ employee.days }}</CardText>
+                                    </div>
                                 </div>
-
-                                <div class="flex gap-2 justify-end">
-                                    <CardTitle class="pt-0.5">Dias laborales: </CardTitle>
-                                    <CardText> {{ employee.days }}</CardText>
-                                </div>
-
                             </div>
 
                             <div class="flex flex-col items-start gap-1 w-3/5">
-                                <p class="text-gray-700 dark:text-gray-300 uppercase font-semibold">
+                                <p class="text-gray-800 dark:text-gray-300 font-semibold">
                                     {{ employee.generalDirection }}
                                 </p>
 
-                                <p class="text-gray-700 dark:text-gray-300 uppercase font-semibold">
+                                <p class="text-gray-600 dark:text-gray-300">
                                     {{ employee.direction }}
                                 </p>
 
-                                <p v-if="employee.subDirection" class="text-gray-600 dark:text-gray-300 uppercase font-semibold text-sm">
+                                <p v-if="employee.subDirection" class="text-gray-600 dark:text-gray-300">
                                     {{ employee.subDirection}}
                                 </p>
 
-                                <p v-if="employee.department" class="text-gray-600 dark:text-gray-300 uppercase font-semibold text-sm">
+                                <p v-if="employee.department" class="text-gray-600 dark:text-gray-300">
                                     {{ employee.department}}
                                 </p>
                             </div>
@@ -228,10 +230,8 @@ function updateIncident(){
                 </template>
             </Card>
 
-            
             <!-- Incidents -->
             <div class="outline outline-1 outline-gray-300 flex flex-col gap-2 bg-white p-2 rounded dark:bg-gray-700 dark:outline-gray-500">
-                
                 <!-- Options -->
                 <div class="w-full flex gap-2 mt-2 dark:border-gray-500">
                     <div class="w-32">
@@ -248,14 +248,16 @@ function updateIncident(){
 
                     <AnimateSpin v-if="loading" class="w-6 h-6 my-auto text-slate-800" />
 
-                    <div v-if="formIncident.incident_id != null" class="ml-auto flex gap-1">
-                        <InputSelect v-model="formIncident.state_id">
-                            <option value="" selected> * Seleccione un elemento</option>
-                            <option v-for="item in incidentStatuses" :key="item.id" :value="item.id"> {{ item.name }}</option>
-                        </InputSelect>
-                        <SuccessButton v-if="formIncident.state_id != null" v-on:click="updateIncident" class="w-fit px-1">
-                            Actualzar
-                        </SuccessButton>
+                    <div v-if="auth.user.level_id == 1">
+                        <div v-if="formIncident.incident_id != null" class="ml-auto flex gap-1">
+                            <InputSelect v-model="formIncident.state_id">
+                                <option value="" selected> * Seleccione un elemento</option>
+                                <option v-for="item in incidentStatuses" :key="item.id" :value="item.id"> {{ item.name }}</option>
+                            </InputSelect>
+                            <SuccessButton v-if="formIncident.state_id != null" v-on:click="updateIncident" class="w-fit px-1">
+                                Actualzar
+                            </SuccessButton>
+                        </div>
                     </div>
 
                 </div>
