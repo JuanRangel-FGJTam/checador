@@ -150,11 +150,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
 
-    Route::prefix('devices')->name('devices.')->group(function(){
-        Route::get('', [ DeviceController::class, "index"])->name('index');
-        Route::get('logs', [ DeviceController::class, "getDevicesLogRaw"])->name('logs');
-    });
+Route::prefix('devices')->name('devices.')->group(function(){
+    Route::get('', [ DeviceController::class, "index"])->name('index');
+    Route::get('logs', [ DeviceController::class, "getDevicesLogRaw"])->name('logs');
 });
 
 Route::get('/', function () {

@@ -1,12 +1,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { Head, useForm, router } from '@inertiajs/vue3';
-import { debounce } from '@/utils/debounce.js';
 import { useToast } from 'vue-toastification';
 import { formatDate, formatDatetime } from '@/utils/date';
-
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-
 import DeviceOnIcon from '@/Components/Icons/DeviceOnIcon.vue';
 import DeviceOffIcon from '@/Components/Icons/DeviceOffIcon.vue';
 import axios from 'axios';
@@ -50,13 +45,12 @@ async function fetchDeviceLogs(){
 </script>
 
 <template>
-
-    <Head title="Administrador" />
-
-    <AuthenticatedLayout>
-        <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Dispositivos</h2>
-        </template>
+    <div class="min-h-screen flex flex-col items-center bg-gray-100 dark:bg-gray-900">
+        <div class="bg-white dark:bg-gray-600 shadow mb-4 w-full p-2">
+            <div class=" max-w-screen-lg mx-auto">
+                <h1 class="font-semibold text-2xl text-gray-800 dark:text-gray-200 leading-tight">Estatus de dispositivos</h1>
+            </div>
+        </div>
 
         <div class="px-4 py-[2rem] rounded-lg max-w-screen-2xl mx-auto dark:text-gray-200">
             <ul class="grid grid-cols-1 lg:grid-cols-3 2xl:grid-cols-4 gap-2">
@@ -78,5 +72,5 @@ async function fetchDeviceLogs(){
             </ul>
         </div>
 
-    </AuthenticatedLayout>
+    </div>
 </template>
