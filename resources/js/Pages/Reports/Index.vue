@@ -16,6 +16,7 @@ import Breadcrumb from '@/Components/Breadcrumb.vue';
 const props = defineProps({
     breadcrumbs: Object,
     generalDirections: Array,
+    generalDirectionId: Number,
     years: {
         type: Array,
         default: [
@@ -48,13 +49,13 @@ const props = defineProps({
 const toast = useToast();
 
 const formDaily = useForm({
-    generalDirectionId: undefined,
+    generalDirectionId: props.generalDirectionId ?? 0,
     date: undefined,
     allEmployees: false
 });
 
 const formMonthly = useForm({
-    generalDirectionId: undefined,
+    generalDirectionId: props.generalDirectionId ?? 0,
     year: undefined,
     month: undefined,
     allEmployees: false
@@ -127,7 +128,7 @@ function handleReportMonthlyClick(){
 
                         <div role="form-group">
                             <InputLabel for="dailyGeneralDirectionId" value="Area" />
-                            <InputSelect id="dailyGeneralDirectionId" v-model="formDaily.generalDirectionId" class="min-w-64 max-w-[24rem]" required>
+                            <InputSelect id="dailyGeneralDirectionId" v-model="formDaily.generalDirectionId" class="min-w-64 max-w-[24rem]" required :disabled="$page.props.auth.user.level_id > 1">
                                 <option value=""> Selecione una opcion</option>
                                 <option v-for="item in generalDirections" :key="item.id" :value="item.id"> {{ item.name }}</option>
                             </InputSelect>
@@ -164,7 +165,7 @@ function handleReportMonthlyClick(){
 
                         <div role="form-group">
                             <InputLabel for="monthlyGeneralDirectionId" value="Area" />
-                            <InputSelect id="monthlyGeneralDirectionId" v-model="formMonthly.generalDirectionId" class="min-w-64 max-w-[24rem]" >
+                            <InputSelect id="monthlyGeneralDirectionId" v-model="formMonthly.generalDirectionId" class="min-w-64 max-w-[24rem]" :disabled="$page.props.auth.user.level_id > 1" >
                                 <option value="">Seleccione una opción</option>
                                 <option v-for="item in generalDirections" :key="item.id" :value="item.id"> {{ item.name }}</option>
                             </InputSelect>
