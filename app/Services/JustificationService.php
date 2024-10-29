@@ -36,7 +36,7 @@ class JustificationService {
         // * store the file
         $filePath = $this->storeJustificationFile(
             file: $request->file('file'),
-            employee_number: $employee->employeeNumber,
+            employee_number: $employee->id,
             date: $request->input('initialDay')
         );
         
@@ -179,7 +179,7 @@ class JustificationService {
                 // * store the new file
                 $filePath = $this->storeJustificationFile(
                     file: $request->file('file'),
-                    employee_number: $employee->employeeNumber,
+                    employee_number: $employee->id,
                     date: $request->input('initialDay')
                 );
 
