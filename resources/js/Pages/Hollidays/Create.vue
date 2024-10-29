@@ -74,7 +74,9 @@ function hangleGeneralDirectionChange(){
             preserveState: true,
             preserveScroll: true,
             onSuccess: (res)=>{
-                form.employees.push( ...res.props.employees.map(element => element.id));
+                if(res.props.employees != null){
+                    form.employees.push( ...res.props.employees.map(element => element.id));
+                }
             },
             onFinish: ()=>{
                 loading.value = false;

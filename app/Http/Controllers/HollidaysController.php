@@ -57,11 +57,17 @@ class HollidaysController extends Controller
         // * attempt to get the employees based on the user level
         $employees = array();
         if($generalDirection != null){
-            $employees = $this->employeeService->getEmployeesOfUser()
-                ->where('active',1)
-                ->where('status_id',1)
+            $tmpEmployees = $this->employeeService->getEmployeesOfUser()
+                ->where('active', 1)
+                ->where('status_id', 1)
                 ->where('general_direction_id', $generalDirection->id)
                 ->all();
+            $employees = array_map(function($emp){
+                return [
+                    "id" => $emp->id,
+                    "name" => $emp->name
+                ];
+            }, $tmpEmployees);
         }
 
         // * return the view
