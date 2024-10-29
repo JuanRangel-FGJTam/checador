@@ -102,8 +102,12 @@ class HollidaysController extends Controller
 
         // * store the file uploaded
         $start = Carbon::parse( $request->input('initialDay') );
-        $filepath = "/justificantes/justificante_general-" . $start->format('Ymd') . '-' . $request->file('file')->hashName();
-        Storage::disk('local')->put($filepath, $request->file('file')->get() );
+        $endDate = "00-00-00";
+        if($request->input('endDay')){
+            $endDate = Carbon::parse($request->input('endDate'))->format('d-m-Y');
+        }
+        $fileName = "justificante_general-" . $start->format('d-m-Y') . '-' . $endDate . ".pdf";
+        $filepath = Storage::disk('local')->putFileAs("justificantes", $request->file('file'), $fileName );
 
 
         // * get employees of the user and filtered by the request employees

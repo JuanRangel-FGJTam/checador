@@ -18,6 +18,7 @@ use App\Http\Requests\{
     NewJustificationRequest,
     UpdateJustificationRequest
 };
+use App\Models\Employee;
 use App\Models\Justify;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Redirect;
@@ -33,6 +34,37 @@ class JustificationController extends Controller
         $this->justificationService = $justificationService;
     }
 
+
+    public function index(Request $request)
+    {
+        $elementsToTake = 25;
+
+        $employeesID = $this->employeeService->getEmployeesOfUser()->pluck('id')->all();
+
+        $justifications = array();
+        $data = Justify::with(['type', 'employee'])
+            ->whereHas('employee', fn( $emp) => $emp->whereIn('id', $employeesID))
+            ->get()
+            ->sortDesc()
+            ->take($elementsToTake)
+            ->all();
+
+        foreach($data as $element){
+            array_push( $justifications, [
+                "id" => $element->id,
+                "employee_name" => $element->employee->name,
+                "type_name" => $element->type->name,
+                "date_start" => $element->date_start,
+                "date_finish" => $element->date_finish,
+                "details" => $element->details
+            ]);
+        }
+
+        // * return the viewe
+        return Inertia::render('Justifications/Index', [
+            "justifications" => array_values($justifications),
+        ]);
+    }
 
     /**
      * returned view to edit the justify

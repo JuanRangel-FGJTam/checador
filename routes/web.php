@@ -107,6 +107,7 @@ Route::middleware(['auth', 'authorized.menu'])->group(function () {
     });
 
     Route::prefix("justifications")->name('justifications.')->group(function(){
+        Route::get('', [JustificationController::class, 'index'])->name('index');
         Route::get('{justification_id}/file', [JustificationController::class, 'getJustificationFile'])->name('file');
         Route::get('{justification_id}/edit', [JustificationController::class, 'editJustify'])->name('edit');
         Route::post('{justification_id}/update', [JustificationController::class, 'updateJustify'])->name('update');
