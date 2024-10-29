@@ -23,8 +23,8 @@ class DeviceService
             $dLog = array();
             $dLog["name"] = $value->name;
             $dLog["address"] = $value->address;
-            $dLog["last-connection"] = $value->updated_at;
-            if(Carbon::parse($value->updated_at)->addMinutes(5) >= Carbon::now()){
+            $dLog["last-connection"] = Carbon::parse($value->updated_at)->format("Y-m-d H:i:s");
+            if(Carbon::parse($value->updated_at)->addMinutes(5) >= Carbon::now()->timezone('America/Monterrey')){
                 $dLog["status"] = 1;
             }else{
                 $dLog["status"] = 0;

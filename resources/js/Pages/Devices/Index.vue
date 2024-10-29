@@ -1,7 +1,6 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useToast } from 'vue-toastification';
-import { formatDate, formatDatetime } from '@/utils/date';
 import DeviceOnIcon from '@/Components/Icons/DeviceOnIcon.vue';
 import DeviceOffIcon from '@/Components/Icons/DeviceOffIcon.vue';
 import axios from 'axios';
@@ -9,6 +8,7 @@ import axios from 'axios';
 const props = defineProps({
     title: String,
     devices: Array,
+    lastCheckout: String
 });
 
 const toast = useToast();
@@ -31,6 +31,8 @@ async function fetchDeviceLogs(){
         if(response.status == 200){
             deviceLogs.value = response.data;
             console.debug('Logs updated');
+
+            document.getElementById('lastCheckoutDiv').innerText = getDateTimeNowUTCPlus6();
         }
         else{
             console.debug('Bad staus code of the response ' + response.status);
@@ -42,6 +44,31 @@ async function fetchDeviceLogs(){
     }
 }
 
+function getDateTimeNowUTCPlus6() {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/Monterrey',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    });
+    const formattedDate = formatter.formatToParts(now);
+
+    // Reformat to 'YYYY-MM-DD HH:MM:SS'
+    const year = formattedDate.find(part => part.type === 'year').value;
+    const month = formattedDate.find(part => part.type === 'month').value;
+    const day = formattedDate.find(part => part.type === 'day').value;
+    const hour = formattedDate.find(part => part.type === 'hour').value;
+    const minute = formattedDate.find(part => part.type === 'minute').value;
+    const second = formattedDate.find(part => part.type === 'second').value;
+
+    return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+}
+
 </script>
 
 <template>
@@ -49,6 +76,7 @@ async function fetchDeviceLogs(){
         <div class="bg-white dark:bg-gray-600 shadow mb-4 w-full p-2">
             <div class=" max-w-screen-lg mx-auto">
                 <h1 class="font-semibold text-2xl text-gray-800 dark:text-gray-200 leading-tight">Estatus de dispositivos</h1>
+                <h5 class="font-semibold text-sm text-gray-800 dark:text-gray-200 leading-tight">Ultima actualizacion: <span id="lastCheckoutDiv">{{ props.lastCheckout }}</span></h5>
             </div>
         </div>
 
@@ -62,8 +90,8 @@ async function fetchDeviceLogs(){
                         <div class="flex flex-col ml-2 text-lg text-gray-700 dark:text-gray-100">
                             <div class="uppercase overflow-clip line-clamp-1 text-lg text-gray-600 dark:text-gary-200">{{ item.name }}</div>
                             <div class="text-xl">{{ item.address }}</div>
-                            <div class="uppercase text-sm">{{ formatDatetime(item['last-connection']).split(',')[1]}}</div>
-                            <div class="uppercase text-sm">{{ formatDatetime(item['last-connection']).split(',')[0]}}</div>
+                            <div class="uppercase text-sm">{{ item['last-connection'].split(' ')[1]}}</div>
+                            <div class="uppercase text-sm">{{ item['last-connection'].split(' ')[0]}}</div>
                         </div>
 
                     </div>
@@ -71,6 +99,5 @@ async function fetchDeviceLogs(){
                 </li>
             </ul>
         </div>
-
     </div>
 </template>

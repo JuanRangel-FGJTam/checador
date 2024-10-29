@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 use App\Models\ClientStatusLog;
 use App\Services\DeviceService;
+use Carbon\Carbon;
 
 class DeviceController extends Controller
 {
@@ -22,10 +23,13 @@ class DeviceController extends Controller
 
         // * retrive the log of the devices
         $deviceLogs = $this->deviceService->getDevicesLog();
-        
+
+        $lastCheckout = Carbon::now()->timezone('America/Monterrey')->format("Y-m-d H:i:s");
+
         // * return the view
         return Inertia::render('Devices/Index',[
-            "devices" => $deviceLogs
+            "devices" => $deviceLogs,
+            "lastCheckout" => $lastCheckout
         ]);
 
     }
