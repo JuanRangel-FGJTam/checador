@@ -35,6 +35,8 @@ class ReportController extends Controller
             ->get()
             ->all();
 
+        $generalDirectionId = Auth::user()->general_direction_id;
+
         $breadcrumbs = array(
             ["name"=> "Inicio", "href"=> "/dashboard"],
             ["name"=> "Generar reportes", "href"=>""],
@@ -42,7 +44,8 @@ class ReportController extends Controller
 
         return Inertia::render("Reports/Index", [
             "generalDirections" => $generalDirections,
-            "breadcrumbs" => $breadcrumbs
+            "breadcrumbs" => $breadcrumbs,
+            "generalDirectionId" => $generalDirectionId
         ]);
     }
 
