@@ -1,0 +1,140 @@
+<script setup>
+import { ref, onMounted } from 'vue';
+import { Head, useForm, router } from '@inertiajs/vue3';
+import { useToast } from 'vue-toastification';
+import { formatDate } from '@/utils/date';
+
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import PreviewDocument from '@/Components/PreviewDocument.vue';
+
+import WhiteButton from '@/Components/WhiteButton.vue';
+import AnimateSpin from '@/Components/Icons/AnimateSpin.vue';
+import PdfIcon from '@/Components/Icons/PdfIcon.vue';
+
+const props = defineProps({
+    title: String,
+    justifications: Array
+});
+
+const toast = useToast();
+
+const loading = ref(false);
+
+const previewDocumentModal = ref({
+    show: false,
+    title: "",
+    subtitle: "",
+    src: ""
+});
+
+
+onMounted(()=>{
+    //
+});
+
+
+function handleShowPdfClick(id){
+    var item = props.justifications.find( i => i.id == id);
+
+    previewDocumentModal.value.title = `Justification ${item.type_name}`;
+    previewDocumentModal.value.subtitle = `${formatDate(item.date_start)} - ${formatDate(item.date_finish)}`;
+    previewDocumentModal.value.src = `/justifications/${item.id}/file`;
+    previewDocumentModal.value.show = true;
+}
+
+</script>
+
+<template>
+
+    <Head title="Administrador" />
+
+    <AuthenticatedLayout>
+        <template #header>
+            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Ultimos Justificantes</h2>
+        </template>
+
+        <div class="px-4 py-4 rounded-lg min-h-screen max-w-screen-2xl mx-auto">
+
+            <table class="table-fixed w-full shadow text-sm text-left border rtl:text-right text-gray-700 dark:text-gray-400 dark:border-gray-500">
+                <thead class="sticky top-0 z-20 text-xs uppercase text-gray-700 border bg-gradient-to-b from-gray-50 to-slate-100 dark:from-gray-800 dark:to-gray-700 dark:text-gray-200 dark:border-gray-500">
+                    <AnimateSpin v-if="loading" class="w-4 h-4 mx-2 absolute top-2.5" />
+                    <tr>
+                        <th scope="col" class="w-2/8 text-center px-6 py-3">
+                            Empleado
+                        </th>
+                        <th scope="col" class="w-2/8 text-center px-6 py-3">
+                            Justificacion
+                        </th>
+                        <th scope="col" class="w-1/8 text-center px-6 py-3">
+                            Fecha Inicio
+                        </th>
+                        <th scope="col" class="w-2/8 text-center px-6 py-3">
+                            Fecha Fin
+                        </th>
+                        <th scope="col" class="w-1/8 text-center px-6 py-3">
+                            Observaciones
+                        </th>
+                        <th scope="col" class="w-32 text-center px-6 py-3">
+                            Acciones
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="table-body" class="bg-white dark:bg-gray-800 dark:border-gray-500">
+                    <template v-if="justifications && justifications.length > 0">
+                        <tr v-for="item in justifications" :key="item.id" :id="item.id" class="border-b">
+
+                            <td class="p-2">
+                                <div class="text-sm pl-1">
+                                    {{ item.employee_name }}
+                                </div>
+                            </td>
+
+                            <td class="p-2 text-center">
+                                <div class="text-sm">
+                                    {{ item.type_name }}
+                                </div>
+                            </td>
+
+                            <td class="p-2 text-center uppercase">
+                                {{ formatDate(item.date_start)}}
+                            </td>
+
+                            <td class="p-2 text-center uppercase">
+                                {{ formatDate(item.date_finish)}}
+                            </td>
+
+                            <td class="p-2 text-center">
+                                {{ item.details }}
+                            </td>
+
+                            <td class="p-2 text-center">
+                                <div class="flex gap-2">
+                                    <WhiteButton v-on:click="handleShowPdfClick(item.id)">
+                                        <PdfIcon class="w-4 h-4 mr-1" />
+                                        <span>Mostrar</span>
+                                    </WhiteButton>
+                                </div>
+                            </td>
+
+                        </tr>
+                    </template>
+                    <template v-else>
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center font-medium whitespace-nowrap dark:text-white text-lg text-emerald-700">
+                                No hay justificantes registrados para el empleado.
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+
+        <PreviewDocument v-if="previewDocumentModal.show"
+            :title="previewDocumentModal.title"
+            :subtitle="previewDocumentModal.subtitle"
+            :src="previewDocumentModal.src"
+            v-on:close="previewDocumentModal.show = false"
+        />
+
+    </AuthenticatedLayout>
+</template>

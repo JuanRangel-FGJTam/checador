@@ -34,6 +34,29 @@ class JustificationController extends Controller
     }
 
 
+    public function index(Request $request)
+    {
+        $elementsToTake = 25;
+
+        $justifications = array();
+        $data = Justify::with(['type', 'employee'])->get()->sortDesc()->take($elementsToTake)->all();
+        foreach($data as $element){
+            array_push( $justifications, [
+                "id" => $element->id,
+                "employee_name" => $element->employee->name,
+                "type_name" => $element->type->name,
+                "date_start" => $element->date_start,
+                "date_finish" => $element->date_finish,
+                "details" => $element->details
+            ]);
+        }
+
+        // * return the viewe
+        return Inertia::render('Justifications/Index', [
+            "justifications" => array_values($justifications),
+        ]);
+    }
+
     /**
      * returned view to edit the justify
      *
