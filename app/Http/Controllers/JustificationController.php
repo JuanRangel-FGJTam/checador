@@ -18,6 +18,7 @@ use App\Http\Requests\{
     NewJustificationRequest,
     UpdateJustificationRequest
 };
+use App\Models\Employee;
 use App\Models\Justify;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Redirect;
@@ -38,8 +39,16 @@ class JustificationController extends Controller
     {
         $elementsToTake = 25;
 
+        $employeesID = $this->employeeService->getEmployeesOfUser()->pluck('id')->all();
+
         $justifications = array();
-        $data = Justify::with(['type', 'employee'])->get()->sortDesc()->take($elementsToTake)->all();
+        $data = Justify::with(['type', 'employee'])
+            ->whereHas('employee', fn( $emp) => $emp->whereIn('id', $employeesID))
+            ->get()
+            ->sortDesc()
+            ->take($elementsToTake)
+            ->all();
+
         foreach($data as $element){
             array_push( $justifications, [
                 "id" => $element->id,
