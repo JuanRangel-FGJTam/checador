@@ -67,14 +67,14 @@ class CreateIncidentsCommand extends Command
         $workingHours = WorkingHours::where('employee_id', $employee->id)->first();
         $workingDays = WorkingDays::where('employee_id', $employee->id)->first();
 
-        if ($workingHours) {
+        if (!$workingHours) {
             Log::debug("CreateIncidents: Employee id {employeeId} has not workingHours", [
                 "employeeId" => $employee->id,
             ]);
             return;
         }
 
-        if ( !$employee->workingHours->checkin || !$employee->workingHours->checkout) {
+        if (!$workingHours->checkin || !$workingHours->checkout) {
             Log::debug("CreateIncidents: Employee id {employeeId} has not workingHours", [
                 "employeeId" => $employee->id,
             ]);

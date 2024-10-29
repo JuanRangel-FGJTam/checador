@@ -87,15 +87,15 @@ class CreateIncidentsDate implements ShouldQueue
         $workingHours = WorkingHours::where('employee_id', $employee->id)->first();
         $workingDays = WorkingDays::where('employee_id', $employee->id)->first();
 
-        if ($workingHours) {
-            Log::debug("CreateIncidents: Employee id {employeeId} has not workingHours", [
+        if (!$workingHours) {
+            Log::debug("CreateIncidents: Employee id {employeeId} has not workingHours x1", [
                 "employeeId" => $employee->id,
             ]);
             return;
         }
 
-        if ( !$employee->workingHours->checkin || !$employee->workingHours->checkout) {
-            Log::debug("CreateIncidents: Employee id {employeeId} has not workingHours", [
+        if (!$workingHours->checkin || !$workingHours->checkout) {
+            Log::debug("CreateIncidents: Employee id {employeeId} has not workingHours x2", [
                 "employeeId" => $employee->id,
             ]);
             return;
