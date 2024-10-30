@@ -85,13 +85,15 @@ function getDateTimeNowUTCPlus6() {
                 <li v-for="item in deviceLogs" :key="item.id">
 
                     <div class="p-1 flex gap-4 items-center border rounded shadow-lg bg-white">
-                        <DeviceOnIcon v-if="item['status'] ==1" class="w-14 h-14" />
-                        <DeviceOffIcon v-else class="w-14 h-14" />
+                        <div class="flex flex-col items-center gap-1">
+                            <DeviceOnIcon v-if="item['status'] == 1" class="w-14 h-14" />
+                            <DeviceOffIcon v-else class="w-14 h-14" />
+                        </div>
                         <div class="flex flex-col ml-2 text-lg text-gray-700 dark:text-gray-100">
                             <div class="uppercase overflow-clip line-clamp-1 text-lg text-gray-600 dark:text-gary-200">{{ item.name }}</div>
                             <div class="text-xl">{{ item.address }}</div>
-                            <div class="uppercase text-sm">{{ item['last-connection'].split(' ')[1]}}</div>
-                            <div class="uppercase text-sm">{{ item['last-connection'].split(' ')[0]}}</div>
+                            <div class="uppercase text-sm">{{ item['last-connection'].split(' ')[1] }}</div>
+                            <div class="uppercase text-sm">{{ item['last-connection'].split(' ')[0] }}</div>
                         </div>
 
                     </div>
