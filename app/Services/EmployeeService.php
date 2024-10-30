@@ -187,11 +187,11 @@ class EmployeeService {
         try {
             $employee->general_direction_id = $data['general_direction_id'];
 
-            $employee->direction_id = isset($data['direction_id']) ?$data['direction_id'] :null;
+            $employee->direction_id = isset($data['direction_id']) ?$data['direction_id'] :1;
 
-            $employee->subdirectorate_id = isset($data['subdirectorate_id']) ?$data['subdirectorate_id'] :null;
+            $employee->subdirectorate_id = isset($data['subdirectorate_id']) ?$data['subdirectorate_id'] :1;
 
-            $employee->department_id = isset($data['subdirectorate_id']) ?$data['subdirectorate_id'] :null;
+            $employee->department_id = isset($data['department_id']) ?$data['department_id'] :1;
 
             if( isset($data['name'])){
                 $employee->name = $data['name'];

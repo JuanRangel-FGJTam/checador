@@ -24,7 +24,7 @@ class UpdateEmployeeRequest extends FormRequest
         return [
             "general_direction_id" => "required|numeric|exists:general_directions,id",
             "direction_id" => "required|numeric|exists:directions,id",
-            "subdirectorate_id" => "required|numeric|exists:subdirectorates,id",
+            "subdirectorate_id" => "nullable|numeric|exists:subdirectorates,id",
             "department_id" => "nullable|numeric|exists:departments,id",
             "canCheck" => "required|numeric",
             "status_id" => "required|numeric",
