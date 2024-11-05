@@ -104,7 +104,6 @@ class IncidentService
         $incident->incident_type_id = $typeId;
         $incident->incident_state_id = self::STATE_PENDIENTE_ID;
         $incident->date = $this->date;
-        $incident->record_id = isset($record) ?$record->id :null;
         $incident->save();
 
         return $incident;
