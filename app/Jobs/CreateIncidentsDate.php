@@ -46,9 +46,9 @@ class CreateIncidentsDate implements ShouldQueue
             // * get the day of the week as a number (7 = Sunday, 6 = Saturday)
             $dayOfWeek = $now->format('N');
             if ($dayOfWeek < 6) {
-                $dayIs = 'week';
+                $this->dayIs = 'week';
             } else {
-                $dayIs = 'weekend';
+                $this->dayIs = 'weekend';
             }
 
             // * get the active employees
@@ -65,11 +65,12 @@ class CreateIncidentsDate implements ShouldQueue
 
             // * process each employee
             foreach ($employees as $key=>$employee) {
-                Log::debug("CreateIncidents: Proccessing {index} of {total}", [
+                Log::debug("CreateIncidents: Employee ID `{employeeId}`, Proccessing {index} of {total}", [
+                    "employeeId" => $employee->id,
                     "index" => $key,
-                    "total" => count($employees)
+                    "total" => count($employees),
+                    "targetDate" => $this->targetDate
                 ]);
-                
                 $this->handleEmployee($employee);
             }
 
@@ -88,14 +89,14 @@ class CreateIncidentsDate implements ShouldQueue
         $workingDays = WorkingDays::where('employee_id', $employee->id)->first();
 
         if (!$workingHours) {
-            Log::debug("CreateIncidents: Employee id {employeeId} has not workingHours x1", [
+            Log::debug("CreateIncidents: Employee id {employeeId} has not workingHours (A)", [
                 "employeeId" => $employee->id,
             ]);
             return;
         }
 
         if (!$workingHours->checkin || !$workingHours->checkout) {
-            Log::debug("CreateIncidents: Employee id {employeeId} has not workingHours x2", [
+            Log::debug("CreateIncidents: Employee id {employeeId} has not workingHours (B)", [
                 "employeeId" => $employee->id,
             ]);
             return;
@@ -127,6 +128,8 @@ class CreateIncidentsDate implements ShouldQueue
                 );
 
                 $incidentService->calculateAndStoreIncidents();
+                Log::notice('Se creó las incidencias para el empleado id: '. $employee->id.' del día ' . $now->format('Y-m-d'));
+
             } catch (Exception $e) {
                 Log::error('CreateIncidents: Error creating incident '.$employee->id.': '.$e->getMessage());
             }

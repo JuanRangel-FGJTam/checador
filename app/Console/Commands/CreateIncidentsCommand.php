@@ -5,8 +5,12 @@ namespace App\Console\Commands;
 use \DateTime;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
-use App\Models\Employee;
 use App\Services\IncidentService;
+use App\Models\{
+    Employee,
+    WorkingHours,
+    WorkingDays
+};
 
 class CreateIncidentsCommand extends Command
 {
@@ -51,7 +55,7 @@ class CreateIncidentsCommand extends Command
             ->all();
 
         foreach ($employees as $employee){
-            $this->handleEmployee($employee);
+            $this->handleEmployee($employee, $now, $dayIs);
         }
 
         $this->info('Terminó el calculo de incidencias del día ' . $now->format('Y-m-d') . ' - incident:create Command.');
@@ -59,10 +63,7 @@ class CreateIncidentsCommand extends Command
 
     }
 
-    private function handleEmployee($employee){
-
-        $now = new DateTime();
-        $now->modify('-1 day');
+    private function handleEmployee($employee, $targetDate, $dayIs){
 
         $workingHours = WorkingHours::where('employee_id', $employee->id)->first();
         $workingDays = WorkingDays::where('employee_id', $employee->id)->first();
@@ -98,12 +99,12 @@ class CreateIncidentsCommand extends Command
         }
 
         // * validate if the employee works on the target date
-        if (in_array($this->dayIs, $workDays)) {
+        if (in_array($dayIs, $workDays)) {
             try {
                 $incidentService = new IncidentService(
                     $employee->id,
                     $workingHours,
-                    $now->format('Y-m-d')
+                    $targetDate->format('Y-m-d')
                 );
 
                 $incidentService->calculateAndStoreIncidents();
