@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Collection;
 use Carbon\Carbon;
 use App\Models\{Incident, Justify, Record};
+use DateTime;
 
 class IncidentService
 {
@@ -194,7 +196,7 @@ class IncidentService
             array_push($types, 'toeat', 'toarrive');
         }
 
-        $recordMarkers = array_fill_keys($types, null);  // Initialize all markers as null
+        $recordMarkers = array_fill_keys($types, null); // Initialize all markers as null
 
         foreach ($types as $type) {
             foreach ($records as $record) {
@@ -226,13 +228,12 @@ class IncidentService
     public function calculateAndStoreIncidents()
     {
         $isDateJustified = $this->isDateJustified();
-        $records = $this->removeDuplicateRecords();
+        $records = $this->removeDuplicateRecordsV2();
         $assessment = $this->assessIncidents($this->working_hours, $records);
-        
         // Delete previous incidents if exists
         $this->deleteAllByDay();
 
-        Log::debug("Total records:" . count($records));
+        Log::debug("Total records:" . $records->count() );
 
         if ($records->isEmpty()) {
             if (!$isDateJustified) {
@@ -315,6 +316,44 @@ class IncidentService
         }, collect());
 
         return $filteredRecords;
+    }
+
+    /**
+     * removeDuplicateRecordsV2
+     *
+     * @return Collection<Record>
+     */
+    public function removeDuplicateRecordsV2()
+    {
+        /** @var Record[] $records */
+        $records = Record::where('employee_id', $this->employee_id)
+            ->whereDate('check', $this->date)
+            ->get()
+            ->sortBy('check')
+            ->all(); // Ensure records are sorted for comparison
+
+        // Filter records to remove those within one minute of each other
+        /** @var Record[] $filteredRecords */
+        $filteredRecords = array();
+
+        foreach($records as $record){
+            $duplicated = false;
+            $currentDate = new DateTime($record->check);
+            foreach($filteredRecords as $storedRecord){
+                $diff = $currentDate->diff(new DateTime($storedRecord->check));
+                // Convert the difference to total minutes
+                $minutesDifference = ($diff->days * 24 * 60) + ($diff->h * 60) + $diff->i;
+                $duplicated = $minutesDifference <= 5;
+            }
+
+            if($duplicated){
+                continue;
+            }
+
+            array_push($filteredRecords, $record);
+        }
+
+        return collect($filteredRecords);
     }
 
     private function isMoreAppropriateRecord($newDiff, $currentDiff) 

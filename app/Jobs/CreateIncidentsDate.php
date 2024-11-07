@@ -71,7 +71,7 @@ class CreateIncidentsDate implements ShouldQueue
                     "total" => count($employees),
                     "targetDate" => $this->targetDate
                 ]);
-                $this->handleEmployee($employee);
+                $this->handleEmployee($employee, $now);
             }
 
             Log::info("CreateIncidents: The process has finished");
@@ -82,9 +82,8 @@ class CreateIncidentsDate implements ShouldQueue
         }
     }
 
-    private function handleEmployee($employee){
+    private function handleEmployee($employee, $targetDate){
 
-        $now = Carbon::parse($this->targetDate);
         $workingHours = WorkingHours::where('employee_id', $employee->id)->first();
         $workingDays = WorkingDays::where('employee_id', $employee->id)->first();
 
@@ -124,11 +123,11 @@ class CreateIncidentsDate implements ShouldQueue
                 $incidentService = new IncidentService(
                     $employee->id,
                     $workingHours,
-                    $now->format('Y-m-d')
+                    $targetDate->format('Y-m-d')
                 );
 
                 $incidentService->calculateAndStoreIncidents();
-                Log::notice('Se creó las incidencias para el empleado id: '. $employee->id.' del día ' . $now->format('Y-m-d'));
+                Log::notice('Se creó las incidencias para el empleado id: '. $employee->id.' del día ' . $targetDate->format('Y-m-d'));
 
             } catch (Exception $e) {
                 Log::error('CreateIncidents: Error creating incident '.$employee->id.': '.$e->getMessage());
