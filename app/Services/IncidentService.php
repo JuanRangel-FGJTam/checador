@@ -201,6 +201,7 @@ class IncidentService
         foreach ($types as $type) {
             foreach ($records as $record) {
                 $checkTime = new Carbon($record['check']);
+                $checkTime->setSecond(0)->setMillisecond(0);
                 $scheduledTime = new Carbon($checkTime->format('Y-m-d') . ' ' . $workingHours->$type);
                 $diffInMinutes = $scheduledTime->diffInMinutes($checkTime, false);
 
