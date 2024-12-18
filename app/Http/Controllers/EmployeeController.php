@@ -67,7 +67,7 @@ class EmployeeController extends Controller
             if( Auth::user()->level_id > 2){
                 $directionId = Auth::user()->direction_id;
             }else{
-                $directionId = $request->filled('d') ?$request->query("d") :null;
+                $directionId = $request->filled('d') ?$request->query("d") :0;
             }
 
             $subdirectionId = $request->query("sd");
@@ -104,7 +104,6 @@ class EmployeeController extends Controller
             $filters[ EmployeeFiltersEnum::GD ] = $generalDirectionId;
             $directions = $directions->where('general_direction_id', $generalDirectionId);
         }
-
         if( isset($directionId)){
             $filters[ EmployeeFiltersEnum::D ] = $directionId;
             $subdirectorate = $subdirectorate->where('direction_id', $directionId);
