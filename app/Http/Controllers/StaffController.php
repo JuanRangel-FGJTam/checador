@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\UnauthorizedException;
 use Inertia\Inertia;
 use Exception;
 use App\Services\{
@@ -103,9 +104,12 @@ class StaffController extends Controller
     {
 
         // * attempt to get the employee
-        try {
+        try
+        {
             $employee = $this->employeeService->getEmployee($employee_number);
-        } catch (ModelNotFoundException $nf) {
+        }
+        catch (ModelNotFoundException $nf)
+        {
             Log::warning("Employee with employee number '$employee_number' not found");
 
             // * redirect back
@@ -114,14 +118,25 @@ class StaffController extends Controller
                 "message" => "Empleado no encontrado"
             ])->withInput();
 
-        } catch (\Throwable $th) {
+        }
+        catch(UnauthorizedException $ue)
+        {
+            Log::warning("The user with id '{userId}' can't access the data of the employee with employee number '{employeeNumber}': {message}", [
+                "userId" => $employee_number,
+                "employeeNumber" => $employee_number,
+                "message" => $ue->getMessage(),
+            ]);
+            abort(403, "No tiene acceso a los datos de este empleado.");
+        }
+        catch (\Throwable $th)
+        {
             Log::error("Unhandle exception at attempting to get the employee at EmployeeController.show: {message}", [
                 "employee_number" => $employee_number,
                 "message" => $th->getMessage(),
             ]);
 
             //TODO: Redirect to error page
-            throw new Exception("Not implemented");
+            abort(409, "Un error inesperado ocurrió. Intente de nuevo o comuníquese con el administrador.");
         }
 
         // calculate status
