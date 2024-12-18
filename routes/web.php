@@ -75,6 +75,7 @@ Route::middleware(['auth', 'authorized.menu'])->group(function () {
         Route::get('{employee_number}', [EmployeeController::class, 'show'])->name('show');
         Route::get('{employee_number}/edit', [EmployeeController::class, 'edit'])->name('edit');
         Route::patch('{employee_number}', [EmployeeController::class, 'update'])->name('update');
+        Route::post('{employee_number}/update-status', [EmployeeController::class, 'updateStatus'])->name('update.status');
 
         Route::get('{employee_number}/incidents/create', [EmployeeController::class, 'incidentCreate'])->name('incidents.create');
         Route::post('{employee_number}/incidents/store', [IncidentController::class, 'makeIncidentsOfEmployee'])->name('incidents.store');

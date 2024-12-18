@@ -26,8 +26,7 @@ class UpdateEmployeeRequest extends FormRequest
             "direction_id" => "required|numeric|exists:directions,id",
             "subdirectorate_id" => "nullable|numeric|exists:subdirectorates,id",
             "department_id" => "nullable|numeric|exists:departments,id",
-            "canCheck" => "required|numeric",
-            "status_id" => "required|numeric",
+            "canCheck" => "required|numeric"
         ];
     }
 

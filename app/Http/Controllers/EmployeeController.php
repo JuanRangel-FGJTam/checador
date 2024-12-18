@@ -31,7 +31,8 @@ use App\ViewModels\{
     CalendarEvent
 };
 use App\Http\Requests\{
-    UpdateEmployeeRequest
+    UpdateEmployeeRequest,
+    UpdateEmployeeStatusRequest
 };
 use App\Helpers\EmployeeKardexRecords;
 use App\Helpers\EmployeeKardexExcel;
@@ -349,6 +350,41 @@ class EmployeeController extends Controller
 
         // * redirect to show view
         return redirect()->route('employees.show', ['employee_number' => $employee->employeeNumber ]);
+
+    }
+
+    /**
+     * Update the employee status in storage.
+     *
+     * @param  UpdateEmployeeStatusRequest $request
+     * @param  string $employee_number
+     * @return void
+     */
+    public function updateStatus(UpdateEmployeeStatusRequest $request, string $employee_number)
+    {
+        // * retrive the employee
+        $employee = $this->findEmployee($employee_number);
+        if($employee instanceof \Illuminate\Http\RedirectResponse){
+            return $employee;
+        }
+        // * retrive the current user
+        $user = Auth::user();
+
+        dd( $employee, $user);
+
+        // TODO: implemented store the document and store the history record
+
+        // * update the employee data
+        // try {
+        //     $this->employeeService->updateEmployee( $employee->employeeNumber, $request->request->all());
+        // }catch (\Throwable $th) {
+        //     return redirect()->back()->withErrors([
+        //         "message" => $th->getMessage()
+        //     ])->withInput();
+        // }
+
+        // // * redirect to show view
+        // return redirect()->route('employees.show', ['employee_number' => $employee->employeeNumber ]);
 
     }
 
