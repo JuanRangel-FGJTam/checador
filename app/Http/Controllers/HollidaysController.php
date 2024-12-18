@@ -32,12 +32,12 @@ class HollidaysController extends Controller
     public function create(Request $request){
 
         // * get catalogs
-        $justifyIds = array(10, 25, 26);
-        if (Auth::user()->level_id == 1) { // Admin General can justify error by system
-            $justifyIds = array(1, 10, 25, 26, 27, 28);
-        }
-        $justificationsType = TypeJustify::select('id', 'name')->whereIn('id', $justifyIds)->get()->all();
+        $justifyIds = array(1, 9, 10, 11, 12, 15, 16, 17,18, 19, 20, 25, 26, 27, 28);
+        $justificationsType = TypeJustify::select('id', 'name')->orderBy('name')->whereIn('id', $justifyIds)->get()->all();
 
+        if (Auth::user()->level_id == 1) { // Admin General can justify error by system
+            $justificationsType = TypeJustify::select('id', 'name')->orderBy('name')->get()->all();
+        }
 
         // * retrive the general direction and the catalog
         $generalDirection = null;

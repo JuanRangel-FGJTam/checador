@@ -107,7 +107,7 @@ function handleListItemTodosChanged(e){
         </template>
 
         <PageTitle class="px-4 mt-4 text-center">
-            Justificación de días inhábiles
+            Justificación Masiva
         </PageTitle>
 
         <Card class="max-w-screen-md mx-auto mt-4">
@@ -115,7 +115,7 @@ function handleListItemTodosChanged(e){
                 <form class="flex flex-col gap-2" @submit.prevent="submitForm">
                     <div class="flex flex-col gap-y-4 mb-2">
 
-                        <p class="bg-yellow-100 text-yellow-600 text-lg my-2 p-2 text-center">Este apartado es única y exclusivamente para justificar días festivos o feriados considerados como <strong>días de descanso obligatorio</strong>.</p>
+                        <p class="bg-yellow-100 text-yellow-600 text-lg my-2 p-2 text-center">Este apartado es para justificar a <strong>múltiples personas</strong> con un solo justificante, el cual puede ser un oficio o formato interno.</p>
 
                         <div role="form-group">
                             <InputLabel for="initialDay">Fecha inicial de justificacion</InputLabel>
