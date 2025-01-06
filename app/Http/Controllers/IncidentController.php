@@ -130,6 +130,12 @@ class IncidentController extends Controller
             ];
         }
 
+        // * get years availables
+        $years = array();
+        for ($i = 0; $i < 6; $i++) {
+            $years[] = Carbon::now()->subYears($i)->year;
+        }
+
         // * return the view
         return Inertia::render('Incidents/Index', [
             "incidentStatuses" => array_values($incidentStatuses),
@@ -143,7 +149,8 @@ class IncidentController extends Controller
                 "period" => $period,
                 "type" => $repType,
                 "dateGeneration" => Carbon::now()->format("Y-m-d")
-            ]
+            ],
+            "years" => $years
         ]);
     }
 
@@ -230,6 +237,12 @@ class IncidentController extends Controller
             }
         }
 
+        // * get years availables
+        $years = array();
+        for ($i = 0; $i < 6; $i++) {
+            $years[] = Carbon::now()->subYears($i)->year;
+        }
+
         // * return the view
         return Inertia::render('Incidents/Employee', [
             "employeeNumber" => $employee->employeeNumber,
@@ -240,7 +253,8 @@ class IncidentController extends Controller
             "workingHours" => $hours,
             "incidentStatuses" => array_values($incidentStatuses),
             "options" => isset($options) ?$options :null,
-            "employeePhoto" => $employeePhoto
+            "employeePhoto" => $employeePhoto,
+            "years" => $years
         ]);
     }
 
