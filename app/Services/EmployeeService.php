@@ -221,6 +221,40 @@ class EmployeeService {
     }
 
     /**
+     * update the status of the employee
+     *
+     * @param  string $employeeNumber
+     * @param  int $newStatusId
+     * @return void
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws \Throwable
+     */
+    public function updateEmployeeStatus(string $employeeNumber, int $newStatusId )
+    {
+        // * get the employee
+        $employee = Employee::where('plantilla_id', '1' . $employeeNumber)->first();
+        if( $employee == null){
+            throw new ModelNotFoundException("Employee not fount");
+        }
+
+        // * attempt to update the employee
+        try
+        {
+            $employee->active = $newStatusId;
+            $employee->save();
+
+            Log::notice("Updated Employee status of the employee'$employeeNumber:$employee->name'.");
+
+        } catch (\Throwable $th) {
+            Log::error("Fail to update the employee '{employeeNumber}': {message}", [
+                "employeeNumber" => $employeeNumber,
+                "message" => $th->getMessage()
+            ]);
+            throw $th;
+        }
+    }
+
+    /**
      * return the employees that dont have assigned a general-direction, direction or subdirection
      *
      * @return array<EmployeeViewModel>

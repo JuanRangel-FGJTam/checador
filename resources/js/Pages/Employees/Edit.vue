@@ -50,7 +50,7 @@ const form = useForm({
 
 const formStatus = useForm({
     status_id: undefined,
-    comments: "Hola mundo",
+    comments: "",
     file: undefined
 });
 
