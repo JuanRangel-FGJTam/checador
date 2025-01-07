@@ -22,6 +22,15 @@ class Employee extends Model
         "status_id"
     ];
 
+    // Hide the fingerprint attribute when the model is serialized
+    protected $hidden = [
+        'fingerprint',
+    ];
+
+    protected $appends = [
+        'computed_employee_number'
+    ];
+
     public function department() {
         return $this->belongsTo(Department::class);
     }
@@ -61,6 +70,16 @@ class Employee extends Model
      * @return int
      */
     public function employeeNumber(){
+        return intval( substr($this->plantilla_id, 1) );
+    }
+
+    /**
+     * Calculate the employee number by using the plantilla_id
+     *
+     * @return string
+     */
+    public function getComputedEmployeeNumberAttribute()
+    {
         return intval( substr($this->plantilla_id, 1) );
     }
 
