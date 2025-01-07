@@ -14,6 +14,7 @@ use Inertia\Inertia;
 use Exception;
 use App\Services\{
     EmployeeService,
+    InactiveService,
     JustificationService
 };
 use App\Models\{
@@ -37,18 +38,19 @@ use App\Http\Requests\{
 };
 use App\Helpers\EmployeeKardexRecords;
 use App\Helpers\EmployeeKardexExcel;
-use Illuminate\Support\Facades\DB;
 
 class EmployeeController extends Controller
 {
 
     protected EmployeeService $employeeService;
     protected JustificationService $justificationService;
+    protected InactiveService $inactiveService;
 
-    function __construct( EmployeeService $employeeService, JustificationService $justificationService )
+    function __construct( EmployeeService $employeeService, JustificationService $justificationService, InactiveService $inactiveService)
     {
         $this->employeeService = $employeeService;
         $this->justificationService = $justificationService;
+        $this->inactiveService = $inactiveService;
     }
 
     /**
@@ -368,80 +370,26 @@ class EmployeeController extends Controller
         if($employee instanceof \Illuminate\Http\RedirectResponse){
             return $employee;
         }
-        // * retrive the current user
-        $user = Auth::user();
 
-        Log::info("Attemtp to update the status of the employee '{employeeNumber}' to '{statusId}' by '{userName}'", [
-            "employeeNumber" => $employee->employeeNumber,
-            "statusId" => $request->status_id,
-            "userName" => $user->name
-        ]);
+        $employeeModel = Employee::find($employee->id);
 
-        DB::beginTransaction();
-
-        // * change the employee status
+        // * update the status of the employee
         try
         {
-            $this->employeeService->updateEmployeeStatus( $employee->employeeNumber, $request->status_id);
+            $this->inactiveService->changeStatus(
+                $this->employeeService,
+                $employeeModel,
+                $request->comments,
+                $request->status_id,
+                $request->file('file')
+            );
         }
         catch (\Throwable $th)
         {
-            DB::rollback();
             return redirect()->back()->withErrors([
-                "message" => "Error al cambiar el estatus del empleado, No se pudo cambiar el estatus."
-            ])->withInput();
-        }
-
-        // * store the document if exists
-        $filePath = null;
-        try
-        {
-            if($request->hasFile('file'))
-            {
-                $filePath = $this->storeJustificationFile(
-                    $request->file('file'),
-                    $employee->employeeNumber
-                );
-            }
-        }
-        catch (\Throwable $th)
-        {
-            Log::error("Fail to store the justification file at EmployeeController.updateStatus: {message}", [
                 "message" => $th->getMessage()
-            ]);
-            DB::rollback();
-            return redirect()->back()->withErrors([
-                "message" => "Error al cambiar el estatus del empleado, No se pudo almacenar el archivo de justificacion."
             ])->withInput();
         }
-
-        try
-        {
-            // * create a record of EmployeeStatushistory with the new status and the file path of the document
-            $histoyRecord = new EmployeeStatusHistory([
-                'user_id' => $user->id,
-                'employee_id' => $employee->id,
-                'comments' => $request->comments,
-                'file' => $filePath,
-                'status' => $request->status_id == 1 ?"Activo" :"Baja"
-            ]);
-            $histoyRecord->save();
-        } catch (\Throwable $th) {
-            Log::error("Fail to store the history record at EmployeeController.updateStatus: {message}", [
-                "message" => $th->getMessage()
-            ]);
-            DB::rollBack();
-            return redirect()->back()->withErrors([
-                "message" => "Error al cambiar el estatus del empleado, No se pudo registrar el cambio en la bitacora."
-            ])->withInput();
-        }
-
-        DB::commit();
-        Log::info("Successfull updated the status of the employee '{employeeNumber}' to '{statusId}' by '{userName}'", [
-            "employeeNumber" => $employee->employeeNumber,
-            "statusId" => $request->status_id,
-            "userName" => $user->name
-        ]);
 
         // * redirect to show view
         return redirect()->route('employees.show', ['employee_number' => $employee->employeeNumber ]);
@@ -625,20 +573,6 @@ class EmployeeController extends Controller
                 "message" => "Empleado no encontrado"
             ])->withInput();
         }
-    }
-
-    /**
-     * store the justification file and return the path
-     *
-     * @param  mixed $file
-     * @param  string $employee_number
-     * @param  string $date
-     * @return string
-     */
-    private function storeJustificationFile($file, $employee_number): string {
-        $cDate = Carbon::now();
-        $name = sprintf("%s-%s.pdf", $employee_number, $cDate->timestamp);
-        return Storage::disk("local")->putFileAs('justificantes-cambio-estatus', $file, $name );
     }
     #endregion
 

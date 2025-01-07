@@ -4,32 +4,92 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use App\Models\{
     Employee,
     EmployeeStatusHistory
 };
+use Exception;
 
 class InactiveService
 {
 
-    function changeStatus(int $employeeId, string $comments, string $file, int $status): bool
+    function changeStatus(EmployeeService $employeeService, Employee $employee, string $comments, int $status, $file)
     {
-        $employee = Employee::find($employeeId);
-        if ($employee == null) {
-            return false;
-        }
-        $employee->status = $status;
-        $employee->save();
+        // * retrive the current user
+        $user = Auth::user();
 
-        $history = new EmployeeStatusHistory();
-        $history->employee_id = $employeeId;
-        $history->user_id = auth()->user()->id;
-        $history->comments = $comments;
-        $history->file = $file;
-        $history->status = $status;
-        $history->save();
-        return true;
+        Log::info("Attemtp to update the status of the employee '{employeeNumber}' to '{statusId}' by '{userName}'", [
+            "employeeNumber" => $employee->employeeNumber(),
+            "statusId" => $status,
+            "userName" => $user->name
+        ]);
+
+        DB::beginTransaction();
+
+        // * change the employee status
+        try
+        {
+            $employeeService->updateEmployeeStatus( $employee->employeeNumber(), $status);
+        }
+        catch (\Throwable $th)
+        {
+            Log::error("Fail at change the status of the employee: {message}", [
+                "message" => $th->getMessage()
+            ]);
+            DB::rollback();
+            throw new Exception("Error al cambiar el estatus del empleado, No se pudo cambiar el estatus.");
+        }
+
+        // * store the document if exists
+        $filePath = null;
+        try
+        {
+            if(isset($file))
+            {
+                $filePath = $this->storeJustificationFile(
+                    $file,
+                    $employee->computed_employee_number
+                );
+            }
+        }
+        catch (\Throwable $th)
+        {
+            Log::error("Fail to store the justification file at EmployeeController.updateStatus: {message}", [
+                "message" => $th->getMessage()
+            ]);
+            DB::rollback();
+            throw new Exception("Error al cambiar el estatus del empleado, No se pudo almacenar el archivo de justificacion.");
+        }
+
+        try
+        {
+            // * create a record of EmployeeStatushistory with the new status and the file path of the document
+            $histoyRecord = new EmployeeStatusHistory([
+                'user_id' => $user->id,
+                'employee_id' => $employee->id,
+                'comments' => $comments,
+                'file' => $filePath,
+                'status' => $status == 1 ?"Activo" :"Baja"
+            ]);
+            $histoyRecord->save();
+        } catch (\Throwable $th) {
+            Log::error("Fail to store the history record at EmployeeController.updateStatus: {message}", [
+                "message" => $th->getMessage()
+            ]);
+            DB::rollBack();
+            throw new Exception("Error al cambiar el estatus del empleado, No se pudo registrar el cambio en la bitacora.");
+        }
+
+        DB::commit();
+        Log::info("Successfull updated the status of the employee '{employeeNumber}' to '{statusId}' by '{userName}'", [
+            "employeeNumber" => $employee->employeeNumber(),
+            "statusId" => $status,
+            "userName" => $user->name
+        ]);
     }
 
     /**
@@ -63,4 +123,20 @@ class InactiveService
 
         return $history;
     }
+
+    #region Private Methods
+    /**
+     * store the justification file and return the path
+     *
+     * @param  mixed $file
+     * @param  string $employee_number
+     * @param  string $date
+     * @return string
+     */
+    private function storeJustificationFile($file, $employee_number): string {
+        $cDate = Carbon::now();
+        $name = sprintf("%s-%s.pdf", $employee_number, $cDate->timestamp);
+        return Storage::disk("local")->putFileAs('justificantes-cambio-estatus', $file, $name );
+    }
+    #endregion
 }
