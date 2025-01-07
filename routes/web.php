@@ -9,6 +9,7 @@ use App\Http\Controllers\{
     EmployeeScheduleController,
     HollidaysController,
     InactiveController,
+    InactiveHistoyController,
     IncidentController,
     JustificationController,
     NewEmployeeController,
@@ -145,6 +146,10 @@ Route::middleware(['auth', 'authorized.menu'])->group(function () {
 
     Route::prefix('inactive')->name('inactive.')->group(function(){
         Route::get('', [InactiveController::class, 'index'])->name('index');
+    });
+
+    Route::prefix('inactive-history')->name('inactiveHistory.')->group(function() {
+        Route::get('', [InactiveHistoyController::class, 'index'])->name('index');
     });
 
 });
