@@ -150,6 +150,7 @@ Route::middleware(['auth', 'authorized.menu'])->group(function () {
 
     Route::prefix('inactive-history')->name('inactiveHistory.')->group(function() {
         Route::get('', [InactiveHistoyController::class, 'index'])->name('index');
+        Route::get('{inactiveHistoryId}/file', [InactiveHistoyController::class, 'getJustificationFile'])->name('file');
     });
 
 });

@@ -5,6 +5,7 @@ import { useToast } from 'vue-toastification';
 import { formatDatetime } from '@/utils/date';
 
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import PreviewDocument from '@/Components/PreviewDocument.vue';
 import NavLink from '@/Components/NavLink.vue';
 import SearchInput from '@/Components/SearchInput.vue';
 import BadgeBlue from '@/Components/BadgeBlue.vue';
@@ -30,6 +31,12 @@ const inactiveStatus = ['baja', '0', 'inactive' ];
 
 const loading = ref(false);
 
+const previewDocumentModal = ref({
+    show: false,
+    title: "",
+    subtitle: "",
+    src: ""
+});
 
 function handleInputSearch(search)
 {
@@ -82,6 +89,15 @@ function employeeIsActive(status)
     return activeStatus.includes(status.toLowerCase());
 }
 
+function handleShowPdfClick(id)
+{
+    var item = props.data.find( i => i.id == id);
+    previewDocumentModal.value.title = `Justificante cambio de estatus de ${item.employee.computed_employee_number}`;
+    previewDocumentModal.value.subtitle = `${formatDatetime(item.created_at)}`;
+    previewDocumentModal.value.src = `/inactive-history/${item.id}/file`;
+    previewDocumentModal.value.show = true;
+}
+
 </script>
 
 <template>
@@ -96,11 +112,11 @@ function employeeIsActive(status)
         <div class="px-4 py-4 rounded-lg min-h-screen max-w-screen-2xl mx-auto">
             
             <!-- filter data area -->
-            <div class="grid grid-cols-2 gap-2 px-2 pt-2 pb-4 bg-white border-x border-t dark:bg-gray-700 dark:border-gray-500">
+            <!-- <div class="grid grid-cols-2 gap-2 px-2 pt-2 pb-4 bg-white border-x border-t dark:bg-gray-700 dark:border-gray-500">
                 <div role="form-group" class="flex flex-col justify-end">
                     <SearchInput placeHolder="Nombre, curp, numero de empleado" v-on:search="handleInputSearch" />
                 </div>
-            </div>
+            </div> -->
 
             <!-- data table -->
             <table class="table-fixed w-full shadow text-sm text-left border rtl:text-right text-gray-500 dark:text-gray-400 dark:border-gray-500">
@@ -134,15 +150,23 @@ function employeeIsActive(status)
                                 <div class="flex gap-2">
                                     <img :src="hrecord.employee.photo" class="h-8" alt="user"/>
                                     <div class="flex flex-col items-start">
-                                        <div class="text-sm truncate">{{ hrecord.employee.name}}</div>
-                                        <div class="text-xs">{{ hrecord.employee.employee_number}}</div>
+                                        <div class="text-sm truncate">
+                                            {{ hrecord.employee.name}}
+                                        </div>
+                                        <div v-if="hrecord.employee.computed_employee_number" class="text-xs">
+                                            {{ hrecord.employee.computed_employee_number}}
+                                        </div>
+                                        <div v-else class="text-xs">Número de empleado desconocido</div>
                                     </div>
                                 </div>
                             </td>
 
                             <td class="p-2 text-center">
-                                <div class="text-sm text-gray-900">{{ hrecord.employee.general_direction.abbreviation }} </div>
-                                <div class="text-xs text-gray-400">{{ hrecord.employee.direction.name }}</div>
+                                <div v-if="hrecord.employee.general_direction" class="text-sm text-gray-900">{{ hrecord.employee.general_direction.abbreviation }} </div>
+                                <div v-else class="text-sm text-gray-900">Desconocido</div>
+
+                                <div v-if="hrecord.employee.direction" class="text-xs text-gray-400">{{ hrecord.employee.direction.name }}</div>
+                                <div v-else class="text-xs text-gray-400">Desconocido</div>
                             </td>
 
                             <td class="p-2 text-center">
@@ -161,13 +185,11 @@ function employeeIsActive(status)
 
                             <td class="p-2 text-center">
                                 <div class="flex gap-1 items-center justify-end">
-                                    <NavLink v-if="hrecord.file" href=" route('employees.show', hrecord.employee.employee_number)">
-                                        <div class="flex items-center justify-center gap-1 shadow bg-slate-200 px-2 py-1 text-xs">
-                                            <PdfIcon class="w-4 h-4"/>
-                                            <span>Justificante</span>
-                                        </div>
-                                    </NavLink>
-                                    <NavLink :href="route('employees.show', hrecord.employee.employee_number)">
+                                    <div v-if="hrecord.file" class="flex items-center justify-center gap-1 shadow bg-slate-200 px-2 py-1 text-xs cursor-pointer" v-on:click="handleShowPdfClick(hrecord.id)">
+                                        <PdfIcon class="w-4 h-4"/>
+                                        <span>Justificante</span>
+                                    </div>
+                                    <NavLink v-if="hrecord.employee.computed_employee_number" :href="route('employees.show', hrecord.employee.computed_employee_number)">
                                         <div class="flex items-center justify-center gap-1 shadow bg-slate-200 px-2 py-1 text-xs">
                                             <span>Empleado</span>
                                             <ChevronRightIcon class="w-4 h-4"/>
@@ -188,6 +210,14 @@ function employeeIsActive(status)
             </table>
 
         </div>
+
+        <PreviewDocument v-if="previewDocumentModal.show"
+            :title="previewDocumentModal.title"
+            :subtitle="previewDocumentModal.subtitle"
+            :src="previewDocumentModal.src"
+            v-on:close="previewDocumentModal.show = false"
+        />
+
 
     </AuthenticatedLayout>
 </template>

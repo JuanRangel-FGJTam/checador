@@ -13,6 +13,7 @@ use App\Services\{
 };
 use App\Models\{
     Employee,
+    EmployeeStatusHistory,
     GeneralDirection
 };
 
@@ -31,7 +32,7 @@ class InactiveHistoyController extends Controller
     function index(Request $request)
     {
         $currentPage = $request->query('p', 1);
-        $elementsToTake = 25;
+        $elementsToTake = 100;
 
         // * get the history of inactive employees
         $data = $this->inactiveService->getHistoryInactive(
@@ -48,6 +49,38 @@ class InactiveHistoyController extends Controller
                 "take" => $elementsToTake
             ]
         ]);
+
+    }
+
+    /**
+     * retrive the document`
+     *
+     * @param  int $inactiveHistoryId
+     * @return void
+     */
+    function getJustificationFile(int $inactiveHistoryId){
+
+        // * get the model
+        $employeeStatusHistory = EmployeeStatusHistory::find($inactiveHistoryId);
+        if( $employeeStatusHistory == null)
+        {
+            return response()->json([ "message" => "History record not found on the system." ], 404);
+        }
+
+        // * get the document
+        if (Storage::disk('local')->exists($employeeStatusHistory->file))
+        {
+            $fileContents = Storage::disk('local')->get($employeeStatusHistory->file);
+            $fileName = basename($employeeStatusHistory->file);
+
+            return response($fileContents, 200)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline; filename="'.$fileName.'"');
+        }
+        else
+        {
+            return response()->json(['message' => 'File not found'], 404);
+        }
 
     }
 
