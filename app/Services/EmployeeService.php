@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Validation\UnauthorizedException;
 use App\Models\{
     Employee,
     WorkingHours,
@@ -155,13 +156,42 @@ class EmployeeService {
      * @param  string $employeeNumber
      * @return EmployeeViewModel
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @throws \Illuminate\Validation\UnauthorizedException
      */
-    public function getEmployee(string $employeeNumber) {
+    public function getEmployee(string $employeeNumber)
+    {
+        // * get the employee
         $employee = Employee::where('plantilla_id', '1' . $employeeNumber)->first();
-        if( $employee == null){
+        if( $employee == null)
+        {
             throw new ModelNotFoundException("Employee not fount");
         }
 
+        // * validate if the user has access the employee
+        $__hasAccess = true;
+        try
+        {
+            if(Auth::user()->level_id > 1) // * validate the access only if is not a Admin user (level id 1)
+            {
+                $__hasAccess = \App\Helpers\ValidateAccessEmployee::validateUser(Auth::user(), $employee);
+            }
+        }
+        catch (\Throwable $th)
+        {
+            Log::error("Fail at validate if the user with id '{userId}' has access to the employee with employee number '{employee}: {message}'", [
+                "userId" => Auth::user()->id,
+                "employee" => $employeeNumber,
+                "message" => $th->getMessage()
+            ]);
+            throw $th;
+        }
+
+        if(!$__hasAccess)
+        {
+            throw new UnauthorizedException("The user has nos access to this employee.");
+        }
+
+        // * return the employee
         return EmployeeViewModel::fromEmployeeModel($employee);
     }
 

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use Illuminate\Validation\UnauthorizedException;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 use Exception;
@@ -182,19 +183,31 @@ class EmployeeController extends Controller
      */
     public function show(Request $request, string $employee_number)
     {
-        // * attempt to get the employee
-        try {
-            $employee = $this->employeeService->getEmployee($employee_number);
-        } catch (ModelNotFoundException $nf) {
-            Log::warning("Employee with employee number '$employee_number' not found");
 
-           abort(404);
-        } catch (\Throwable $th) {
+        // * attempt to get the employee
+        try
+        {
+            $employee = $this->employeeService->getEmployee($employee_number);
+        }
+        catch (ModelNotFoundException $nf) {
+            Log::warning("Employee with employee number '$employee_number' not found");
+            abort(404);
+        }
+        catch(UnauthorizedException $ue)
+        {
+            Log::warning("The user with id '{userId}' can't access the data of the employee with employee number '{employeeNumber}': {message}", [
+                "userId" => $employee_number,
+                "employeeNumber" => $employee_number,
+                "message" => $ue->getMessage(),
+            ]);
+            abort(403);
+        }
+        catch (\Throwable $th)
+        {
             Log::error("Unhandle exception at attempting to get the employee at EmployeeController.show: {message}", [
                 "employee_number" => $employee_number,
                 "message" => $th->getMessage(),
             ]);
-
             abort(500);
         }
 
