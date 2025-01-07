@@ -101,20 +101,20 @@ class EmployeeController extends Controller
         // * prepare the filters
         $filters = array();
 
-        if( isset($generalDirectionId)){
+        if(isset($generalDirectionId)){
             $filters[ EmployeeFiltersEnum::GD ] = $generalDirectionId;
             $directions = $directions->where('general_direction_id', $generalDirectionId);
         }
-        if( isset($directionId)){
+        if(isset($directionId) && $directionId > 0){
             $filters[ EmployeeFiltersEnum::D ] = $directionId;
             $subdirectorate = $subdirectorate->where('direction_id', $directionId);
         }
 
-        if( isset($subdirectionId)){
+        if(isset($subdirectionId) && $subdirectionId > 0){
             $filters[ EmployeeFiltersEnum::SD ] = $subdirectionId;
         }
 
-        if( $request->filled("se")){
+        if($request->filled("se")){
             $filters['search'] = $request->query("se");
         }
 
