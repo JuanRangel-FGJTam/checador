@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import { useToast } from 'vue-toastification';
 import axios from 'axios';
@@ -45,6 +45,8 @@ const calendarLoading = ref(false);
 const fullCalenarObj = ref({});
 
 const calendarEvents = ref([]);
+
+const yearsAvailables = ref([]);
 
 const calendarOptions = {
     plugins: [
@@ -110,6 +112,12 @@ const currentIncidences = computed(()=>{
         return [];
     }
 
+});
+
+onMounted(()=>{
+    for (let i = 0; i < 6; i++) {
+        yearsAvailables.value.push(new Date().getFullYear() - i);
+    }
 });
 
 /**
@@ -231,6 +239,7 @@ function getFirstDayOrNextMonth(startDate, endDate) {
             <div class="col-span-5 bg-white shadow border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-500" style="grid-area: 1/2/1/3;">
                 <EmployeeDataPanel
                     :employee="employee"
+                    :years="yearsAvailables"
                     :showButtons="false"
                     v-on:editCalendar="editCalendarClick"
                     v-on:editEmployee="editEmployeeClick"

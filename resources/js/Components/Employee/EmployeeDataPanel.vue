@@ -21,7 +21,7 @@ const props = defineProps({
 
 const emit = defineEmits(['editCalendar', 'editEmployee', 'incidencesClick', 'downloadKardex']);
 
-const kardexForm = ref({ year: props.years[0] });
+const kardexForm = ref({ year: new Date().getFullYear() });
 
 function editCalendarClick(){
     emit('editCalendar');

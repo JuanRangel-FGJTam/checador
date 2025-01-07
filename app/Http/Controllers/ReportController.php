@@ -42,10 +42,17 @@ class ReportController extends Controller
             ["name"=> "Generar reportes", "href"=>""],
         );
 
+        // * get years availables
+        $years = array();
+        for ($i = 0; $i < 6; $i++) {
+            $years[] = Carbon::now()->subYears($i)->year;
+        }
+
         return Inertia::render("Reports/Index", [
             "generalDirections" => $generalDirections,
             "breadcrumbs" => $breadcrumbs,
-            "generalDirectionId" => $generalDirectionId
+            "generalDirectionId" => (int) $generalDirectionId,
+            "years" => $years
         ]);
     }
 

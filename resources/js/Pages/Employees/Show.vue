@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import { formatDate } from '@/utils/date.js';
 
@@ -41,6 +41,8 @@ const calendarLoading = ref(false);
 const fullCalenarObj = ref({});
 
 const calendarEvents = ref([]);
+
+const yearsAvailables = ref([]);
 
 const calendarOptions = {
     plugins: [
@@ -103,6 +105,12 @@ const currentIncidences = computed(()=>{
             });
     }else{
         return [];
+    }
+});
+
+onMounted(()=>{
+    for (let i = 0; i < 6; i++) {
+        yearsAvailables.value.push(new Date().getFullYear() - i);
     }
 });
 
@@ -256,6 +264,7 @@ function getFirstDayOrNextMonth(startDate, endDate) {
 
                 <EmployeeDataPanel
                     :employee="employee"
+                    :years="yearsAvailables"
                     v-on:editCalendar="editCalendarClick"
                     v-on:editEmployee="editEmployeeClick"
                     v-on:incidencesClick="incidencesClick"
