@@ -5,14 +5,20 @@ namespace App\Services;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
 use Carbon\Carbon;
-use App\Models\{Incident, Justify, Record};
+use App\Models\{
+    Incident,
+    Justify,
+    Record,
+    WorkingHours
+};
+use DateInterval;
 use DateTime;
 
 class IncidentService
 {
-    public $date;
-    public $employee_id;
-    public $working_hours;
+    public DateTime $date;
+    public int $employee_id;
+    public WorkingHours $working_hours;
 
     const STATE_PENDIENTE_ID = 1;
 
@@ -87,9 +93,17 @@ class IncidentService
         26, // Día de descanso no obligatorio (Autorizado)
     ];
 
+    /**
+     * __construct
+     *
+     * @param  int $employee_id
+     * @param  WorkingHours $working_hours
+     * @param  DateTime|string $date
+     * @return void
+     */
     public function __construct($employee_id, $working_hours, $date)
     {
-        $this->date = $date;
+        $this->date = ($date instanceof DateTime) ? $date : new DateTime($date);
         $this->employee_id = $employee_id;
         $this->working_hours = $working_hours;
     }
@@ -226,29 +240,107 @@ class IncidentService
         return $results;
     }
 
+    /**
+     * Assess incidents based on employee records and working hours.
+     *
+     * @param object $workingHours An object containing working hours.
+     * @param array $matchingRecord
+     * @return array An array containing assessments for each record.
+     */
+    public function assessIncidentsV2($workingHours, $matchingRecord): ?array
+    {
+        $results = [];
+        $types = ['checkin', 'checkout'];
+
+        if($workingHours->toeat && $workingHours->toarrive)
+        {
+            $types = ['checkin', 'toeat', 'toarrive', 'checkout'];
+        }
+
+        // * initialize all markers as null
+        $recordMarkers = array_fill_keys($types, null);
+
+        for ($i = 0; $i < count($matchingRecord); $i++)
+        {
+            /** @var array $record */
+            $record = $matchingRecord[$i];
+            $currentType = $types[$i];
+            $diffInMinutes = 0;
+            $incident = "";
+
+            if($record[1] == null)
+            {
+                $diffInMinutes = 9999;
+                $incident = 'Falta';
+            }
+            else
+            {
+                // * calculate the incident
+                $scheduleDate = Carbon::parse($record[0])->setSecond(0)->setMillisecond(0);
+                $checkDate = Carbon::parse($record[1]->check)->setSecond(0)->setMillisecond(0);
+                $diffInMinutes = $scheduleDate->diffInMinutes($checkDate);
+                $incident = $this->determineIncident($types[$i], $diffInMinutes);
+            }
+
+            // * create the marker
+            $recordMarkers[$currentType] = [
+                'type' => $currentType,
+                'incident' => $incident,
+                'time' => isset($record[1]) ? Carbon::parse($record[1]->check)->format('Y-m-d H:i:s') : null,
+                'scheduled' => $record[0]->format('Y-m-d H:i:s'),
+                'difference' => $diffInMinutes
+            ];
+
+        }
+
+        // * compile the final results
+        foreach ($recordMarkers as $data)
+        {
+            $results[] = $data;
+        }
+        return $results;
+    }
+
     public function calculateAndStoreIncidents()
     {
         $isDateJustified = $this->isDateJustified();
         $records = $this->removeDuplicateRecordsV2();
-        $assessment = $this->assessIncidents($this->working_hours, $records);
-        // Delete previous incidents if exists
+
+        // * delete previous incidents if exists
         $this->deleteAllByDay();
 
-        Log::debug("Total records:" . $records->count() );
+        Log::debug("Justification for employee {employeeId} of the data {date}: {justificationsId}", [
+            "employeeId" => $this->employee_id,
+            "date" => $this->date,
+            "justificationsId" => $isDateJustified
+        ]);
 
-        if ($records->isEmpty()) {
-            if (!$isDateJustified) {
+        if ($records->isEmpty())
+        {
+            if (!$isDateJustified)
+            {
                 $this->storeFalta();
-            } elseif (empty(array_intersect(self::JUSTIFICA_DIAS_IDS, $isDateJustified))) {
-                $this->storeFalta();
+                Log::debug("Store the incident 'falta' (Condition A)");
             }
-
+            elseif ( empty(array_intersect(self::JUSTIFICA_DIAS_IDS, $isDateJustified)) )
+            {
+                $this->storeFalta();
+                Log::debug("Store the incident 'falta' (Condition B)");
+            }
+            else
+            {
+                Log::debug("Not store the incident 'falta', the day is justifed");
+            }
             return True;
         }
 
-        foreach ($assessment as $row) {
-            if ($row['incident'] != 'A Tiempo') {
-                if (!$isDateJustified || !$this->isIncidentJustified($row, $isDateJustified)) {
+        $assessment = $this->assessIncidents($this->working_hours, $records);
+        foreach ($assessment as $row)
+        {
+            if ($row['incident'] != 'A Tiempo')
+            {
+                if (!$isDateJustified || !$this->isIncidentJustified($row, $isDateJustified))
+                {
                     $this->{$this->getIncidentMethod($row)}();
                 }
             }
@@ -257,19 +349,85 @@ class IncidentService
         return True;
     }
 
+    public function calculateAndStoreIncidentsV2()
+    {
+        $isDateJustified = $this->isDateJustified();
+
+        // * delete previous incidents if exists
+        $this->deleteAllByDay();
+
+        Log::debug("Beggin calculate incidents for employee {employeeId} of the data {date}: {justificationsId}; Version 2", [
+            "employeeId" => $this->employee_id,
+            "date" => $this->date,
+            "justificationsId" => $isDateJustified
+        ]);
+
+        // * get the records of employee at the target day
+        $records = $this->getEmployeeRecords($this->date);
+        Log::debug("Record of the employee: {records}", [
+            "records" => $records
+        ]);
+
+        if(empty($records))
+        {
+            if (!$isDateJustified)
+            {
+                $this->storeFalta();
+                Log::debug("Records are empty, Store the incident 'falta' (Condition A)");
+            }
+            elseif ( empty(array_intersect(self::JUSTIFICA_DIAS_IDS, $isDateJustified)) )
+            {
+                $this->storeFalta();
+                Log::debug("Records are empty, Store the incident 'falta' (Condition B)");
+            }
+            else
+            {
+                Log::debug("Records are empty, Not store the incident 'falta', the day is justifed");
+            }
+            Log::debug("End calculate incidents for employee {employeeId}");
+            return True;
+        }
+
+        // * get the matching records of the employee based of the working hours
+        $matchingRecords = $this->matchingCheckins($records, $this->working_hours, $this->date);
+        Log::debug("Matching records for employee {employeeId}: {matchingRecords", [
+            "employeeId" => $this->employee_id,
+            "matchingRecords" => $matchingRecords,
+        ]);
+
+        // * get the assessment of the incidents
+        $assessment = $this->assessIncidentsV2($this->working_hours, $matchingRecords);
+        Log::debug("Incidents assessment for employee {employeeId}: {assessment}", [
+            "employeeId" => $this->employee_id,
+            "assessment" => $assessment,
+        ]);
+
+        foreach ($assessment as $row)
+        {
+            if ($row['incident'] != 'A Tiempo')
+            {
+                if (!$isDateJustified || !$this->isIncidentJustified($row, $isDateJustified))
+                {
+                    $this->{$this->getIncidentMethod($row)}();
+                }
+            }
+        }
+
+        Log::debug("End calculate incidents for employee {employeeId}");
+        return True;
+    }
+
     /**
-     * Checks if a specific date is justified for an employee.
+     * Checks if the date is justified for an employee.
      *
-     * @param int $employeeId The ID of the employee.
-     * @param Carbon $date The date to check.
-     * @return array Justify if the date is justified, false otherwise.
+     * @return array list of justifies types id's if the date is justified, false otherwise.
      */
-    public function isDateJustified() 
+    public function isDateJustified()
     {
         $date = new Carbon($this->date);
         $justifiesRecords = false;
 
-        $justifies = Justify::where('employee_id', $this->employee_id)
+        $justifiesOfTheDay = Justify::where('employee_id', $this->employee_id)
             ->where(function ($query) use ($date) {
                 $query->where('date_start', '<=', $date->format('Y-m-d'))
                     ->orWhere(function ($subQuery) use ($date) {
@@ -279,9 +437,22 @@ class IncidentService
             })
             ->get();
 
-        foreach ($justifies as $justify) {
+        Log::debug("Justification for employee '{employeeID}', of the date '{date}'", [
+            'employeeID' => $this->employee_id,
+            'date' => $date->format('Y-m-d'),
+            'justifications' => $justifiesOfTheDay
+        ]);
+
+        foreach ($justifiesOfTheDay as $justify)
+        {
             $start = new Carbon($justify->date_start);
             $end = isset($justify->date_finish) ? new Carbon($justify->date_finish) : $start;
+
+            Log::debug("Jutifie from {start} to {end} > {targetDate}", [
+                'start' => $start,
+                'end' => $end,
+                'targetDate' => $date->format('Y-m-d')
+            ]);
 
             if ($date->between($start, $end)) {
                 $justifiesRecords[] = $justify->type_justify_id;
@@ -419,5 +590,157 @@ class IncidentService
         }
 
         return false;
+    }
+
+    /**
+     * get an array of records
+     * @param DateTime $date
+     * @return array<Record>
+     */
+    private function getEmployeeRecords(DateTime $date)
+    {
+        /** @var Record[] $records */
+        $records = Record::where('employee_id', $this->employee_id)
+            ->select('id', 'employee_id', 'check')
+            ->whereDate('check', $date)
+            ->get()
+            ->sortBy('check')
+            ->all(); // Ensure records are sorted for comparison
+
+        return $records;
+    }
+
+    /**
+     * matchingCheckins
+     *
+     * @param  array<Record> $records
+     * @param  WorkingHours $workingHours
+     * @return array
+     */
+    private function matchingCheckins(array $records, WorkingHours $workingHours, DateTime $targetDate)
+    {
+        // * define witch type of workinghours has the employee and prepare the array for store the matching date 'check'
+        $workingHoursArray = array();
+        if ($workingHours->toeat && $workingHours->toarrive)
+        {
+            // combine the targetDate with the working hours when the working hours format is like H:i
+            array_push($workingHoursArray,
+                [ (clone $targetDate)->setTime(
+                    hour: explode(':', $workingHours->checkin)[0],
+                    minute: explode(':', $workingHours->checkin)[1]
+                    ),
+                    null
+                ],
+                [ (clone $targetDate)->setTime(
+                    hour: explode(':', $workingHours->toeat)[0],
+                    minute: explode(':', $workingHours->toeat)[1]
+                    ),
+                    null
+                ],
+                [ (clone $targetDate)->setTime(
+                    hour: explode(':', $workingHours->toarrive)[0],
+                    minute: explode(':', $workingHours->toarrive)[1]
+                    ),
+                    null
+                ],
+                [ (clone $targetDate)->setTime(
+                    hour: explode(':', $workingHours->checkout)[0],
+                    minute: explode(':', $workingHours->checkout)[1]
+                    ),
+                    null
+                ]
+            );
+        } else
+        {
+            array_push($workingHoursArray,
+                [ (clone $targetDate)->setTime(
+                    hour: explode(':', $workingHours->checkin)[0],
+                    minute: explode(':', $workingHours->checkin)[1]
+                    ),
+                    null
+                ],
+                [ (clone $targetDate)->setTime(
+                    hour: explode(':', $workingHours->checkout)[0],
+                    minute: explode(':', $workingHours->checkout)[1]
+                    ),
+                    null
+                ]
+            );
+        }
+
+        $continue = true;
+        $loop = 1;
+        $minutesRange = 30;
+        $tmpRecords = array_map(fn($record) => clone $record, $records); // * Clone the array of records
+        while ($continue)
+        {
+            Log::debug("TempRecords: {tmpRecords} on loop {loop} with range +-{minutes}", [
+                "loop" => $loop,
+                "minutes" => $minutesRange,
+                "tmpRecords" => $tmpRecords,
+                "workingHoursArray" => $workingHoursArray
+            ]);
+
+            for ($i=0; $i<count($workingHoursArray); $i++)
+            {
+                // * skip if the current 'hour to check' has a match stored already
+                if($workingHoursArray[$i][1] != null)
+                {
+                    continue;
+                }
+
+                /** @var DateTime $currentCheckDate */
+                $currentCheckDate = $workingHoursArray[$i][0];
+                $currentCheckDateFrom = (clone $currentCheckDate)->sub(new DateInterval('PT' . $minutesRange . 'M'));
+                $currentCheckDateTo = (clone $currentCheckDate)->add(new DateInterval('PT' . $minutesRange . 'M'));
+
+                // * Get an array of checks if they are in the range of `$currentCheckDateFrom` and `$currentCheckDateTo`
+                $targetChecks = array_values(
+                    array_filter($tmpRecords, function($record) use ($currentCheckDateFrom, $currentCheckDateTo) {
+                        $checkTime = new DateTime($record->check);
+                        return $checkTime >= $currentCheckDateFrom && $checkTime <= $currentCheckDateTo;
+                    })
+                );
+
+                if(empty($targetChecks))
+                {
+                    continue;
+                }
+
+
+                // * get the type of the datecheck ['checkin', 'checkout'] based on if is odd or even
+                $isChekin = (($i + 1) % 2) != 0;
+                $workingHoursArray[$i][1] = $isChekin
+                    ? $targetChecks[0]
+                    : end($targetChecks);
+
+                // * remove the matched date from the records
+                $tmpRecords = array_diff($tmpRecords, $targetChecks);
+
+            }
+
+            // * check if the recods still has elements
+            if(empty($tmpRecords))
+            {
+                $continue = false;
+            }
+
+            // * check if all the working hours has a match
+            if(count(array_filter($workingHoursArray, fn ($elm) => $elm[1] == null)) == 0)
+            {
+                $continue = false;
+            }
+
+            // * check if the loop has reached the limit
+            if($loop == 16)
+            {
+                $continue = false;
+            }
+
+            $loop ++;
+            $minutesRange += 15;
+        }
+
+        return $workingHoursArray;
     }
 }

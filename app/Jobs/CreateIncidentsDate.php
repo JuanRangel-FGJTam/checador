@@ -126,7 +126,7 @@ class CreateIncidentsDate implements ShouldQueue
                     $targetDate->format('Y-m-d')
                 );
 
-                $incidentService->calculateAndStoreIncidents();
+                $incidentService->calculateAndStoreIncidentsV2();
                 Log::notice('Se creó las incidencias para el empleado id: '. $employee->id.' del día ' . $targetDate->format('Y-m-d'));
 
             } catch (Exception $e) {

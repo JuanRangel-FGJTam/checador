@@ -107,7 +107,8 @@ class CreateIncidentsCommand extends Command
                     $targetDate->format('Y-m-d')
                 );
 
-                $incidentService->calculateAndStoreIncidents();
+                $incidentService->calculateAndStoreIncidentsV2();
+                Log::notice('Se creó las incidencias para el empleado id: '. $employee->id.' del día ' . $targetDate->format('Y-m-d'));
             } catch (Exception $e) {
                 Log::error('CreateIncidents: Error creating incident '.$employee->id.': '.$e->getMessage());
             }

@@ -542,7 +542,7 @@ class IncidentController extends Controller
                     $date->format('Y-m-d')
                 );
 
-                $incidentService->calculateAndStoreIncidents();
+                $incidentService->calculateAndStoreIncidentsV2();
 
             } catch (\Exception $e) {
                 Log::error('Error al crear la incidencias del empleado id: '.$employee->id . ' - ' . $e->getMessage() . ' - ' . $e->getTraceAsString() );
