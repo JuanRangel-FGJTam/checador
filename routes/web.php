@@ -80,6 +80,7 @@ Route::middleware(['auth', 'authorized.menu'])->group(function () {
 
         Route::get('{employee_number}/incidents/create', [EmployeeController::class, 'incidentCreate'])->name('incidents.create');
         Route::post('{employee_number}/incidents/store', [IncidentController::class, 'makeIncidentsOfEmployee'])->name('incidents.store');
+        Route::delete('{employee_number}/incidents/{incidentId}', [EmployeeController::class, 'removeIncident'])->name('incidents.delete');
 
         Route::prefix('{employee_number}/justifications')->name('justifications.')->group(function(){
             Route::get('', [JustificationController::class, 'showJustificationOfEmployee'])->name('index');

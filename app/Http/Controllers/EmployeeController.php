@@ -440,22 +440,19 @@ class EmployeeController extends Controller
 
         // * parse events
         $events = array();
-
         foreach($records as $record) {
-            $event = new CalendarEvent(" ", $record->check, $record->check);
+            $event = new CalendarEvent("E$record->id", "", $record->check, $record->check);
             $event->color = "#27ae60";
             $event->type = "RECORD";
             array_push( $events, $event);
         }
-
         foreach($incidents as $incident){
             $title = $incident->type->name;
-            $event = new CalendarEvent($title, $incident->date, $incident->date);
+            $event = new CalendarEvent("I$incident->id",$title, $incident->date, $incident->date);
             $event->color = "#ef8b11";
             $event->type = "INCIDENT";
             array_push( $events, $event);
         }
-
         foreach($justifications as $justify) {
             $justify_title = $justify->type->name;
             if( $justify->date_finish != null ){
@@ -463,14 +460,14 @@ class EmployeeController extends Controller
                 $_to = Carbon::parse($justify->date_finish);
                 // Loop through each day from start to end date
                 for ($date = $_from; $date->lte($_to); $date->addDay()) {
-                    $event = new CalendarEvent($justify_title, $date->format('Y-m-d'), $date->format('Y-m-d'));
+                    $event = new CalendarEvent("J$incident->id", $justify_title, $date->format('Y-m-d'), $date->format('Y-m-d'));
                     $event->color = "#3ea1e7";
                     $event->type = "JUSTIFY";
                     array_push( $events, $event);
                 }
             }
             else{
-                $event = new CalendarEvent($justify_title, $justify->date_start->format('Y-m-d'), $justify->date_start->format('Y-m-d'));
+                $event = new CalendarEvent("J$incident->id", $justify_title, $justify->date_start->format('Y-m-d'), $justify->date_start->format('Y-m-d'));
                 $event->color = "#3ea1e7";
                 $event->type = "JUSTIFY";
                 array_push( $events, $event);
@@ -560,6 +557,43 @@ class EmployeeController extends Controller
         ]);
 
     }
+
+    public function removeIncident(Request $request, string $employee_number, int $incidentId)
+    {
+        // * validate if the user is Admin
+        if(Auth::user()->level_id > 1){
+            return redirect()->back()->withErrors([
+                "message" => "You do not have the privileges to perform this action."
+            ])->withInput();
+        }
+
+        // * attempt to get the employee, may cause a forbidden response if the user has no access.
+        $employee = $this->findEmployee($employee_number);
+        if($employee instanceof \Illuminate\Http\RedirectResponse){
+            return $employee;
+        }
+
+        // * get the incident
+        try
+        {
+            $incident = Incident::where('id', $incidentId)->firstOrFail();
+        }
+        catch(Exception)
+        {
+            return redirect()->back()->withErrors([
+                "message" => "Incident not found"
+            ])->withInput();
+        }
+
+        // * attempt to delete the incident
+        $logData = [
+            "incidentId" => $incident->id,
+            "incidentData" => $incident
+        ];
+        $incident->delete();
+        Log::notice("Deleted the incident '{incidentId}'; ", $logData);
+    }
+
     #endregion
 
     #region private methods

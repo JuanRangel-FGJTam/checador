@@ -3,6 +3,8 @@
 import VerticalTimeLine from '@/Components/VerticalTimeLine.vue';
 import TimeLineItemCustom from '@/Components/TimeLineItemCustom.vue';
 import CalendarExclamationIcon from '@/Components/Icons/CalendarExclamationIcon.vue';
+import WhiteButton from '@/Components/WhiteButton.vue';
+import TrashcanIcon from '@/Components/Icons/TrashcanIcon.vue';
 
 const props = defineProps({
     employee: Object,
@@ -12,12 +14,41 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['incidentClick']);
+const emit = defineEmits(['incidentClick', 'removeIncidentClick']);
 
 function handleIncidentClick(incident)
 {
     const incidentDate = incident.start;
     emit("incidentClick", incidentDate);
+}
+
+function handleRemoveIncident(incident)
+{
+    emit("removeIncidentClick", incident);
+}
+
+function handleMouseEnter(type, incident)
+{
+    var ele = document.getElementById(`rm${incident.id}`);
+    if(!ele)
+    {
+        return;
+    }
+
+    if( type=='enter')
+    {
+        if(ele.classList.contains('hidden'))
+        {
+            ele.classList.remove('hidden');
+        }
+    }
+    else
+    {
+        if(!ele.classList.contains('hidden'))
+        {
+            document.getElementById(`rm${incident.id}`).classList.add('hidden');
+        }
+    }
 }
 
 </script>
@@ -40,9 +71,18 @@ function handleIncidentClick(incident)
                         <CalendarExclamationIcon class="w-4 h-4 text-orange-400" />
                     </template>
                     <template #content>
-                        <div class="-translate-y-1 -translate-x-2 cursor-pointer w-full rounded px-2 py-1 flex flex-col gap-2 text-gray-600 dark:text-gray-200 hover:bg-amber-50 hover:outline hover:outline-amber-400" v-on:click="handleIncidentClick(item)">
-                            <h2 class="text-bold uppercase">{{ item.title }}</h2>
-                            <div class="pl-1 text-xs">{{ item.start }}</div>
+                        <div class="-translate-y-1 -translate-x-2 cursor-pointer w-full rounded px-2 py-1 flex gap-2 text-gray-600 dark:text-gray-200 hover:bg-amber-50 hover:outline hover:outline-amber-400"
+                            v-on:click="handleIncidentClick(item)"
+                            v-on:mouseenter="handleMouseEnter('enter', item)"
+                            v-on:mouseleave="handleMouseEnter('leave', item)"
+                        >
+                            <div class="flex flex-col">
+                                <h2 class="text-bold uppercase">{{ item.title }}</h2>
+                                <div class="pl-1 text-xs">{{ item.start }}</div>
+                            </div>
+                            <WhiteButton :id="`rm${item.id}`" v-if="$page.props.auth.user.level_id <= 1" class="ml-auto text-red-500 hover:bg-red-100 hidden focus:bg-red-200 active:bg-red-200 focus:outline-red-400" v-on:click="handleRemoveIncident(item)">
+                                <TrashcanIcon class="w-4 h-4"/>
+                            </WhiteButton>
                         </div>
                     </template>
                 </timeLineItemCustom>
