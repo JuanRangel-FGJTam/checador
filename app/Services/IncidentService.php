@@ -281,7 +281,7 @@ class IncidentService
 
         foreach ($justifies as $justify) {
             $start = new Carbon($justify->date_start);
-            $end = isset($justify->date_end) ? new Carbon($justify->date_end) : $start;
+            $end = isset($justify->date_finish) ? new Carbon($justify->date_finish) : $start;
 
             if ($date->between($start, $end)) {
                 $justifiesRecords[] = $justify->type_justify_id;
