@@ -241,6 +241,12 @@ function getFirstDayOrNextMonth(startDate, endDate) {
 
   return firstDayNextMonth;
 }
+
+function handleIncidentClick(incidentDate)
+{
+    fullCalenarObj.value.calendar.select(incidentDate);
+}
+
 </script>
 
 <template>
@@ -273,7 +279,7 @@ function getFirstDayOrNextMonth(startDate, endDate) {
 
                 <div class="pb-4 overflow-y: auto; dark:bg-gray-800 h-80 mt-2">
                     <AnimateSpin v-if="calendarLoading" class="w-4 h-4 mx-1 "/>
-                    <IncidenciasPanel v-else :incidences="currentIncidences" />
+                    <IncidenciasPanel v-else :incidences="currentIncidences" v-on:incidentClick="handleIncidentClick" />
                 </div>
             </div>
 

@@ -12,6 +12,14 @@ const props = defineProps({
     }
 });
 
+const emit = defineEmits(['incidentClick']);
+
+function handleIncidentClick(incident)
+{
+    const incidentDate = incident.start;
+    emit("incidentClick", incidentDate);
+}
+
 </script>
 
 <template>
@@ -32,7 +40,7 @@ const props = defineProps({
                         <CalendarExclamationIcon class="w-4 h-4 text-orange-400" />
                     </template>
                     <template #content>
-                        <div class="-translate-y-1 -translate-x-2 flex flex-col gap-2 text-gray-600 dark:text-gray-200">
+                        <div class="-translate-y-1 -translate-x-2 cursor-pointer w-full rounded px-2 py-1 flex flex-col gap-2 text-gray-600 dark:text-gray-200 hover:bg-amber-50 hover:outline hover:outline-amber-400" v-on:click="handleIncidentClick(item)">
                             <h2 class="text-bold uppercase">{{ item.title }}</h2>
                             <div class="pl-1 text-xs">{{ item.start }}</div>
                         </div>
