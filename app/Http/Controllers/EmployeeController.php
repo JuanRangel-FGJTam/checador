@@ -15,11 +15,13 @@ use Inertia\Inertia;
 use Exception;
 use App\Services\{
     EmployeeService,
+    InactiveService,
     JustificationService
 };
 use App\Models\{
     Department,
     Employee,
+    EmployeeStatusHistory,
     GeneralDirection,
     Direction,
     Subdirectorate,
@@ -32,22 +34,24 @@ use App\ViewModels\{
     CalendarEvent
 };
 use App\Http\Requests\{
-    UpdateEmployeeRequest
+    UpdateEmployeeRequest,
+    UpdateEmployeeStatusRequest
 };
 use App\Helpers\EmployeeKardexRecords;
 use App\Helpers\EmployeeKardexExcel;
-
 
 class EmployeeController extends Controller
 {
 
     protected EmployeeService $employeeService;
     protected JustificationService $justificationService;
+    protected InactiveService $inactiveService;
 
-    function __construct( EmployeeService $employeeService, JustificationService $justificationService )
+    function __construct( EmployeeService $employeeService, JustificationService $justificationService, InactiveService $inactiveService)
     {
         $this->employeeService = $employeeService;
         $this->justificationService = $justificationService;
+        $this->inactiveService = $inactiveService;
     }
 
     /**
@@ -362,6 +366,45 @@ class EmployeeController extends Controller
         // * redirect to show view
         return redirect()->route('employees.show', ['employee_number' => $employee->employeeNumber ]);
 
+    }
+
+    /**
+     * Update the employee status in storage.
+     *
+     * @param  UpdateEmployeeStatusRequest $request
+     * @param  string $employee_number
+     * @return void
+     */
+    public function updateStatus(UpdateEmployeeStatusRequest $request, string $employee_number)
+    {
+        // * retrive the employee
+        $employee = $this->findEmployee($employee_number);
+        if($employee instanceof \Illuminate\Http\RedirectResponse){
+            return $employee;
+        }
+
+        $employeeModel = Employee::find($employee->id);
+
+        // * update the status of the employee
+        try
+        {
+            $this->inactiveService->changeStatus(
+                $this->employeeService,
+                $employeeModel,
+                $request->comments,
+                $request->status_id,
+                $request->file('file')
+            );
+        }
+        catch (\Throwable $th)
+        {
+            return redirect()->back()->withErrors([
+                "message" => $th->getMessage()
+            ])->withInput();
+        }
+
+        // * redirect to show view
+        return redirect()->route('employees.show', ['employee_number' => $employee->employeeNumber ]);
     }
 
 

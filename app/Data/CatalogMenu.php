@@ -14,7 +14,8 @@ class CatalogMenu {
         'incidents' => 'incidents.index',
         'hollidays' => 'hollidays.create',
         'inactive' => 'inactive.index',
-        'justifications' => 'justifications.index'
+        'justifications' => 'justifications.index',
+        'inactiveHistory' => 'inactiveHistory.index'
     ];
 
 }
