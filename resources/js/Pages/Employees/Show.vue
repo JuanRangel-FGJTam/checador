@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import { formatDate } from '@/utils/date.js';
+import { useToast } from 'vue-toastification';
 
 import FullCalendar from '@fullcalendar/vue3';
 import esLocale from '@fullcalendar/core/locales/es';
@@ -9,9 +10,12 @@ import interactionPlugin from '@fullcalendar/interaction';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import multiMonthPlugin from '@fullcalendar/multimonth'
-
+import Modal from '@/Components/Modal.vue';
+import Card from '@/Components/Card.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
 import WarningButton from '@/Components/WarningButton.vue';
+import DangerButton from '@/Components/DangerButton.vue';
 import WhiteButton from '@/Components/WhiteButton.vue';
 import DisabledButton from '@/Components/DisabledButton.vue';
 import Breadcrumb from '@/Components/Breadcrumb.vue';
@@ -19,6 +23,8 @@ import EmployeeGeneralData from '@/Components/Employee/EmployeeGeneralData.vue';
 import EmployeeDataPanel from '@/Components/Employee/EmployeeDataPanel.vue';
 import IncidenciasPanel from '@/Components/Employee/IncidenciasPanel.vue';
 import AnimateSpin from '@/Components/Icons/AnimateSpin.vue';
+
+const toast = useToast();
 
 const props = defineProps({
     employeeNumber: String,
@@ -106,6 +112,11 @@ const currentIncidences = computed(()=>{
     }else{
         return [];
     }
+});
+
+const confirmationModal = ref({
+    show: false,
+    data: undefined
 });
 
 onMounted(()=>{
@@ -241,6 +252,40 @@ function getFirstDayOrNextMonth(startDate, endDate) {
 
   return firstDayNextMonth;
 }
+
+function handleIncidentClick(incidentDate)
+{
+    fullCalenarObj.value.calendar.select(incidentDate);
+}
+
+function handleRemoveIncidentClick(incident)
+{
+    confirmationModal.value.data = incident;
+    confirmationModal.value.show = true;
+}
+
+function removeIncident(incident)
+{
+    // toast.warning('Remove the incident');
+    var incidentId = incident.id.slice(1);
+    router.delete(route('employees.incidents.delete', { "employee_number": props.employeeNumber, "incidentId": incidentId }), {
+        onSuccess: (res) =>
+        {
+            toast.success('Incidencia eliminada');
+            confirmationModal.value.show = false;
+            fullCalenarObj.value.calendar.refetchEvents();
+        },
+        onError: (err) => {
+            const {message} = err;
+            if(message)
+            {
+                toast.error(message);
+            }
+            toast.error("Error al eliminar la incidencia, intente de nuevo.");
+        }
+    });
+}
+
 </script>
 
 <template>
@@ -273,7 +318,11 @@ function getFirstDayOrNextMonth(startDate, endDate) {
 
                 <div class="pb-4 overflow-y: auto; dark:bg-gray-800 h-80 mt-2">
                     <AnimateSpin v-if="calendarLoading" class="w-4 h-4 mx-1 "/>
-                    <IncidenciasPanel v-else :incidences="currentIncidences" />
+                    <IncidenciasPanel v-else 
+                        :incidences="currentIncidences"
+                        v-on:incidentClick="handleIncidentClick"
+                        v-on:removeIncidentClick="handleRemoveIncidentClick"
+                    />
                 </div>
             </div>
 
@@ -301,6 +350,23 @@ function getFirstDayOrNextMonth(startDate, endDate) {
                 <FullCalendar ref="fullCalenarObj" :options="calendarOptions" />
             </div>
 
+            <Modal :show="confirmationModal.show && confirmationModal.data != null" v-on:close="confirmationModal.show = false">
+                <Card :shadow="false" :whitOutBorder="true">
+                    <template #header>
+                        <h2 class="uppercase">Eliminando incidencia</h2>
+                    </template>
+                    <template #content>
+                        <div class="flex flex-col p-2">
+                            <p>Esta por eliminar la incidencia <b>"{{ confirmationModal.data.title}}"</b> del dia <b>{{ confirmationModal.data.start}}</b>, esta es una accion irreversible, ¿desea continuar?</p>
+
+                            <div class="flex mt-5 justify-between">
+                                <PrimaryButton v-on:click="confirmationModal.show = false">Cancelar </PrimaryButton>
+                                <DangerButton v-on:click="removeIncident(confirmationModal.data)"> Eliminar incidencia </DangerButton>
+                            </div>
+                        </div>
+                    </template>
+                </Card>
+            </Modal>
         </div>
 
     </AuthenticatedLayout>
