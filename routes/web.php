@@ -9,6 +9,7 @@ use App\Http\Controllers\{
     EmployeeScheduleController,
     HollidaysController,
     InactiveController,
+    InactiveHistoyController,
     IncidentController,
     JustificationController,
     NewEmployeeController,
@@ -75,6 +76,7 @@ Route::middleware(['auth', 'authorized.menu'])->group(function () {
         Route::get('{employee_number}', [EmployeeController::class, 'show'])->name('show');
         Route::get('{employee_number}/edit', [EmployeeController::class, 'edit'])->name('edit');
         Route::patch('{employee_number}', [EmployeeController::class, 'update'])->name('update');
+        Route::post('{employee_number}/update-status', [EmployeeController::class, 'updateStatus'])->name('update.status');
 
         Route::get('{employee_number}/incidents/create', [EmployeeController::class, 'incidentCreate'])->name('incidents.create');
         Route::post('{employee_number}/incidents/store', [IncidentController::class, 'makeIncidentsOfEmployee'])->name('incidents.store');
@@ -144,6 +146,11 @@ Route::middleware(['auth', 'authorized.menu'])->group(function () {
 
     Route::prefix('inactive')->name('inactive.')->group(function(){
         Route::get('', [InactiveController::class, 'index'])->name('index');
+    });
+
+    Route::prefix('inactive-history')->name('inactiveHistory.')->group(function() {
+        Route::get('', [InactiveHistoyController::class, 'index'])->name('index');
+        Route::get('{inactiveHistoryId}/file', [InactiveHistoyController::class, 'getJustificationFile'])->name('file');
     });
 
 });
