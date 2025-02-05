@@ -21,6 +21,7 @@ class DeviceService
         $devicesLogs = array();
         foreach ($logs as $key => $value) {
             $dLog = array();
+            $dLog["id"] = $value->id;
             $dLog["name"] = $value->name;
             $dLog["address"] = $value->address;
             $dLog["last-connection"] = Carbon::parse($value->updated_at)->format("Y-m-d H:i:s");
@@ -34,5 +35,14 @@ class DeviceService
 
         // * return the data
         return $devicesLogs;
+    }
+
+    public function deleteDevicesLog(int $logId)
+    {
+        $log = ClientStatusLog::find($logId);
+        if(isset($log))
+        {
+            $log->delete();
+        }
     }
 }

@@ -19,8 +19,8 @@ class DeviceController extends Controller
         $this->deviceService = $deviceService;
     }
 
-    function index(){
-
+    function index()
+    {
         // * retrive the log of the devices
         $deviceLogs = $this->deviceService->getDevicesLog();
 
@@ -31,7 +31,11 @@ class DeviceController extends Controller
             "devices" => $deviceLogs,
             "lastCheckout" => $lastCheckout
         ]);
+    }
 
+    function deleteDeviceLog(int $logId)
+    {
+        $this->deviceService->deleteDevicesLog($logId);
     }
 
     

@@ -1,8 +1,11 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useToast } from 'vue-toastification';
+import { router } from '@inertiajs/vue3';
 import DeviceOnIcon from '@/Components/Icons/DeviceOnIcon.vue';
 import DeviceOffIcon from '@/Components/Icons/DeviceOffIcon.vue';
+import TrashcanIcon from '@/Components/Icons/TrashcanIcon.vue';
+import WhiteButton from '@/Components/WhiteButton.vue';
 import axios from 'axios';
 
 const props = defineProps({
@@ -69,6 +72,16 @@ function getDateTimeNowUTCPlus6() {
     return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
 }
 
+async function deleteRecord(record)
+{
+
+    router.delete(route('devices.logs.delete', record.id), {
+        onSuccess: ()=>{
+            router.reload();
+        }
+    });
+}
+
 </script>
 
 <template>
@@ -83,7 +96,6 @@ function getDateTimeNowUTCPlus6() {
         <div class="px-4 py-[2rem] rounded-lg max-w-screen-2xl mx-auto dark:text-gray-200">
             <ul class="grid grid-cols-1 lg:grid-cols-3 2xl:grid-cols-4 gap-2">
                 <li v-for="item in deviceLogs" :key="item.id">
-
                     <div class="p-1 flex gap-4 items-center border rounded shadow-lg bg-white">
                         <div class="flex flex-col items-center gap-1">
                             <DeviceOnIcon v-if="item['status'] == 1" class="w-14 h-14" />
@@ -95,9 +107,10 @@ function getDateTimeNowUTCPlus6() {
                             <div class="uppercase text-sm">{{ item['last-connection'].split(' ')[1] }}</div>
                             <div class="uppercase text-sm">{{ item['last-connection'].split(' ')[0] }}</div>
                         </div>
-
+                        <WhiteButton class="ml-auto text-red-600" v-on:click="deleteRecord(item)">
+                            <TrashcanIcon class="w-4 h-4" />
+                        </WhiteButton>
                     </div>
-
                 </li>
             </ul>
         </div>

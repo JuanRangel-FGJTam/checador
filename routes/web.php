@@ -165,6 +165,7 @@ Route::middleware('auth')->group(function () {
 Route::prefix('devices')->name('devices.')->group(function(){
     Route::get('', [ DeviceController::class, "index"])->name('index');
     Route::get('logs', [ DeviceController::class, "getDevicesLogRaw"])->name('logs');
+    Route::delete('logs/{logId}', [ DeviceController::class, "deleteDeviceLog"])->name('logs.delete');
 });
 
 Route::get('/', function () {
