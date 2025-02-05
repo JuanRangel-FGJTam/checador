@@ -391,7 +391,7 @@ class EmployeeController extends Controller
             $this->inactiveService->changeStatus(
                 $this->employeeService,
                 $employeeModel,
-                $request->comments,
+                $request->comments ?? "",
                 $request->status_id,
                 $request->file('file')
             );
