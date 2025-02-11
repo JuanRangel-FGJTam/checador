@@ -468,7 +468,7 @@ class EmployeeController extends Controller
                 }
             }
             else{
-                $event = new CalendarEvent("J$incident->id", $justify_title, $justify->date_start->format('Y-m-d'), $justify->date_start->format('Y-m-d'));
+                $event = new CalendarEvent("J$justify->id", $justify_title, $justify->date_start->format('Y-m-d'), $justify->date_start->format('Y-m-d'));
                 $event->color = "#3ea1e7";
                 $event->type = "JUSTIFY";
                 array_push( $events, $event);
