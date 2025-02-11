@@ -459,8 +459,9 @@ class EmployeeController extends Controller
                 $_from = Carbon::parse($justify->date_start);
                 $_to = Carbon::parse($justify->date_finish);
                 // Loop through each day from start to end date
-                for ($date = $_from; $date->lte($_to); $date->addDay()) {
-                    $event = new CalendarEvent("J$incident->id", $justify_title, $date->format('Y-m-d'), $date->format('Y-m-d'));
+                for ($date = $_from; $date->lte($_to); $date->addDay())
+                {
+                    $event = new CalendarEvent("J$justify->id", $justify_title, $date->format('Y-m-d'), $date->format('Y-m-d'));
                     $event->color = "#3ea1e7";
                     $event->type = "JUSTIFY";
                     array_push( $events, $event);
