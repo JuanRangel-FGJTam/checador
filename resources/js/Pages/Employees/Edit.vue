@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from 'vue-toastification';
@@ -56,6 +56,10 @@ const formStatus = useForm({
 
 const loading = ref(false);
 
+const statusButtonText = computed(()=>{
+    return (props.employee.active) ?"Desactivar empleado" : "Activar empleado";
+});
+
 onMounted(()=>{
     if(props.employee){
         form.general_direction_id = props.employee.generalDirectionId;
@@ -86,6 +90,7 @@ function submitForm(){
 
 function submitFormEmployeeStatus()
 {
+    formStatus.status_id = (props.employee.active) ?0: 1;
     formStatus.post(route('employees.update.status', props.employeeNumber), {
         replace: true,
         onError:(res)=>{
@@ -226,16 +231,6 @@ function handleSelectChanged(e){
                     <form class="flex flex-col gap-2" @submit.prevent="submitFormEmployeeStatus">
                         <div class="flex flex-col gap-2">
                             <h2 class="text-gray-700 dark:text-gray-300 uppercase font-semibold border-b pb-1">Modificar Estatus del empleado</h2>
-
-                            <div role="form-group">
-                                <InputLabel for="status_id">Estado del empleado</InputLabel>
-                                <InputSelect id="status_id" v-model="formStatus.status_id">
-                                    <option value="" class="text-gray-600" >Seleccione un elemento</option>
-                                    <option v-for="item in statusEmployee" :key="item.id" :value="item.id">{{item.name}}</option>
-                                </InputSelect>
-                                <InputError :message="formStatus.errors.status_id" />
-                            </div>
-
                             <div role="form-group">
                                 <InputLabel for="general_direction_id">Comentarios</InputLabel>
                                 <textarea id="comments" v-model="formStatus.comments" class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full dark:bg-gray-700 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 h-24 resize-none" />
@@ -261,7 +256,7 @@ function handleSelectChanged(e){
 
                         <div class="flex flex-wrap gap-4 p-4 justify-center">
                             <DangerButton type="submit">
-                                Actualizar Estatus
+                                {{statusButtonText}}
                             </DangerButton>
                         </div>
 
