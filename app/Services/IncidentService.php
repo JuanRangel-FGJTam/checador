@@ -694,6 +694,18 @@ class IncidentService
                 $currentCheckDateFrom = (clone $currentCheckDate)->sub(new DateInterval('PT' . $minutesRange . 'M'));
                 $currentCheckDateTo = (clone $currentCheckDate)->add(new DateInterval('PT' . $minutesRange . 'M'));
 
+                // * Define the day's boundaries (00:00 to 23:59 of the same day)
+                $startOfDay = (clone $currentCheckDate)->setTime(0, 0);
+                $endOfDay = (clone $currentCheckDate)->setTime(23, 59);
+
+                // * Ensure range stays within the same day
+                if ($currentCheckDateFrom < $startOfDay) {
+                    $currentCheckDateFrom = clone $startOfDay;
+                }
+                if ($currentCheckDateTo > $endOfDay) {
+                    $currentCheckDateTo = clone $endOfDay;
+                }
+
                 // * Get an array of checks if they are in the range of `$currentCheckDateFrom` and `$currentCheckDateTo`
                 $targetChecks = array_values(
                     array_filter($tmpRecords, function($record) use ($currentCheckDateFrom, $currentCheckDateTo) {
@@ -732,7 +744,7 @@ class IncidentService
             }
 
             // * check if the loop has reached the limit
-            if($loop == 16)
+            if($loop == 24) // +6hrs => (24 * 15min) = 360min
             {
                 $continue = false;
             }
