@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 
@@ -45,6 +45,38 @@ function submitForm(){
         }
     });
 }
+
+async function fetchData(url) {
+    try {
+        router.visit(url, {
+            method: 'get',
+            only: ['directions', 'subdirectorates', 'departments'],
+            preserveState: true,
+        });
+    } catch (error) {
+        toast.error(`Error al cargar datos de ${updateField}.`);
+        console.error(error);
+    }
+}
+
+watch(() => form.generalDirection_id, (newVal) => {
+    form.direction_id = '';
+    form.subdirectorate_id = '';
+    form.departments_id = '';
+
+    fetchData(`/admin/users/create?generalDirection_id=${newVal}`);
+});
+
+watch(() => form.direction_id, (newVal) => {
+    form.subdirectorate_id = '';
+    form.departments_id = '';
+    fetchData(`/admin/users/create?generalDirection_id=${form.generalDirection_id}&direction_id=${newVal}`);
+});
+
+watch(() => form.subdirectorate_id, (newVal) => {
+    form.departments_id = '';
+    fetchData(`/admin/users/create?generalDirection_id=${form.generalDirection_id}&direction_id=${form.direction_id}&subdirectorate_id=${newVal}`);
+});
 
 </script>
 
