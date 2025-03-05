@@ -54,12 +54,39 @@ class UserController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
+        // * Get the catalogs
         $generalDirections = GeneralDirection::select('id','name')->get();
-        $directions = Direction::select('id','name')->get();
-        $subdirectorates = Subdirectorate::select('id','name')->get();
-        $departments = Department::select('id','name')->get();
+        $directions = [];
+        $subdirectorates = [];
+        $departments = [];
+
+        if ($request->has('generalDirection_id')) {
+            $directions = Direction::where('general_direction_id', $request->generalDirection_id)->select('id','name')->get();
+        }
+        else
+        {
+            $directions = Direction::where('id', 1)->select('id','name')->get();
+        }
+
+        if ($request->has('direction_id'))
+        {
+            $subdirectorates = Subdirectorate::where('direction_id', $request->direction_id)->select('id','name')->get();
+        }
+        else
+        {
+            $subdirectorates = Subdirectorate::where('id', 1)->select('id','name')->get();
+        }
+
+        if ($request->subdirectorate_id)
+        {
+            $departments = Department::where('subdirectorate_id', $request->subdirectorate_id)->select('id','name')->get();
+        }
+        else
+        {
+            $departments = Department::where('id', 1)->select('id','name')->get();
+        }
 
         return Inertia::render('Admin/UserNew', [
             "generalDirections" => $generalDirections,
@@ -83,7 +110,7 @@ class UserController extends Controller
                 'direction_id' => $request->direction_id,
                 'subdirectorate_id' => $request->subdirectorate_id,
                 'department_id' => $request->departments_id,
-                'level_id' => $request->level_id
+                'level_id' => $request->level_id ?? 0
             ]);
 
             Log::info("New user id:'{userid}' email:'{email}' created.", [
