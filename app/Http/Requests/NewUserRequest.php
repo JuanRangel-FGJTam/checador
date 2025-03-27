@@ -25,7 +25,7 @@ class NewUserRequest extends FormRequest
     {
         return [
             "generalDirection_id" => 'required|integer|min:1',
-            "direction_id" => 'required|integer|min:1',
+            "direction_id" => 'nullable|integer|min:1',
             "subdirectorate_id" => 'nullable|integer|min:1',
             "departments_id" => 'nullable|integer|min:1',
             "name" => 'required|string|max:120',
