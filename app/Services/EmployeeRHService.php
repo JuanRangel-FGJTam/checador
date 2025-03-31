@@ -80,4 +80,22 @@ class EmployeeRHService {
 
         return null;
     }
+
+    /**
+     * getMissingEmployees
+     *
+     * @param  mixed $employees
+     * @return Collection<EmployeeRh>
+     */
+    public static function getMissingEmployees(): Collection
+    {
+        /** @var int[] $localEmployees */
+        $localEmployeeNumbers = Employee::select(['id', 'plantilla_id'])->get()->map(fn($e)=>$e->computed_employee_number)->toArray();
+        $missingEmployees = EmployeeRh::select('IDEMPLEADO', 'NUMEMP', 'NOMBRE', 'APELLIDO', 'RFC', 'CURP')
+            ->whereNull('FECHABAJA')
+            ->whereNotIn('NUMEMP', $localEmployeeNumbers)
+            ->get();
+        return $missingEmployees;
+    }
+
 }

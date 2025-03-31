@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Collection;
 use Inertia\Inertia;
 use App\Services\EmployeeService;
+use App\Services\EmployeeRHService;
 use App\Models\{
     Employee,
     GeneralDirection,
@@ -14,6 +15,7 @@ use App\Models\{
     Subdirectorate
 };
 use App\Http\Requests\AssignAreaRequest;
+use App\ViewModels\EmployeeViewModel;
 
 class NewEmployeeController extends Controller
 {
@@ -25,17 +27,27 @@ class NewEmployeeController extends Controller
     }
 
 
-    public function index(Request $request){
-
+    public function index(Request $request)
+    {
         // * get catalogs
         $general_direction = GeneralDirection::select('id', 'name')->get();
         $directions = Direction::select('id', 'name', 'general_direction_id')->get();
         $subdirectorate = Subdirectorate::select('id', 'name', 'direction_id')->get();
 
-        // * get employees
+
+        // TODO: use a cache for load the employees
+
+        // * get employees with no area assigned
+        /** @var EmployeeViewModel[] $employees */
         $employees = $this->employeeService->getNewEmployees();
 
-        if ($request->filled('s')) {
+        // * get employees of RH that dont't have a record on the local DB.
+        $missingEmployees = EmployeeRHService::getMissingEmployees()->map(fn($emp) => EmployeeViewModel::fromRHModel($emp))->toArray();
+
+        $employees = array_merge($employees, $missingEmployees);
+
+        if ($request->filled('s'))
+        {
             $employees = array_filter( $employees, fn($emp) => str_contains( strtolower($emp->name), strtolower($request->input('s'))) );
         }
         
@@ -103,6 +115,16 @@ class NewEmployeeController extends Controller
         // * redirect to show view
         return redirect()->route('employees.show', ['employee_number' => $employee->employeeNumber ]);
 
+    }
+
+    public function registerNewEmployee(string $employeeNumber)
+    {
+        dd($employeeNumber);
+    }
+
+    public function storeNewEmployee(Request $request,string $employeeNumber)
+    {
+        dd($employeeNumber);
     }
 
     #region private functions

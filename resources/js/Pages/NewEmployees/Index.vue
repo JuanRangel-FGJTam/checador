@@ -14,6 +14,7 @@ import BadgeBlue from '@/Components/BadgeBlue.vue';
 import BadgeGreen from '@/Components/BadgeGreen.vue';
 import ChevronRightIcon from '@/Components/Icons/ChevronRightIcon.vue';
 import AnimateSpin from '@/Components/Icons/AnimateSpin.vue';
+import UserPlusIcon from '@/Components/Icons/UserPlusIcon.vue';
 
 const props = defineProps({
     employees: Array,
@@ -65,7 +66,7 @@ function handleInputSearch(search){
 
         <div class="px-4 py-4 rounded-lg min-h-screen max-w-screen-xl mx-auto">
 
-            <div class="bg-white border-l border-t border-r dark:border-gray-500 flex items-center p-2">
+            <div class="bg-white border-l border-t border-r dark:bg-gray-800 dark:border-gray-500 flex items-center p-2">
                 <SearchInput v-on:search="handleInputSearch" :initialValue="props.searchString" />
                 <AnimateSpin v-if="loading" class="w-5 h-5 mx-2" />
             </div>
@@ -90,13 +91,16 @@ function handleInputSearch(search){
                 </thead>
                 <tbody id="table-body" class="bg-white dark:bg-gray-800 dark:border-gray-500">
                     <template v-if="employees && employees.length > 0">
-                        <tr v-for="(employee, index) in employees" :key="employee.id" class="border-b">
+                        <tr v-for="(employee, index) in employees" :key="employee.id" class="border-b dark:border-gray-700">
                             <td class="p-2 text-center">
                                 {{index + 1}}
                             </td>
 
                             <td class="p-2">
-                                {{ employee.name }}
+                                <div class="inline-flex flex-col justify-content-center align-items-center">
+                                    <span>{{ employee.name }}</span>
+                                    <span class="text-xs border bg-amber-600 border-amber-700 w-[7rem] text-center rounded px-2 text-white " v-if="employee.isRH">Nuevo Empleado</span>
+                                </div>
                             </td>
 
                             <td class="p-2 text-center">
@@ -104,10 +108,17 @@ function handleInputSearch(search){
                             </td>
 
                             <td class="p-2 text-center">
-                                <NavLink :href=" route('newEmployees.edit', employee.employeeNumber )">
-                                    <div class="flex gap-2 shadow bg-slate-200 px-4 py-1">
+                                <NavLink v-if="!employee.isRH" :href=" route('newEmployees.edit', employee.employeeNumber )">
+                                    <div class="flex gap-2 shadow bg-slate-200 px-4 py-1 dark:bg-slate-900">
                                         <span>Asignar Area</span>
                                         <ChevronRightIcon class="w-4 h-4 ml-1" />
+                                    </div>
+                                </NavLink>
+
+                                <NavLink v-else :href=" route('newEmployees.new', employee.employeeNumber )">
+                                    <div class="flex gap-2 shadow bg-slate-200 px-4 py-1 dark:bg-slate-900">
+                                        <span>Registrar</span>
+                                        <UserPlusIcon class="w-4 h-4 ml-1" />
                                     </div>
                                 </NavLink>
                             </td>

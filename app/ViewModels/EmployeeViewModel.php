@@ -3,6 +3,7 @@
 namespace App\ViewModels;
 
 use App\Models\Employee;
+use App\Models\EmployeeRh;
 use App\Models\WorkingHours;
 use App\Services\EmployeeRHService;
 
@@ -27,6 +28,7 @@ class EmployeeViewModel
     public ?int $subDirectionId = null;
     public ?string $department = "";
     public ?int $departmentId = null;
+    public bool $isRH = false;
     
     public function __construct(int $id, string $employeeNumber, string $name) {
         $this->id = $id;
@@ -137,6 +139,40 @@ class EmployeeViewModel
             $model->name = $employeeRh->NOMBRE . ' ' . $employeeRh->APELLIDO;
             $model->curp = $employeeRh->CURP;
         }
+
+        return $model;
+    }
+
+    /**
+     * create a employee view model from the local model
+     *
+     * @param  Employee $employee
+     * @return EmployeeViewModel
+     */
+    public static function fromRHModel(EmployeeRh $employee) : EmployeeViewModel
+    {
+        // create the view model
+        $model = new EmployeeViewModel(
+            $employee->IDEMPLEADO,
+            $employee->NUMEMP,
+            $employee->NOMBRE . ' ' . $employee->APELLIDO
+        );
+
+        // * validate if photo exists in directory
+        if($employee->photo != null)
+        {
+            $photo = public_path($employee->photo);
+            if (file_exists($photo))
+            {
+                $model->photo = $employee->photo;
+            }
+        }
+
+        $model->curp = $employee->CURP;
+        $model->photo = '/images/unknown.png';
+        $model->checa = 0;
+        $model->active = false;
+        $model->isRH = true;
 
         return $model;
     }
