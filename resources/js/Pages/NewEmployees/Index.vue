@@ -15,15 +15,28 @@ import BadgeGreen from '@/Components/BadgeGreen.vue';
 import ChevronRightIcon from '@/Components/Icons/ChevronRightIcon.vue';
 import AnimateSpin from '@/Components/Icons/AnimateSpin.vue';
 import UserPlusIcon from '@/Components/Icons/UserPlusIcon.vue';
+import Pagination from '@/Components/Paginator.vue';
 
 const props = defineProps({
     employees: Array,
     general_direction: Array,
     directions: Array,
     subdirectorate: Array,
-    searchString: {
-        type: String,
-        default: undefined
+    paginator: {
+        type: Object,
+        default : {
+            from: 0,
+            to: 0,
+            total: 0,
+            pages: []
+        }
+    },
+    filters: {
+        type: Object,
+        default : {
+            search: "",
+            pages: 0
+        }
     }
 });
 
@@ -31,26 +44,57 @@ const toast = useToast();
 
 const loading = ref(false);
 
-function handleInputSearch(search){
+const form = useForm({
+    search: "",
+    page: 1
+});
+
+onMounted(()=>{
+    form.page = props.filters.page ?? 1;
+    form.search = props.filters.search ?? undefined;
+});
+
+function handleInputSearch(search)
+{
+    form.search = search;
+    form.page = 1;
+    reloadData();
+}
+
+function reloadData()
+{
     loading.value = true;
-    
     debounce(()=>{
-        var queryParams = '';
-        if(search){
-            queryParams = 's=' + search;
+        var params = [];
+
+        if(form.page && form.page > 1){
+            params.push(`p=${form.page}`);
         }
-        router.visit('?'+ queryParams, {
-            replace: true,
+
+        if(form.search){
+            params.push(`se=${form.search}`);
+        }
+
+        // * reload the view
+        router.visit("?" + params.join("&"), {
+            method: 'get',
+            only: ['employees', 'paginator'],
             preserveState: true,
-            only: ['employees'],
-            onError:()=>{
-                toast.error("Error al recargar los datos.")
+            onError:(err)=>{
+                toast.error("Error al obtener los datos");
             },
-            onFinish:()=>{
+            onSuccess: ()=>{
                 loading.value = false;
             }
         });
-    }, 100);
+
+    }, 500);
+}
+
+function changePage(pageNumber)
+{
+    form.page = pageNumber;
+    reloadData();
 }
 
 </script>
@@ -67,7 +111,7 @@ function handleInputSearch(search){
         <div class="px-4 py-4 rounded-lg min-h-screen max-w-screen-xl mx-auto">
 
             <div class="bg-white border-l border-t border-r dark:bg-gray-800 dark:border-gray-500 flex items-center p-2">
-                <SearchInput v-on:search="handleInputSearch" :initialValue="props.searchString" />
+                <SearchInput v-on:search="handleInputSearch" :initialValue="form.search" />
                 <AnimateSpin v-if="loading" class="w-5 h-5 mx-2" />
             </div>
 
@@ -133,6 +177,9 @@ function handleInputSearch(search){
                     </template>
                 </tbody>
             </table>
+
+            <!-- paginator -->
+            <Pagination :paginator="paginator" :currentPage="form.page" v-on:changePage="changePage" />
 
         </div>
 

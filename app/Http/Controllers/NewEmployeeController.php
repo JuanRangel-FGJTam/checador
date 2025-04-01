@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use App\Services\EmployeeService;
 use App\Services\EmployeeRHService;
@@ -33,27 +34,48 @@ class NewEmployeeController extends Controller
 
     public function index(Request $request)
     {
+        // * properties
+        $currentPage = $request->query('p', 1);
+        $elementsToTake = 50;
+
         // * get catalogs
         $general_direction = GeneralDirection::select('id', 'name')->get();
         $directions = Direction::select('id', 'name', 'general_direction_id')->get();
         $subdirectorate = Subdirectorate::select('id', 'name', 'direction_id')->get();
 
 
-        // TODO: use a cache for load the employees
-
-        // * get employees with no area assigned
-        /** @var EmployeeViewModel[] $employees */
-        $employees = $this->employeeService->getNewEmployees();
-
-        // * get employees of RH that dont't have a record on the local DB.
-        $missingEmployees = EmployeeRHService::getMissingEmployees()->map(fn($emp) => EmployeeViewModel::fromRHModel($emp))->toArray();
-
-        $employees = array_merge($employees, $missingEmployees);
-
-        if ($request->filled('s'))
+        // * use a cache for load the employees
+        $employees = Cache::remember('new_employees', 3600, function ()
         {
-            $employees = array_filter( $employees, fn($emp) => str_contains( strtolower($emp->name), strtolower($request->input('s'))) );
+            // * get employees with no area assigned
+            /** @var EmployeeViewModel[] $employees */
+            $employees = $this->employeeService->getNewEmployees();
+
+            // * get employees of RH that dont't have a record on the local DB.
+            $missingEmployees = EmployeeRHService::getMissingEmployees()->map(fn($emp) => EmployeeViewModel::fromRHModel($emp))->toArray();
+
+            return array_merge($employees, $missingEmployees);
+        });
+
+
+        if ($request->filled('se'))
+        {
+            $searchInput = $request->input('se');
+            $employees = array_filter( $employees, function($emp) use($searchInput) {
+                return str_contains( strtolower($emp->name), strtolower($searchInput)) || str_contains( $emp->employeeNumber, $searchInput);
+            });
         }
+
+        // * make paginator
+        $paginator = [
+            "from" => $elementsToTake * ($currentPage - 1),
+            "to" =>  $elementsToTake * $currentPage,
+            "total" => count($employees),
+            "pages" =>  range(1, ceil( count($employees) / $elementsToTake))
+        ];
+
+        // * take n elements and skip m
+        $employees = array_slice($employees, $paginator['from'], $elementsToTake);
         
         // * return the view
         return Inertia::render('NewEmployees/Index',[
@@ -61,7 +83,11 @@ class NewEmployeeController extends Controller
             "general_direction" => $general_direction,
             "directions" => array_values( $directions->toArray() ),
             "subdirectorate" => array_values( $subdirectorate->toArray() ),
-            "searchString" => $request->filled('s') ? $request->input('s') : null
+            "paginator" => $paginator,
+            "filters" => [
+                "page" => $currentPage,
+                "search" => $request->filled('se') ? $request->input('se') : null,
+            ],
         ]);
     }
 
@@ -236,6 +262,9 @@ class NewEmployeeController extends Controller
             ]);
             abort(409, 'Error al registrar el empleado');
         }
+
+        // * clear the cache
+        Cache::forget('new_employees');
 
         return redirect()->route('newEmployees.index');
     }
