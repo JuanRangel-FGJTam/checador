@@ -132,7 +132,7 @@ Route::middleware(['auth', 'authorized.menu'])->group(function () {
         Route::patch('{employee_number}', [NewEmployeeController::class, 'update'])->name('update');
 
         Route::get('{employee_number}/new', [NewEmployeeController::class, 'registerNewEmployee'])->name('new');
-        Route::post('{employee_number}', [storeNewEmployee::class, 'storeNewEmployee'])->name('store');
+        Route::post('{employee_number}', [NewEmployeeController::class, 'storeNewEmployee'])->name('store');
     });
 
     Route::prefix('staff')->name('staff.')->group(function(){
