@@ -17,10 +17,10 @@ class EmployeeRHService {
      * @param  string|int $employee_number
      * @return mixed
      */
-    public static function getEmployeeData($employee_number)
+    public static function getEmployeeData($employee_number, $columns = ['NUMEMP', 'NOMBRE', 'APELLIDO', 'RFC', 'CURP'])
     {
         try {
-            return EmployeeRh::select('NUMEMP', 'NOMBRE', 'APELLIDO', 'RFC', 'CURP')
+            return EmployeeRh::select($columns)
                 ->where('NUMEMP', $employee_number)
                 ->first();
         } catch (\Throwable $th) {
@@ -55,10 +55,11 @@ class EmployeeRHService {
         $employee_number = (int)substr($plantilla_id, 1);
         $rowRh = EmployeeRh::select('FOTO', 'RFC')->where('NUMEMP', '=', $employee_number)->first();
 
-        if ($rowRh) {
-            $path = null;
-
-            if ($rowRh->FOTO) {
+        $path = null;
+        if ($rowRh)
+        {
+            if ($rowRh->FOTO)
+            {
                 $path = 'photos/'.$rowRh->RFC.'.jpg';
 
                 try {
@@ -68,7 +69,8 @@ class EmployeeRHService {
                 }
             }
 
-            if ($path) {
+            if ($path)
+            {
                 $employee = Employee::find($employee_id);
                 if ($employee) {
                     $employee->photo = $path;
@@ -78,6 +80,24 @@ class EmployeeRHService {
             }
         }
 
-        return null;
+        return $path;
     }
+
+    /**
+     * getMissingEmployees
+     *
+     * @param  mixed $employees
+     * @return Collection<EmployeeRh>
+     */
+    public static function getMissingEmployees(): Collection
+    {
+        /** @var int[] $localEmployees */
+        $localEmployeeNumbers = Employee::select(['id', 'plantilla_id'])->get()->map(fn($e)=>$e->computed_employee_number)->toArray();
+        $missingEmployees = EmployeeRh::select('IDEMPLEADO', 'NUMEMP', 'NOMBRE', 'APELLIDO', 'RFC', 'CURP')
+            ->whereNull('FECHABAJA')
+            ->whereNotIn('NUMEMP', $localEmployeeNumbers)
+            ->get();
+        return $missingEmployees;
+    }
+
 }
