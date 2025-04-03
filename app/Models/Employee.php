@@ -19,7 +19,8 @@ class Employee extends Model
         'fingerprint',
         "plantilla_id",
         "active",
-        "status_id"
+        "status_id",
+        "employee_number"
     ];
 
     // Hide the fingerprint attribute when the model is serialized
