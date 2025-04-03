@@ -43,27 +43,30 @@ class NewEmployeeController extends Controller
         $directions = Direction::select('id', 'name', 'general_direction_id')->get();
         $subdirectorate = Subdirectorate::select('id', 'name', 'direction_id')->get();
 
-
-        // * use a cache for load the employees
-        $employees = Cache::remember('new_employees', 3600, function ()
-        {
-            // * get employees with no area assigned
-            /** @var EmployeeViewModel[] $employees */
-            $employees = $this->employeeService->getNewEmployees();
-
-            // * get employees of RH that dont't have a record on the local DB.
-            $missingEmployees = EmployeeRHService::getMissingEmployees()->map(fn($emp) => EmployeeViewModel::fromRHModel($emp))->toArray();
-
-            return array_merge($employees, $missingEmployees);
-        });
+        // * get employees with no area assigned
+        /** @var EmployeeViewModel[] $employees */
+        $employees = $this->employeeService->getNewEmployees();
 
 
         if ($request->filled('se'))
         {
             $searchInput = $request->input('se');
+
+            // * retrive the RH Employees and filter the employees, use a cache AND
+            $employeesRH = Cache::remember('new_employees', 3600, function()
+            {
+                return EmployeeRHService::getMissingEmployees()->map(fn($emp) => EmployeeViewModel::fromRHModel($emp))->toArray();
+            });
+            $employeesRH = array_filter($employeesRH, function($emp) use ($searchInput) {
+                return str_contains( strtolower($emp->name), strtolower($searchInput)) || str_contains( $emp->employeeNumber, $searchInput);
+            });
+
+            // * filter the local employees
             $employees = array_filter( $employees, function($emp) use($searchInput) {
                 return str_contains( strtolower($emp->name), strtolower($searchInput)) || str_contains( $emp->employeeNumber, $searchInput);
             });
+
+            $employees = array_merge($employees, $employeesRH);
         }
 
         // * make paginator
