@@ -72,7 +72,7 @@ class EmployeeController extends Controller
             if( Auth::user()->level_id > 2){
                 $directionId = Auth::user()->direction_id;
             }else{
-                $directionId = $request->filled('d') ?$request->query("d") :0;
+                $directionId = $request->filled('d') ?$request->query("d") : 0;
             }
 
             $subdirectionId = $request->query("sd");
@@ -95,10 +95,12 @@ class EmployeeController extends Controller
             ->get();
 
         $directions = Direction::select('id', 'name', 'general_direction_id')
+            ->where('general_direction_id', $generalDirectionId)
             ->orderBy('name', 'asc')
             ->get();
 
         $subdirectorate = Subdirectorate::select('id', 'name', 'direction_id')
+            ->where('direction_id', $directionId)
             ->orderBy('name', 'asc')
             ->get();
 
@@ -314,17 +316,14 @@ class EmployeeController extends Controller
 
         $directions = Direction::select('id','name', 'general_direction_id')
             ->where('general_direction_id', $_gd)
-            ->orWhere('general_direction_id', 1) // include "1|DESCONOCIDO"
             ->get()->sortBy('name')->all();
 
             $subdirectorates = Subdirectorate::select('id', 'name', 'direction_id')
             ->where('direction_id', $_di)
-            ->orWhere('direction_id', 1) // include "1|DESCONOCIDO"
             ->get()->sortBy('name')->all();
 
             $deparments = Department::select('id', 'name', 'subdirectorate_id')
             ->where('subdirectorate_id', $_sd)
-            ->orWhere('subdirectorate_id', 1) // include "1|DESCONOCIDO"
             ->get()->sortBy('name')->all();
 
         // * return the view
