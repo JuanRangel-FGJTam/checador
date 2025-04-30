@@ -230,13 +230,13 @@ class EmployeeController extends Controller
 
         // calculate status checa
         $checa = array(
-            'name' => 'REGISTRA ASISTENCIA',
+            'name' => 'REPORTA INCIDENCIAS',
             'class' => 'text-xs p-1 rounded border border-green-500 text-green-600'
         );
         if ($employee->checa != 1) {
             $checa = array(
-                'name' => 'NO REGISTRA ASISTENCIA',
-                'class' => 'text-xs p-1 rounded border border-red-500 text-red-600'
+                'name' => 'NO REPORTA INCIDENCIAS',
+                'class' => 'text-xs p-1 rounded border border-yellow-500 text-yellow-600'
             );
         }
 

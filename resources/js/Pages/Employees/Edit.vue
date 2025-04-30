@@ -196,17 +196,17 @@ function handleSelectChanged(e){
                             </div>
                         </div>
 
-                        <CardText class=" font-bold mt-6">¿El Empleado Registra asistencia?</CardText>
-                        <p> Seleccione No para quitar a <span class="text-bold"> '{{ employee.name }}'' </span> de los reportes.</p>
+                        <CardText class=" font-bold mt-6">¿El Empleado debe reportar incidencias?</CardText>
+                        <p> Seleccione NO para quitar a <span class="text-bold"> '{{ employee.name }}'' </span> de los reportes y la generación automática de incidencias.</p>
                         <div class="flex flex-col gap-2">
                             <ul class="flex flex-col gap-2 bg-gray-50 p-4 border-2 border-gray-100 rounded">
                                 <li class="flex items-center gap-x-1">
                                     <input type="radio" id="cancheck-yes" name="canCheck" v-model="form.canCheck" :value="1" class="rounded" />
-                                    <InputLabel for="cancheck-yes">SI</InputLabel>
+                                    <InputLabel for="cancheck-yes">SI reportar incidencias</InputLabel>
                                 </li>
                                 <li class="flex items-center gap-x-1">
                                     <input type="radio" id="cancheck-no" name="canCheck" v-model="form.canCheck" :value="0" class="rounded" />
-                                    <InputLabel for="cancheck-no">NO</InputLabel>
+                                    <InputLabel for="cancheck-no">NO, no generar incidencias ni aparecer en los reportes</InputLabel>
                                 </li>
                             </ul>
                         </div>

@@ -10,7 +10,7 @@ import NavLink from '@/Components/NavLink.vue';
 import SearchInput from '@/Components/SearchInput.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import InputSelect from '@/Components/InputSelect.vue';
-import BadgeBlue from '@/Components/BadgeBlue.vue';
+import BadgeYellow from '@/Components/BadgeYellow.vue';
 import BadgeGreen from '@/Components/BadgeGreen.vue';
 import AnimateSpin from '@/Components/Icons/AnimateSpin.vue';
 import Pagination from '@/Components/Paginator.vue';
@@ -226,8 +226,8 @@ function changePage(pageNumber){
                             </td>
 
                             <td class="p-2 text-center">
-                                <BadgeGreen v-if="employee.checa == 1" text="Checa" />
-                                <BadgeBlue v-else text="No checa" class="mx-auto" />
+                                <BadgeGreen v-if="employee.checa == 1" text="Reporta incidencias" />
+                                <BadgeYellow v-else text="No reporta incidencias" class="mx-auto" />
                             </td>
 
                             <td class="p-2 text-center">
