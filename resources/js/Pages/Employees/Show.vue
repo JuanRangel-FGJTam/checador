@@ -380,4 +380,7 @@ function removeIncident(incident)
     padding: 0.5rem;
     overflow-y: hidden;
 }
+.border-yellow-500 {
+    border-color: #fbbf24;
+}
 </style>
