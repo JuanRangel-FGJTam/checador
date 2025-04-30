@@ -33,7 +33,7 @@ class EmployeeService {
         $query = Employee::query();
 
         // * filter the employees by the user level
-        if( Auth::user()->level_id == 1) /* Admin */{
+        if( Auth::user()->level_id == 1) { /* Admin */
             // * apply some filters
             if( !empty($filters) ){
                 if(isset($filters['general_direction_id']) && $filters['general_direction_id'] > 0 ){
@@ -49,6 +49,7 @@ class EmployeeService {
                 }
 
                 if( isset($filters['search'])){
+                    $query = Employee::query();
                     $query->where(function($q) use ($filters) {
                         $q->where('name', 'like', "%".$filters['search']."%")
                           ->orWhere('plantilla_id', 'like', "%".$filters['search']."%");
@@ -217,11 +218,11 @@ class EmployeeService {
         try {
             $employee->general_direction_id = $data['general_direction_id'];
 
-            $employee->direction_id = isset($data['direction_id']) ?$data['direction_id'] :1;
+            $employee->direction_id = isset($data['direction_id']) ? $data['direction_id'] : 1;
 
-            $employee->subdirectorate_id = isset($data['subdirectorate_id']) ?$data['subdirectorate_id'] :1;
+            $employee->subdirectorate_id = isset($data['subdirectorate_id']) ? $data['subdirectorate_id'] : 1;
 
-            $employee->department_id = isset($data['department_id']) ?$data['department_id'] :1;
+            $employee->department_id = isset($data['department_id']) ? $data['department_id'] : 1;
 
             if( isset($data['name'])){
                 $employee->name = $data['name'];

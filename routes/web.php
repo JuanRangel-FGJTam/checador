@@ -20,8 +20,6 @@ use App\Http\Controllers\{
 };
 
 Route::middleware(['auth', 'authorized.menu'])->group(function () {
-
-
     Route::prefix('admin')->name('admin.')->group(function(){
         Route::get('', [ AdminController::class, "index"])->name('index');
 
