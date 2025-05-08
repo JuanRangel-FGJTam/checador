@@ -69,9 +69,9 @@ class MonthlyReportExcel {
 
     private function makeHeader(Worksheet $sheet){
         // HEADER
-        $sheet->mergeCells('A1:Z1');
-        $sheet->mergeCells('A2:Z2');
-        $sheet->mergeCells('A4:Z4');
+        $sheet->mergeCells('A1:AG1');
+        $sheet->mergeCells('A2:AG2');
+        $sheet->mergeCells('A4:AG4');
         
         // Center text
         $sheet->getStyle("A1")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
