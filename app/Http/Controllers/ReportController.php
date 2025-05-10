@@ -246,7 +246,6 @@ class ReportController extends Controller
 
         // * attempt to make the daily report
         try {
-
             // * attempt to get the report data from the MongoDB
             $mongoReportRecord = $this->getDailyReportStored(
                 date: $dateReport,
@@ -273,11 +272,9 @@ class ReportController extends Controller
                     'departmentId' => ($AUTH_USER->level_id > 4) ?$AUTH_USER->department_id :null,
                 ]);
 
-
                 // * make dailyReport data
                 $dailyReportFactory = new DailyReportFactory( $employees, $dateReport );
                 $reportData = $dailyReportFactory->makeReportData();
-
 
                 // * attempt to store in mongoDB only if selected day is not today
                 if( Carbon::today()->format('Y-m-d') != $dateReport ) {
