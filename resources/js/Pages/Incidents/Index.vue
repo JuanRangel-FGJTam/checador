@@ -200,7 +200,7 @@ function handleMakeIncidentsJob(){
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Consulta de Incidencias</h2>
         </template>
 
-        <div class="px-4 py-4 h-full rounded-lg max-w-screen-xl mx-auto grid " :class="[ $page.props.auth.user.level_id == 1 ?'grid-rows-incidentsIndexAdmin' :'grid-rows-incidentsIndex' ]">
+        <div class="px-4 py-4 h-container rounded-lg max-w-screen-xl mx-auto grid" :class="[ $page.props.auth.user.level_id == 1 ?'grid-rows-incidentsIndexAdmin' :'grid-rows-incidentsIndex' ]">
 
             <Card v-if="$page.props.auth.user.level_id == 1" class="outline outline-1 outline-gray-300 bg-orange-200 dark:outline-gray-500" :shadow="false">
                 <template #content>
@@ -256,7 +256,7 @@ function handleMakeIncidentsJob(){
                 </template>
             </Card>
 
-            <div class="h-full overflow-y-auto">
+            <div class="h-full overflow-y-auto pb-4">
                 <table class="table w-full shadow text-sm text-left border rtl:text-right text-gray-500 dark:text-gray-400 dark:border-gray-500">
                     <thead class="sticky top-0 z-20 text-xs uppercase text-gray-700 border bg-gradient-to-b from-gray-50 to-slate-100 dark:from-gray-800 dark:to-gray-700 dark:text-gray-200 dark:border-gray-500">
                         <AnimateSpin v-if="loading" class="w-5 h-5 mx-2 absolute top-2.5" />
@@ -326,3 +326,8 @@ function handleMakeIncidentsJob(){
 
     </AuthenticatedLayout>
 </template>
+<style>
+.h-container {
+    height: calc(100vh - 7rem);
+}
+</style>

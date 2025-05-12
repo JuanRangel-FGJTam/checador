@@ -408,7 +408,7 @@ class IncidentController extends Controller
         if( $__reportType == 'monthly'){
             $startDate = Carbon::parse("$__year-$__period-01")->startOfDay();
             $endDate = Carbon::parse("$__year-$__period-01")->endOfMonth()->endOfDay();
-            $title = "Reporte de incidencias del mes de " . $this->monthName($__period);
+            $title = "Reporte de incidencias del mes de " . $this->monthName($__period - 1);
         }
         if( $__reportType == 'fortnight'){
             $month = explode("-", $__period)[0];
