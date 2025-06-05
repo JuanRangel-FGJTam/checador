@@ -30,6 +30,8 @@ Route::middleware(['auth', 'authorized.menu'])->group(function () {
             Route::get('{userid}/edit', [UserController::class, 'edit'])->name('edit');
             Route::patch('{userid}', [UserController::class, 'update'])->name('update');
             Route::patch('{userid}/password', [UserController::class, 'updatePassword'])->name('update.password');
+            Route::delete('{userid}', [UserController::class, 'destroy'])->name('destroy');
+            Route::post('{userid}/restore', [UserController::class, 'restore'])->name('restore');
         });
 
         Route::prefix('catalogs')->name('catalogs.')->group(function(){

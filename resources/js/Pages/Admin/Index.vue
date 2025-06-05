@@ -27,17 +27,9 @@ import Landmark from '@/Components/Icons/Landmark.vue';
                 <PageTitle>Usuarios</PageTitle>
             </template>
             <template #content>
-                <div class="flex flex-wrap gap-4 p-4 justify-around">
-                    <CatalogOptionCard :href="route('admin.users.create')" title="Agregar Usuario">
-                        <UserIconPlus class="w-12 h-12" />
-                    </CatalogOptionCard>
-
-                    <CatalogOptionCard :href="route('admin.users.index')" title="Usuarios Activos">
+                <div class="flex flex-wrap gap-4 p-4 justify-start">
+                    <CatalogOptionCard :href="route('admin.users.index')" title="Usuarios">
                         <Users class="w-12 h-12" />
-                    </CatalogOptionCard>
-
-                    <CatalogOptionCard :href="route('admin.users.index', {inactives: 1})" title="Bajas">
-                        <UsersSlash class="w-12 h-12" />
                     </CatalogOptionCard>
                 </div>
             </template>

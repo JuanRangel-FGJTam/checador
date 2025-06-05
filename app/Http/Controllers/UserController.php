@@ -38,7 +38,7 @@ class UserController extends Controller
 
         // * get the users data
         if($request->query->has('inactives')){
-            $title = "Usuarios Inactivos";
+            $title = "Usuarios de baja";
             $users = User::onlyTrashed()->with(['generalDirection', 'direction', 'subdirectorate', 'department' ])->get();
         }else {
             $users = $this->userService->getUsers();
@@ -291,8 +291,58 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
-        //
+         try {
+            $user = $this->userService->getUser($id);
+            $user->delete();
+
+            Log::info("User id '$id' deleted");
+            return redirect()->route('admin.users.index')->with('success', 'Usuario eliminado correctamente.');
+        } catch (ModelNotFoundException $mnf) {
+            Log::error("User id '$id' not found at UserController.destroy", [ "message" => $mnf->getMessage() ]);
+            return redirect()->back()->withErrors([
+                "message" => "Usuario no encontrado"
+            ])->withInput();
+        } catch (\Throwable $th) {
+            Log::error("Error at attempting to delete the user '{userid}' at UserController.destroy: {message}", [
+                "userid" => $id,
+                "message" => $th->getMessage(),
+                "request" => $request->request->all()
+            ]);
+            return redirect()->back()->withErrors([
+                "message" => "Error no controlado; intente de nuevo o comuníquese con el administrador."
+            ])->withInput();
+        }
+    }
+
+    /**
+     * Restore the specified resource from storage.
+     */
+    public function restore(Request $request, string $id)
+    {
+        try {
+            $user = User::withTrashed()->findOrFail($id);
+            $user->restore();
+            Log::info("User id '$id' restored");
+            return redirect()->route('admin.users.index')->with('success', 'Usuario restaurado correctamente.');
+        } catch (ModelNotFoundException $mnf) {
+            Log::error("User id '$id' not found at UserController.restore", [ "message" => $mnf->getMessage() ]);
+            return redirect()->back()->withErrors([
+                "message" => "Usuario no encontrado"
+            ])->withInput();
+        } catch (\Throwable $th) {
+            Log::error("Error at attempting to restore the user '{userid}' at UserController.restore: {message}", [
+                "userid" => $id,
+                "message" => $th->getMessage(),
+                "request" => $request->request->all()
+            ]);
+            return redirect()->back()->withErrors([
+                "message" => "Error no controlado; intente de nuevo o comuníquese con el administrador."
+            ])->withInput();
+        }
+        return redirect()->back()->withErrors([
+            "message" => "Error no controlado; intente de nuevo o comuníquese con el administrador."
+        ])->withInput();
     }
 }
