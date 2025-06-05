@@ -220,7 +220,12 @@ class UserController extends Controller
             $user->subdirectorate_id = $request->subdirectorate_id;
             $user->department_id = $request->departments_id;
             $user->level_id = $request->level_id;
-            
+
+            if ($request->has('password') && $request->password) {
+                // * update the password
+                $user->password = $request->password;
+            }
+
             // * update the menu elements
             $user->menus()->sync($request->options);
 

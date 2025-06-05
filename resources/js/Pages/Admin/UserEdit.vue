@@ -49,11 +49,7 @@ const form = useForm({
     email: props.user.email ?? '',
     options: props.selectedOptions ?? [],
     level_id: props.user.level_id,
-});
-
-const formPassword = useForm({
     password: "",
-    password_confirmation: ""
 });
 
 async function fetchData(url) {
@@ -96,20 +92,6 @@ function redirectBack(){
 
 function submitForm(){
     form.patch( route('admin.users.update', props.user.id), {
-        replace: true,
-        onError:(res)=>{
-            const { message } = res;
-            if( message){
-                toast.error(message);
-            }else{
-                toast.warning("Revise los campos e intente de nuevo.");
-            }
-        }
-    });
-}
-
-function submitFormPassword(){
-    formPassword.patch( route('admin.users.update.password', props.user.id), {
         replace: true,
         onError:(res)=>{
             const { message } = res;
@@ -232,40 +214,17 @@ function handleCheckboxUpdated(e) {
                         </ul>
                     </div>
 
+                     <div role="form-group">
+                        <InputLabel for="password">Contraseña</InputLabel>
+                        <InputText id="password" v-model="form.password" type="password" placeholder="Deja en blanco para no actualizar"/>
+                        <InputError :message="form.errors.password" />
+                    </div>
+
                     <div class="flex flex-wrap gap-4 p-4 justify-between">
                         <DangerButton type="button" v-on:click="redirectBack">Cancelar</DangerButton>
                         <SuccessButton type="submit">Actualizar Usuario</SuccessButton>
                     </div>
                 </form>
-            </template>
-        </Card>
-
-
-        <Card class="max-w-screen-md mx-auto mt-2">
-            <template #header>
-                <PageTitle>Actualizar Contraseña</PageTitle>
-            </template>
-            <template #content>
-                <form class="flex flex-col gap-2" @submit.prevent="submitFormPassword">
-
-                    <div role="form-group">
-                        <InputLabel for="password">Contraseña</InputLabel>
-                        <InputText id="password" v-model="formPassword.password" type="password"/>
-                        <InputError :message="formPassword.errors.password" />
-                    </div>
-
-                    <div role="form-group">
-                        <InputLabel for="password_confirmation">Confirmar Contraseña</InputLabel>
-                        <InputText id="password_confirmation" v-model="formPassword.password_confirmation" type="password"/>
-                        <InputError :message="formPassword.errors.password_confirmation" />
-                    </div>
-
-                    <div class="flex flex-wrap gap-4 p-4 justify-end">
-                        <SuccessButton type="submit" v-on:click="">Actualizar Contraseña</SuccessButton>
-                    </div>
-
-                </form>
-
             </template>
         </Card>
 
