@@ -66,9 +66,7 @@ Route::middleware(['auth', 'authorized.menu'])->group(function () {
                 Route::get('{directionId}', [CatalogController::class, 'departmentEdit'])->name('edit');
                 Route::patch('{directionId}', [CatalogController::class, 'departmentUpdate'])->name('update');
             });
-
         });
-
     });
 
     Route::prefix('employees')->name('employees.')->group(function(){

@@ -157,7 +157,10 @@ function handleSelectChanged(e){
             <Card class="max-w-screen-md mx-auto mt-4">
                 <template #content>
                     <form class="flex flex-col gap-2" @submit.prevent="submitForm">
-                        <div class="flex flex-col gap-2">
+                        <div 
+                            class="flex flex-col gap-2"
+                            v-if="$page.props.auth.user.level_id == 1"
+                        >
 
                             <div role="form-group">
                                 <InputLabel for="general_direction_id">Nivel 1 (Fiscalía, Dirección General, ...)</InputLabel>
@@ -193,6 +196,15 @@ function handleSelectChanged(e){
                                     <option v-for="item in deparments" :value="item.id" :key="item.id"> {{item.name}}</option>
                                 </InputSelect>
                                 <InputError :message="form.errors.department_id" />
+                            </div>
+                        </div>
+                        <div v-else>
+                            <div class="flex flex-col gap-2">
+                                <h2 class="text-gray-700 dark:text-gray-300 uppercase font-semibold border-b pb-1">Información del Empleado</h2>
+                                <p class="text-gray-600 dark:text-gray-400">Empleado: <span class="font-bold">{{ employee.name }}</span></p>
+                                <p class="text-gray-600 dark:text-gray-400">Número de empleado: <span class="font-bold">{{ employee.employeeNumber }}</span></p>
+
+                                <p class="text-yellow-700">La baja y/o cambio de adscripción en este sistema debe ser solicitado mediante oficio.</p>
                             </div>
                         </div>
 

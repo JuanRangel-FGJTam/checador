@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { Head, useForm, router } from '@inertiajs/vue3';
+import { Head, useForm, router, Link } from '@inertiajs/vue3';
 import { debounce } from '@/utils/debounce.js';
 import { useToast } from 'vue-toastification';
 
@@ -199,14 +199,20 @@ function changePage(pageNumber){
                         <th scope="col" class="px-6 py-3">
                             Horario
                         </th>
-                        <th scope="col" class="px-6 py-3 sr-only">
-                            Acciones
+                        <th scope="col" class="px-6 py-3">
+                            <span class="sr-only">
+                                Acciones
+                            </span>
                         </th>
                     </tr>
                 </thead>
                 <tbody id="table-body" class="bg-white dark:bg-gray-800 dark:border-gray-500">
                     <template v-if="employees && employees.length > 0">
-                        <tr v-for="(employee, index) in employees" :key="employee.id" class="border-b hover:bg-gray-100">
+                        <tr 
+                            v-for="(employee, index) in employees" 
+                            :key="employee.id" 
+                            class="border-b hover:bg-gray-200"
+                        >
                             <td class="pl-2">{{ index + 1 }}</td>
                             <td class="px-2 py-4">
                                 <div class="flex gap-2 items-center">
@@ -236,12 +242,11 @@ function changePage(pageNumber){
                             </td>
 
                             <td class="p-2 text-center">
-                                <NavLink :href=" route('employees.show', employee.employeeNumber)">
-                                    <div class="flex gap-2 shadow bg-slate-200 px-4 py-1">
-                                        <span>Asistencia</span>
-                                        <ChevronRightIcon class="w-4 h-4 ml-1" />
-                                    </div>
-                                </NavLink>
+                                <Link :href=" route('employees.show', employee.employeeNumber)"
+                                    class="flex items-center justify-center gap-2 border p-2 text-blue-600 transition hover:bg-blue-700 hover:text-white dark:text-blue-400 dark:hover:text-blue-300">
+                                    <span>Asistencia</span>
+                                    <ChevronRightIcon class="w-4 h-4" />
+                                </Link>
                             </td>
                         </tr>
                     </template>
