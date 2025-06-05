@@ -353,6 +353,16 @@ class EmployeeController extends Controller
             return $employee;
         }
 
+        $authUser = Auth::user();
+
+        if ($authUser->level_id > 2 &&
+            $authUser->general_direction_id != $request->input('general_direction_id')
+        ) {
+            return redirect()->back()->withErrors([
+                "message" => "Solicite el cambio de dirección general al administrador del sistema."
+            ])->withInput();
+        }
+
         // * update the employee data
         try {
             $this->employeeService->updateEmployee( $employee->employeeNumber, $request->request->all());

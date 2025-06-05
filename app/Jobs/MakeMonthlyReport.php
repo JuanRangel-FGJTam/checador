@@ -22,6 +22,8 @@ class MakeMonthlyReport implements ShouldQueue
 
     public $timeout = 900; // 15 minutes
 
+    public $memoryLimit = '4096M'; // 3GB
+
     protected MonthlyRecord $monthlyRecord;
     protected array $employees;
     protected GeneralDirection $generalDirection;
@@ -50,6 +52,8 @@ class MakeMonthlyReport implements ShouldQueue
     public function handle(): void
     {
         Log::info("MakeMonthlyReport: Start the process to make the monthly report");
+        ini_set('memory_limit', '4096M');
+
         // * create the process record and attach to the monthReportRecord
         $this->process->status = 'processing';
         $this->process->output = null;
