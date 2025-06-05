@@ -40,10 +40,6 @@ const togglePasswordVisibility = () => {
 <template>
     <Head title="Iniciar sesión" />
 
-    <div v-if="status" class="mb-4 font-medium text-sm text-green-600">
-        {{ status }}
-    </div>
-
     <div class="h-screen md:flex">
         <div
             class="relative overflow-hidden md:flex w-1/2 bg-gradient-to-tr from-blue-800 to-gray-700 i justify-around items-center hidden"
@@ -59,7 +55,11 @@ const togglePasswordVisibility = () => {
             <div class="absolute -top-20 -right-20 w-80 h-80 border-4 rounded-full border-opacity-30 border-t-8"></div>
         </div>
         <div class="flex md:w-1/2 justify-center py-10 items-center bg-white">
+            
             <form @submit.prevent="submit" class="w-96">
+                <div v-if="status" class="border rounded border-green-500 bg-green-100 my-4 p-2 font-medium text-green-700">
+                   {{ status }}
+               </div>
                 <h1 class="text-gray-800 font-bold text-2xl mb-4">Inicia sesión</h1>
 
                 <InputError class="mt-2" :message="form.errors.email" />
