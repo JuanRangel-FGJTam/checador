@@ -97,24 +97,24 @@ Route::middleware(['auth', 'authorized.menu'])->group(function () {
 
     });
 
-    Route::prefix('incidents')->name("incidents.")->group(function(){
+    Route::prefix('incidents')->name("incidents.")->group(function() {
+        Route::get('/', [IncidentController::class, 'index'])->name('index');
+        Route::patch('/{incident_id}/state', [IncidentController::class, 'updateIncidentState'])->name('state.update');
         Route::get('/employee/{employee_number}', [IncidentController::class, 'getIncidentsByEmployee'])->name('employee.index');
         Route::get('/employee/{employee_number}/raw-incidents', [IncidentController::class, 'employeeIncidentsJson'])->name('employee.raw');
-        Route::patch('{incident_id}/state', [IncidentController::class, 'updateIncidentState'])->name('state.update');
-        Route::get('', [IncidentController::class, 'index'])->name('index');
-        Route::get('report', [IncidentController::class, 'makeReport'])->name('report.make');
-        Route::post('create-job', [IncidentController::class, 'createIncidentsJob'])->name('job.make');
+        Route::get('/report', [IncidentController::class, 'makeReport'])->name('report.make');
+        Route::post('/create-job', [IncidentController::class, 'createIncidentsJob'])->name('job.make');
 
     });
 
-    Route::prefix("justifications")->name('justifications.')->group(function(){
+    Route::prefix("justifications")->name('justifications.')->group(function() {
         Route::get('', [JustificationController::class, 'index'])->name('index');
         Route::get('{justification_id}/file', [JustificationController::class, 'getJustificationFile'])->name('file');
         Route::get('{justification_id}/edit', [JustificationController::class, 'editJustify'])->name('edit');
         Route::post('{justification_id}/update', [JustificationController::class, 'updateJustify'])->name('update');
     });
 
-    Route::prefix("reports")->name('reports.')->group(function(){
+    Route::prefix("reports")->name('reports.')->group(function() {
         Route::get('', [ReportController::class, 'index'])->name('index');
         Route::get('daily', [ReportController::class, 'createDailyReport'])->name('daily.create');
         Route::get('daily/{report_name}/download', [ReportController::class, 'downloadDailyReporte'])->name('daily.download');

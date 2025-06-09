@@ -42,9 +42,8 @@ class IncidentController extends Controller
         $this->employeeIncidentService = $employeeIncidentService;
     }
 
-    function index(Request $request){
-
-        // * attempt to retrive the query params
+    function index(Request $request)
+    {
         $generalDirecctionId = $request->filled('gdi') ? $request->input("gdi") :intval( Auth::user()->general_direction_id );
         $repType = $request->filled('t') ? $request->input("t") : 'monthly';
         $year = $request->filled('y') ? $request->input("y") : Carbon::now()->year;
@@ -70,7 +69,7 @@ class IncidentController extends Controller
                     $startOfMonth = Carbon::parse("$year-$month-01");
                     $endOfMonth = Carbon::parse("$year-$month-15");
                 }else{
-                    $startOfMonth = Carbon::parse("$year-$month-15");
+                    $startOfMonth = Carbon::parse("$year-$month-16");
                     $endOfMonth = Carbon::parse("$year-$month-01")->endOfMonth()->endOfDay();
                 }
             }
@@ -86,6 +85,7 @@ class IncidentController extends Controller
             "monthly" => "Mensual",
             "fortnight" => "Quincenal"
         ];
+
         if($repType == 'monthly'){
             $periods = [
                 "1"  => "Enero",
@@ -101,6 +101,12 @@ class IncidentController extends Controller
                 "11" => "Noviembre",
                 "12" => "Diciembre"
             ];
+
+            // If current year, only show months up to current month
+            if($year == Carbon::now()->year) {
+                $currentMonth = Carbon::now()->month;
+                $periods = array_slice($periods, 0, $currentMonth, true);
+            }
         }else{
             $periods = [
                 "1-1"  => "1ra Quincena de Enero",
@@ -128,6 +134,25 @@ class IncidentController extends Controller
                 "12-1" => "1ra Quincena de Diciembre",
                 "12-2" => "2da Quincena de Diciembre"
             ];
+
+            // If current year, only show fortnights up to current fortnight
+            if($year == Carbon::now()->year) {
+                $currentMonth = Carbon::now()->month;
+                $currentDay = Carbon::now()->day;
+                $currentFortnight = $currentDay <= 15 ? 1 : 2;
+
+                $filteredPeriods = [];
+                foreach($periods as $key => $value) {
+                    $parts = explode('-', $key);
+                    $month = (int)$parts[0];
+                    $fortnight = (int)$parts[1];
+                    
+                    if($month < $currentMonth || ($month == $currentMonth && $fortnight <= $currentFortnight)) {
+                        $filteredPeriods[$key] = $value;
+                    }
+                }
+                $periods = $filteredPeriods;
+            }
         }
 
         // * get years availables
@@ -154,9 +179,8 @@ class IncidentController extends Controller
         ]);
     }
 
-
-    function getIncidentsByEmployee(Request $request, string $employee_number) {
-
+    function getIncidentsByEmployee(Request $request, string $employee_number)
+    {
         $employee =  $this->findEmployee($employee_number);
         if( $employee instanceof RedirectResponse ){
             return $employee;
@@ -169,7 +193,7 @@ class IncidentController extends Controller
                 'month' => $request->input('month'),
             ];
         }
-        
+
         // todo: calculate the breadcrumns based on where the request come from
         $previous_path = parse_url( url()->previous(), PHP_URL_PATH);
         if( $previous_path == '/incidents' ){
@@ -186,7 +210,6 @@ class IncidentController extends Controller
                 ["name"=> "Incidencias", "href"=>""],
             );
         }
-
 
         // * calculate status
         $status = array(
@@ -371,8 +394,8 @@ class IncidentController extends Controller
      * @param  mixed $request
      * @return void
      */
-    function makeReport(Request $request){
-
+    function makeReport(Request $request)
+    {
         // * validate the request data
         $validator = Validator::make( $request->query(), [
             'general_direction_id' => 'required|numeric',
@@ -402,7 +425,6 @@ class IncidentController extends Controller
         );
         $title = "Reporte de incidencias";
 
-
         // * get employees with incidences
         $employees = array();
         if( $__reportType == 'monthly'){
@@ -417,9 +439,10 @@ class IncidentController extends Controller
                 $startDate = Carbon::parse("$__year-$month-01");
                 $endDate = Carbon::parse("$__year-$month-15");
             }else{
-                $startDate = Carbon::parse("$__year-$month-15");
+                $startDate = Carbon::parse("$__year-$month-16");
                 $endDate = Carbon::parse("$__year-$month-01")->endOfMonth()->endOfDay();
             }
+
             $title = "Reporte de incidencias del " . $startDate->format('d M Y') . ' al ' . $endDate->format('d M Y') ;
         }
         $employees = $this->getEmployeesWithIncidentsByDirection( $__generalDirection, $startDate, $endDate );
