@@ -7,21 +7,21 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Services\{
     EmployeeService,
     JustificationService
 };
 use App\ViewModels\EmployeeViewModel;
-use App\Models\TypeJustify;
 use App\Http\Requests\{
     NewJustificationRequest,
     UpdateJustificationRequest
 };
-use App\Models\Employee;
-use App\Models\Justify;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Redirect;
+use App\Models\{
+    TypeJustify,
+    Justify
+};
 
 class JustificationController extends Controller
 {
@@ -38,24 +38,46 @@ class JustificationController extends Controller
     public function index(Request $request)
     {
         $elementsToTake = 25;
+        $page = $request->query("p", 1);
 
-        $employeesID = $this->employeeService->getEmployeesOfUser()->pluck('id')->all();
+        // * filter the employees by the user level
+        $__authUser = Auth::user();
+        $__currentLevel = intval(Auth::user()->level_id);
 
         $justifications = array();
         $data = Justify::with(['type', 'employee'])
-            ->whereHas('employee', fn( $emp) => $emp->whereIn('id', $employeesID))
-            ->get()
-            ->sortDesc()
+            ->when($__currentLevel > 1, function($query) use($__currentLevel, $__authUser) {
+                return $query->whenHas('employee', function($emp) use($__currentLevel, $__authUser) {
+                    if ($__currentLevel >= 2)
+                    {
+                        $emp->where('general_direction_id', $__authUser->general_direction_id );
+                    }
+                    if($__currentLevel >= 3)
+                    {
+                        $emp->where('direction_id', $__authUser->direction_id);
+                    }
+                    if($__currentLevel >= 4)
+                    {
+                        $emp->where('subdirectorate_id', $__authUser->subdirectorates_id);
+                    }
+                    return $emp;
+                });
+            })
+            ->orderByDesc('created_at')
+            ->skip(($page - 1) * $elementsToTake)
             ->take($elementsToTake)
+            ->get()
             ->all();
 
-        foreach($data as $element){
+        foreach($data as $element)
+        {
             array_push( $justifications, [
                 "id" => $element->id,
-                "employee_name" => $element->employee->name,
+                "employee_name" => $element->employee?->name,
                 "type_name" => $element->type->name,
                 "date_start" => $element->date_start,
                 "date_finish" => $element->date_finish,
+                "date_register" => $element->created_at,
                 "details" => $element->details
             ]);
         }
@@ -63,6 +85,12 @@ class JustificationController extends Controller
         // * return the viewe
         return Inertia::render('Justifications/Index', [
             "justifications" => array_values($justifications),
+            "paginator" => [
+                "page" => $page,
+                "elements" => $elementsToTake,
+                "previous" => $page > 1,
+                "next" => count($data) >= $elementsToTake
+            ]
         ]);
     }
 
