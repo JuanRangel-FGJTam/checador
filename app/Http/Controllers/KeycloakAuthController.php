@@ -9,7 +9,7 @@ use Laravel\Socialite\Facades\Socialite;
 use App\Models\
 {
     User,
-    Route
+    Menu
 };
 
 class KeycloakAuthController extends Controller
@@ -35,19 +35,19 @@ class KeycloakAuthController extends Controller
             return redirect('/');
         }
 
-        dd($kuser);
-
         // * create a local user model
         $user = User::updateOrCreate([
             'email' => $kuser->email,
         ], [
             'name' => $kuser->name,
-            'is-admin' => 0,
-            'updated_password' => 0,
-            'keycloak_access_token' => $kuser->token,
-            'keycloak_refresh_token' => $kuser->refreshToken
+            'access_token' => $kuser->token,
+            'access_refresh_token' => $kuser->refreshToken,
+            'level_id' => 0, // TODO: On keycloak create app-roles to define the level id of the user and the general_directions
+            // "general_direction_id" => "2"
+            // "direction_id" => null
+            // "subdirectorate_id" => null
+            // "department_id" => null
         ]);
-
 
         // * validate if the user has the right access roles and
         // *   attempt to retrive the app roles.
@@ -67,29 +67,24 @@ class KeycloakAuthController extends Controller
         // TODO: Move this logic to another function or class
         if(in_array("default-user", $app_roles))
         {
-            $_routes_names = [
-                'annoucement.index',
-                'aspirants.index',
-                'candidates.index',
-                'internal_career.index',
-                'courses.index',
-                'employees.index',
-                'advancedsearch.index',
-                'persons.index',
-                'institutes.index',
-                'groups.index',
-                'initialFormation.index',
-                'performance_eval.index',
-                'confidence_test.index',
-                'academic_performance_eval.index',
-                'employeesTermination.index'
+            $_routes_names = [ // TODO: Based on the keycloak client-roles assign the menus
+                // 'Admin',
+                'Empleados',
+                'Reportes',
+                // 'Nuevos registros',
+                'Consulta',
+                'Incidencias',
+                // 'Días inhábiles',
+                // 'Bajas',
+                // 'Justificantes',
+                // 'Historial Bajas',
             ];
-            $user->routes()->sync(Route::whereIn('name', $_routes_names)->get());
+            $user->menus()->sync(Menu::whereIn('name', $_routes_names)->get());
         }
 
         // * if has the right roles redirect to dashboard
         Auth::login($user);
-        return redirect('/dashboard');
+        return redirect('/employees');
     }
 
     public function logout(Request $request)
@@ -111,10 +106,10 @@ class KeycloakAuthController extends Controller
     private function validateTokenRoles(User $user, array &$roles)
     {
         // * check the roles from the token
-        $userDecoded = \App\Helpers\Token::decode($user->keycloak_access_token, env('KEYCLOAK_REALM_PUBLIC_KEY'), 60);
+        $userDecoded = \App\Helpers\Token::decode($user->access_token, env('KEYCLOAK_REALM_PUBLIC_KEY'), 60);
 
         // * retrive the roles for this app
-        $roles = $userDecoded->resource_access?->dgfspc?->roles ?? [];
+        $roles = $userDecoded->resource_access?->{'checador-web'}?->roles ?? [];
 
         $__roles_availables = config('app.KEYCLOAK_ACCESS_ROLES');
         $diff = array_intersect($__roles_availables, $userDecoded->realm_access->roles);

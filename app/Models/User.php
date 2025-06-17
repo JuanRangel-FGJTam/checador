@@ -27,7 +27,9 @@ class User extends Authenticatable
         'direction_id',
         'subdirectorate_id',
         'department_id',
-        'level_id'
+        'level_id',
+        'access_token',
+        'access_refresh_token'
     ];
 
     /**

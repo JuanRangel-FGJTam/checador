@@ -123,4 +123,10 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    // Defined the keycloak roles the user needs to have in order to access this app
+    'KEYCLOAK_ACCESS_ROLES' => [
+        'checador-web-access',
+        'admin'
+    ],
+
 ];
