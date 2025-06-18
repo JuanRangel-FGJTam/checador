@@ -47,7 +47,7 @@ class JustificationController extends Controller
         $justifications = array();
         $data = Justify::with(['type', 'employee'])
             ->when($__currentLevel > 1, function($query) use($__currentLevel, $__authUser) {
-                return $query->whenHas('employee', function($emp) use($__currentLevel, $__authUser) {
+                return $query->whereHas('employee', function($emp) use($__currentLevel, $__authUser) {
                     if ($__currentLevel >= 2)
                     {
                         $emp->where('general_direction_id', $__authUser->general_direction_id );
