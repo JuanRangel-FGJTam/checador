@@ -146,10 +146,7 @@ function handleEditClick(id){
                             Justificacion
                         </th>
                         <th scope="col" class="w-1/8 text-center px-6 py-3">
-                            Fecha Inicio
-                        </th>
-                        <th scope="col" class="w-2/8 text-center px-6 py-3">
-                            Fecha Fin
+                            Periodo
                         </th>
                         <th scope="col" class="w-1/8 text-center px-6 py-3">
                             Observaciones
@@ -170,11 +167,14 @@ function handleEditClick(id){
                             </td>
 
                             <td class="p-2 text-center uppercase">
-                                {{ formatDate(item.date_start)}}
-                            </td>
-
-                            <td class="p-2 text-center uppercase">
-                                {{ formatDate(item.date_finish)}}
+                                <div class="d-flex items-center">
+                                    <spa>{{ formatDate(item.date_start)}}</spa>
+                                    <span v-if="item.date_finish && item.date_finish > '1970-01-01'">
+                                        <svg aria-hidden="true" data-prefix="far" data-icon="long-arrow-right" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" class="mx-2 inline-block h-4 w-auto svg-inline--fa fa-long-arrow-right fa-w-14 fa-7x"><path fill="currentColor" d="M295.515 115.716l-19.626 19.626c-4.753 4.753-4.675 12.484.173 17.14L356.78 230H12c-6.627 0-12 5.373-12 12v28c0 6.627 5.373 12 12 12h344.78l-80.717 77.518c-4.849 4.656-4.927 12.387-.173 17.14l19.626 19.626c4.686 4.686 12.284 4.686 16.971 0l131.799-131.799c4.686-4.686 4.686-12.284 0-16.971L312.485 115.716c-4.686-4.686-12.284-4.686-16.97 0z" class=""></path>
+                                        </svg>
+                                        {{ formatDate(item.date_finish)}}
+                                    </span>
+                                </div>
                             </td>
 
                             <td class="p-2 text-center">
@@ -199,7 +199,7 @@ function handleEditClick(id){
                     </template>
                     <template v-else>
                         <tr>
-                            <td colspan="5" class="px-6 py-12 text-center font-medium whitespace-nowrap dark:text-white text-lg text-emerald-700">
+                            <td colspan="4" class="px-6 py-12 text-center font-medium whitespace-nowrap dark:text-white text-lg text-emerald-700">
                                 No hay justificantes registrados para el empleado.
                             </td>
                         </tr>
