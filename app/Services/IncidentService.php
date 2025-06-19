@@ -429,11 +429,11 @@ class IncidentService
 
         $justifiesOfTheDay = Justify::where('employee_id', $this->employee_id)
             ->where(function ($query) use ($date) {
-                $query->where('date_start', '<=', $date->format('Y-m-d'))
-                    ->orWhere(function ($subQuery) use ($date) {
-                        $subQuery->where('date_finish', '>=', $date->format('Y-m-d'))
-                            ->orWhereNull('date_finish');
-                    });
+                $query->where(function ($q) use ($date) {
+                    $q->whereNull('date_finish')->whereDate('date_start', $date);
+                })->orWhere(function ($q) use ($date) {
+                    $q->whereDate('date_start', '<=', $date)->whereDate('date_finish', '>=', $date);
+                });
             })
             ->get();
 
