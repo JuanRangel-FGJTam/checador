@@ -550,6 +550,38 @@ class EmployeeController extends Controller
         return Storage::disk('local')->download($filePath, $name);
     }
 
+    public function workinHoursHistory(string $employee_number)
+    {
+        // * retrive the employee
+        $employee = $this->findEmployee($employee_number);
+        if($employee instanceof \Illuminate\Http\RedirectResponse){
+            return $employee;
+        }
+
+        // * retrive workin hours of the employee
+        $workingHours = WorkingHours::where('employee_id', $employee->id)
+            ->orderByDesc('created_at')
+            ->withTrashed()
+            ->take(10)
+            ->get()->all();
+
+        // TODO: calculate the breadcrumns based on where the request come from
+        $breadcrumbs = array(
+            ["name"=> "Inicio", "href"=> "/dashboard"],
+            ["name"=> "Vista Empleados", "href"=> route('employees.index') ],
+            ["name"=> "Empleado: $employee->employeeNumber", "href"=> route('employees.show', $employee->employeeNumber)],
+            ["name"=> "Historial de Horario", "href"=>""],
+        );
+
+        // * return the view
+        return Inertia::render('Employees/WorkinHoursHistory', [
+            "employeeNumber" => $employee->employeeNumber,
+            "employee" => $employee,
+            "workingHours" => array_values($workingHours),
+            "breadcrumbs" => $breadcrumbs
+        ]);
+    }
+
     #region Incidents
     public function incidentCreate(Request $request, string $employee_number) {
 

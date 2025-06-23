@@ -194,6 +194,15 @@ function showJustificationsClick(){
     }));
 }
 
+function showHistoryWorkingHoursClick()
+{
+    router.visit( route('employees.workinghours-history',
+        {
+            "employee_number": props.employeeNumber
+        }
+    ));
+}
+
 function justifyDayClick(){
     var day = calendarDaySelected.value.day;
 
@@ -334,6 +343,10 @@ function removeIncident(incident)
                     >
                         Generar Incidencias
                     </WarningButton>
+
+                    <WhiteButton v-on:click="showHistoryWorkingHoursClick">
+                        Historial Horarios
+                    </WhiteButton>
 
                     <WhiteButton v-on:click="showJustificationsClick">
                         Ver justificantes
