@@ -1,4 +1,8 @@
 const formatDate = (date_string) => {
+  if (!date_string) {
+    return 'sin fecha'
+  }
+
   const myDate = new Date(date_string)
   myDate.setMinutes( myDate.getMinutes() + myDate.getTimezoneOffset() )
   const options = { 
@@ -14,6 +18,10 @@ const formatDate = (date_string) => {
 }
 
 const formatDatetime = (date) => {
+  if (!date) {
+    return 'sin fecha'
+  }
+
 	var d = new Date(date);
 	var options = { 
     year: 'numeric', 
