@@ -95,6 +95,8 @@ Route::middleware(['auth', 'authorized.menu'])->group(function () {
 
         Route::get('{employee_number}/kardex', [EmployeeController::class, 'kardexEmployee'])->name('kardex');
 
+        Route::get('{employee_number}/workinghours-history', [EmployeeController::class, 'workinHoursHistory'])->name('workinghours-history');
+
     });
 
     Route::prefix('incidents')->name("incidents.")->group(function() {

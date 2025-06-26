@@ -61,7 +61,13 @@ class Employee extends Model
     }
 
     public function workingHours() {
-        return $this->hasOne(WorkingHours::class);
+        return $this->hasOne(WorkingHours::class)
+            ->whereNull('deleted_at')
+            ->latest('created_at');
+    }
+
+    public function workingHoursHistory() {
+        return $this->hasMany(WorkingHours::class)->withTrashed()->orderByDesc('created_at');
     }
 
 
