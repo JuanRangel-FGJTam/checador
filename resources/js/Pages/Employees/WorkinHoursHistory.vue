@@ -1,23 +1,13 @@
 <script setup>
-import { ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { useToast } from 'vue-toastification';
-import { formatDate, formatDatetime } from '@/utils/date';
+import { formatDatetime } from '@/utils/date';
 
-import NavLink from '@/Components/NavLink.vue';
 import PageTitle from '@/Components/PageTitle.vue';
 import Card from '@/Components/Card.vue';
-import WhiteButton from '@/Components/WhiteButton.vue';
-import SuccessButton from '@/Components/SuccessButton.vue';
-import InputLabel from "@/Components/InputLabel.vue";
-import InputDate from '@/Components/InputDate.vue';
-import InputError from '@/Components/InputError.vue';
-import PreviewDocument from '@/Components/PreviewDocument.vue';
 import Breadcrumb from '@/Components/Breadcrumb.vue';
 import AnimateSpin from '@/Components/Icons/AnimateSpin.vue';
-import PdfIcon from '@/Components/Icons/PdfIcon.vue';
-import EditIcon from '@/Components/Icons/EditIcon.vue';
 
 const props = defineProps({
     employeeNumber: String,
@@ -32,24 +22,9 @@ const props = defineProps({
         ]
     }
 });
-
-const toast = useToast();
-
-const form = useForm({
-    date: undefined,
-    from: props.from,
-    to: props.to
-});
-
-function redirectBack(){
-    router.visit( route('employees.show', props.employeeNumber), {
-        replace: true
-    } );
-}
 </script>
 
 <template>
-
     <Head title="Empleado - Justificantes" />
 
     <AuthenticatedLayout>
@@ -61,7 +36,7 @@ function redirectBack(){
         <Card class="max-w-screen-lg mx-auto mt-4 pb-4">
             <template #header>
                 <PageTitle class="px-4 mt-4 text-center">
-                    Historial Modificaciones de Horario del empleado '{{ employee.name }}'
+                    Historial de horarios de {{ employee.name }}
                 </PageTitle>
             </template>
 

@@ -563,7 +563,8 @@ class EmployeeController extends Controller
             ->orderByDesc('created_at')
             ->withTrashed()
             ->take(10)
-            ->get()->all();
+            ->get()
+            ->all();
 
         // TODO: calculate the breadcrumns based on where the request come from
         $breadcrumbs = array(
