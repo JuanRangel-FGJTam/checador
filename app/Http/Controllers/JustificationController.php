@@ -39,35 +39,38 @@ class JustificationController extends Controller
     {
         $elementsToTake = 25;
         $page = $request->query("p", 1);
+        $justifications = array();
+        $data = [];
 
         // * filter the employees by the user level
         $__authUser = Auth::user();
         $__currentLevel = intval(Auth::user()->level_id);
 
-        $justifications = array();
-        $data = Justify::with(['type', 'employee'])
-            ->when($__currentLevel > 1, function($query) use($__currentLevel, $__authUser) {
-                return $query->whereHas('employee', function($emp) use($__currentLevel, $__authUser) {
-                    if ($__currentLevel >= 2)
-                    {
-                        $emp->where('general_direction_id', $__authUser->general_direction_id );
-                    }
-                    if($__currentLevel >= 3)
-                    {
-                        $emp->where('direction_id', $__authUser->direction_id);
-                    }
-                    if($__currentLevel >= 4)
-                    {
-                        $emp->where('subdirectorate_id', $__authUser->subdirectorates_id);
-                    }
-                    return $emp;
-                });
-            })
-            ->orderByDesc('created_at')
-            ->skip(($page - 1) * $elementsToTake)
-            ->take($elementsToTake)
-            ->get()
-            ->all();
+        if ($__currentLevel > 0 ) {
+            $data = Justify::with(['type', 'employee'])
+                ->when($__currentLevel > 1, function($query) use($__currentLevel, $__authUser) {
+                    return $query->whereHas('employee', function($emp) use($__currentLevel, $__authUser) {
+                        if ($__currentLevel >= 2)
+                        {
+                            $emp->where('general_direction_id', $__authUser->general_direction_id );
+                        }
+                        if($__currentLevel >= 3)
+                        {
+                            $emp->where('direction_id', $__authUser->direction_id);
+                        }
+                        if($__currentLevel >= 4)
+                        {
+                            $emp->where('subdirectorate_id', $__authUser->subdirectorates_id);
+                        }
+                        return $emp;
+                    });
+                })
+                ->orderByDesc('created_at')
+                ->skip(($page - 1) * $elementsToTake)
+                ->take($elementsToTake)
+                ->get()
+                ->all();
+        }
 
         foreach($data as $element)
         {

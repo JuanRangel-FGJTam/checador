@@ -135,8 +135,8 @@ function handleShowPdfClick(id){
                     </template>
                     <template v-else>
                         <tr>
-                            <td colspan="6" class="px-6 py-12 text-center font-medium whitespace-nowrap dark:text-white text-lg text-emerald-700">
-                                No hay justificantes registrados para el empleado.
+                            <td colspan="6" class="px-6 py-12 text-center dark:text-white text-lg text-gray-600">
+                                No hay justificantes que mostrar
                             </td>
                         </tr>
                     </template>
