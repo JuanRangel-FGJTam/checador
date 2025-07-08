@@ -21,14 +21,12 @@ use App\Services\{
 use App\Models\{
     Department,
     Employee,
-    EmployeeStatusHistory,
     GeneralDirection,
     Direction,
     Subdirectorate,
     WorkingHours,
     Record,
     Incident,
-    Justify
 };
 use App\ViewModels\{
     CalendarEvent
@@ -76,7 +74,6 @@ class EmployeeController extends Controller
             }
 
             $subdirectionId = $request->query("sd");
-
         }else{
             if( $request->filled('gd')){
                 $generalDirectionId = $request->query("gd");

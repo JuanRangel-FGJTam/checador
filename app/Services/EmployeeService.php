@@ -48,12 +48,9 @@ class EmployeeService {
                     $query->where('direction_id', $filters['direction_id'] );
                 }
 
-                if( isset($filters['search'])){
+                if( isset($filters['search']) && !empty(trim($filters['search']))){
                     $query = Employee::query();
-                    $query->where(function($q) use ($filters) {
-                        $q->where('name', 'like', "%".$filters['search']."%")
-                          ->orWhere('plantilla_id', 'like', "%".$filters['search']."%");
-                    });
+                    $query = $this->applyAdvancedSearch($query, $filters['search']);
                 }
 
                 if( isset($filters['active'])){
@@ -88,17 +85,13 @@ class EmployeeService {
                 }
             }
 
-            if( isset($filters['search'])){
-                $query->where(function($q) use ($filters) {
-                    $q->where('name', 'like', "%".$filters['search']."%")
-                      ->orWhere('plantilla_id', 'like', "%".$filters['search']."%");
-                });
+            if( isset($filters['search']) && !empty(trim($filters['search']))){
+                $query = $this->applyAdvancedSearch($query, $filters['search']);
             }
 
             if( isset($filters['active'])){
                 $query->where('active', $filters['active']);
             }
-
         }
 
         // * set the total people
@@ -395,5 +388,57 @@ class EmployeeService {
     }
 
     #endregion
+
+    /**
+     * Enhanced search for employees that handles multiple search scenarios
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder $query
+     * @param  string $searchTerm
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    private function applyAdvancedSearch($query, string $searchTerm)
+    {
+        $searchTerm = trim($searchTerm);
+        
+        if (empty($searchTerm)) {
+            return $query;
+        }
+
+        return $query->where(function($q) use ($searchTerm) {
+            // Search by employee number (plantilla_id)
+            $q->where('plantilla_id', 'like', "%".$searchTerm."%");
+
+            // Search by employee number without prefix (if numeric)
+            if (is_numeric($searchTerm)) {
+                $q->orWhere('plantilla_id', 'like', "%1".$searchTerm."%");
+            }
+
+            // Advanced name search - split search terms for better matching
+            $searchWords = array_filter(explode(' ', $searchTerm), function($word) {
+                return !empty(trim($word)) && strlen(trim($word)) > 1; // Skip single characters
+            });
+
+            if (!empty($searchWords)) {
+                $q->where(function($nameQuery) use ($searchWords) {
+                    // Search for each word in the name
+                    foreach ($searchWords as $word) {
+                        $trimmedWord = trim($word);
+                        $nameQuery->where('name', 'like', "%".$trimmedWord."%");
+                    }
+                });
+
+                // Also search for any word match (OR condition)
+                $q->orWhere(function($nameQuery) use ($searchWords) {
+                    foreach ($searchWords as $word) {
+                        $trimmedWord = trim($word);
+                        $nameQuery->orWhere('name', 'like', "%".$trimmedWord."%");
+                    }
+                });
+            }
+
+            // Search for the complete term in name
+            $q->orWhere('name', 'like', "%".$searchTerm."%");
+        });
+    }
 
 }
