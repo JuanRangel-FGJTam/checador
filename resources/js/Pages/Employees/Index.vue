@@ -1,12 +1,9 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { Head, useForm, router, Link } from '@inertiajs/vue3';
-import { debounce } from '@/utils/debounce.js';
 import { useToast } from 'vue-toastification';
 
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-
-import NavLink from '@/Components/NavLink.vue';
 import SearchInput from '@/Components/SearchInput.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import InputSelect from '@/Components/InputSelect.vue';
@@ -46,6 +43,7 @@ const form = useForm({
 });
 
 const loading = ref(false);
+const debouncedSearch = ref(null);
 
 onMounted(()=>{
     form.gd = props.filters.gd ?? 0;
@@ -55,51 +53,64 @@ onMounted(()=>{
     form.search = props.filters.search ?? undefined;
 });
 
+onUnmounted(() => {
+    // Clear any pending debounced search
+    if (debouncedSearch.value) {
+        clearTimeout(debouncedSearch.value);
+    }
+});
+
 function handleInputSearch(search){
-    form.search = search;
-    form.p = 1;
-    reloadData();
+    // Clear previous debounced call
+    if (debouncedSearch.value) {
+        clearTimeout(debouncedSearch.value);
+    }
+    
+    // Set new debounced call
+    debouncedSearch.value = setTimeout(() => {
+        form.search = search;
+        form.p = 1;
+        reloadData();
+    }, 800);
 }
 
 function reloadData(){
     loading.value = true;
-    debounce(()=>{
-        // * prepare the query params
-        var params = [];
-        if(form.gd){
-            params.push(`gd=${form.gd}`);
-        }
-        
-        if(form.d && form.d > 0){
-            params.push(`d=${form.d}`);
-        }
-        
-        if(form.sd && form.sd > 0){
-            params.push(`sd=${form.sd}`);
-        }
+    
+    // * prepare the query params
+    var params = [];
+    if(form.gd){
+        params.push(`gd=${form.gd}`);
+    }
+    
+    if(form.d && form.d > 0){
+        params.push(`d=${form.d}`);
+    }
+    
+    if(form.sd && form.sd > 0){
+        params.push(`sd=${form.sd}`);
+    }
 
-        if(form.page && form.page > 1){
-            params.push(`p=${form.page}`);
-        }
-        
-        if(form.search){
-            params.push(`se=${form.search}`);
-        }
+    if(form.page && form.page > 1){
+        params.push(`p=${form.page}`);
+    }
+    
+    if(form.search){
+        params.push(`se=${form.search}`);
+    }
 
-        // * reload the view
-        router.visit("?" + params.join("&"), {
-            method: 'get',
-            only: ['employees', 'directions', 'subdirectorate', 'showPaginator', 'paginator'],
-            preserveState: true,
-            onError:(err)=>{
-                toast.error("Error al obtener los datos");
-            },
-            onSuccess: ()=>{
-                loading.value = false;
-            }
-        });
-        
-    }, 500);
+    // * reload the view
+    router.visit("?" + params.join("&"), {
+        method: 'get',
+        only: ['employees', 'directions', 'subdirectorate', 'showPaginator', 'paginator'],
+        preserveState: true,
+        onError:(err)=>{
+            toast.error("Error al obtener los datos");
+        },
+        onSuccess: ()=>{
+            loading.value = false;
+        }
+    });
 }
 
 function handleGeneralDirectionSelect(){
@@ -170,7 +181,7 @@ function changePage(pageNumber){
                     </InputSelect>
                 </div>
 
-                <SearchInput class="col-span-3" placeHolder="Nombre, curp, numero de empleado" v-on:search="handleInputSearch"/>
+                <SearchInput class="col-span-3" placeHolder="Nombre, curp, numero de empleado" :initialValue="form.search" v-on:search="handleInputSearch"/>
 
             </div>
 
