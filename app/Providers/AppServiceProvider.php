@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Routing\UrlGenerator;
 use App\Mail\CustomTransport;
 use App\Interfaces\EmployeeIncidentInterface;
@@ -72,6 +73,10 @@ class AppServiceProvider extends ServiceProvider
         // Register the custom mail transport
         Mail::extend('dgtitAPI', function () {
             return new CustomTransport();
+        });
+
+        Event::listen(function(\SocialiteProviders\Manager\SocialiteWasCalled $event) {
+            $event->extendSocialite('keycloak', \SocialiteProviders\Keycloak\Provider::class);
         });
     }
 }

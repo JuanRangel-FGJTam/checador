@@ -16,8 +16,12 @@ use App\Http\Controllers\{
     ProfileController,
     UserController,
     ReportController,
-    StaffController
+    StaffController,
+    KeycloakAuthController,
 };
+
+Route::get('/keycloak-login', [\App\Http\Controllers\KeycloakAuthController::class, "redirect"])->name('keycloak.login');
+Route::get('/keycloak-callback', [\App\Http\Controllers\KeycloakAuthController::class, "callback"]);
 
 Route::middleware(['auth', 'authorized.menu'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function(){

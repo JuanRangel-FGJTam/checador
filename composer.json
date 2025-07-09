@@ -11,8 +11,10 @@
         "jenssegers/mongodb": "^4.8",
         "laravel/framework": "^11.9",
         "laravel/sanctum": "^4.0",
+        "laravel/socialite": "^5.21",
         "laravel/tinker": "^2.9",
         "phpoffice/phpspreadsheet": "^2.2",
+        "socialiteproviders/keycloak": "^5.3",
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {
