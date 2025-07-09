@@ -33,7 +33,7 @@ const props = defineProps({
             <Breadcrumb :breadcrumbs="breadcrumbs" />
         </template>
 
-        <Card class="max-w-screen-lg mx-auto mt-4 pb-4">
+        <Card class="max-w-screen-xl mx-auto mt-4 pb-4">
             <template #header>
                 <PageTitle class="px-4 mt-4 text-center">
                     Historial de horarios de {{ employee.name }}
@@ -59,6 +59,9 @@ const props = defineProps({
                             </th>
                             <th scope="col" class="w-2/8 text-center px-6 py-3">
                                 Horario
+                            </th>
+                            <th scope="col" class="w-2/8 text-center px-6 py-3">
+                                Modificado Por
                             </th>
                         </tr>
                     </thead>
@@ -106,11 +109,18 @@ const props = defineProps({
                                         </div>
                                     </div>
                                 </td>
+
+                                <td class="p-2 text-center uppercase">
+                                    <div v-if="item.user" class="d-flex flex-col items-center gap-1">
+                                        <span class="block text-sm truncate">{{ item.user.name }}</span>
+                                        <span class="block text-xs truncate">{{ item.user.email }}</span>
+                                    </div>
+                                </td>
                             </tr>
                         </template>
                         <template v-else>
                             <tr>
-                                <td colspan="4" class="px-6 py-12 text-center font-medium whitespace-nowrap dark:text-white text-lg text-emerald-700">
+                                <td colspan="5" class="px-6 py-12 text-center font-medium whitespace-nowrap dark:text-white text-lg text-emerald-700">
                                     No hay datos registrados para el empleado.
                                 </td>
                             </tr>
