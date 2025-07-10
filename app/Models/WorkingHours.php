@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class WorkingHours extends Model
 {
@@ -16,7 +17,8 @@ class WorkingHours extends Model
         'toeat',
         'toarrive',
         'checkout',
-        'deleted_at'
+        'deleted_at',
+        'updated_by'
     ];
 
 
@@ -25,11 +27,29 @@ class WorkingHours extends Model
         // * prevent having multiple workingHours active at the same time
         static::creating(function ($workingHour)
         {
+            // * set the user id
+            $workingHour->updated_by = auth()->user()?->id;
+
             // ensure delete previous working hours
             WorkingHours::where('employee_id', $workingHour->employee_id)
                 ->whereNull('deleted_at')
                 ->delete();
         });
+
+        static::updating(function ($workingHour)
+        {
+            $workingHour->updated_by = auth()->user()?->id;
+        });
+    }
+
+    /**
+     * Get the user that owns the WorkingHours
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by', 'id');
     }
 
 }

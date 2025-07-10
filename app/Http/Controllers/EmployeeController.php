@@ -557,6 +557,7 @@ class EmployeeController extends Controller
 
         // * retrive workin hours of the employee
         $workingHours = WorkingHours::where('employee_id', $employee->id)
+            ->with(['user'])
             ->orderByDesc('created_at')
             ->withTrashed()
             ->take(10)
